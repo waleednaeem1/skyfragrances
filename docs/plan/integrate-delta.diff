@@ -1,0 +1,1739 @@
+diff -ru -x P plan-snapshot-before-integrate/01a-schema-catalogue.md plan/01a-schema-catalogue.md
+--- plan-snapshot-before-integrate/01a-schema-catalogue.md	2026-09-25 16:46:25
++++ plan/01a-schema-catalogue.md	2026-09-25 17:18:55
+@@ -160,6 +160,7 @@
+ | ~~`role`~~ | — | Superseded by 08-decisions-register.md §2 — C-21: column cut; one owner account in v1, staff is question Q-10. |
+ | `last_login_ip_hash` | `CHAR(64)` | `hash('sha256', $ip . $pepper)`. A raw IP is personal data with no use here. |
+ | `password_changed_at` | `DATETIME NULL` | Lets a future "your password is a year old" nudge exist without schema work. |
++| `known_devices` | `TEXT NULL` | **Added by 08 §2.4 C-51.** JSON array of up to 5 `sha256` hashes of the `SFDEV` known-device cookie issued on each successful login (05a §2.4 step 7a). A login request carrying a matching cookie is exempt from the username progressive delay. Never holds the cookie value itself. |
+ 
+ - `uq_admin_users_username` — the login lookup and the uniqueness guarantee in one index.
+ - `uq_admin_users_email` — password-reset lookup by email; also stops two accounts sharing a mailbox.
+@@ -333,6 +334,7 @@
+ exceeds 64 KB. It is stored as sanitised HTML (a fixed tag allow-list applied on save, escaped
+ again nowhere — the page prints it raw, which is exactly why the allow-list is applied on the
+ way in and only an authenticated owner can write it).
++> Amended by 08 §2.4 — C-62: "a fixed tag allow-list" is the `DOMDocument`-based `sanitize_html()` defined in 02c §3.2 (tags `p, br, strong, em, b, i, ul, ol, li, a, h2, h3, blockquote`; only `href` survives, http/https/mailto/site-relative only; `rel="nofollow noopener"` forced). It is applied on save **and again on render**, because "only an authenticated owner can write it" is one stolen admin cookie away from being false, and a planted `javascript:` link would survive a password change. `strip_tags()` is never used.
+ 
+ ### 2.7 `slug_redirects`
+ 
+diff -ru -x P plan-snapshot-before-integrate/01b-schema-commerce.md plan/01b-schema-commerce.md
+--- plan-snapshot-before-integrate/01b-schema-commerce.md	2026-09-25 16:46:25
++++ plan/01b-schema-commerce.md	2026-09-25 17:05:45
+@@ -123,7 +123,7 @@
+ | `customer_note` | `VARCHAR(500)` | Customer's own delivery note. Distinct from `order_notes` (§8), which is internal. |
+ | `subtotal` | `DECIMAL(10,2)` | Sum of `order_items.line_total`. Recomputed server-side at checkout; the browser's number is never trusted. |
+ | `discount_total` | `DECIMAL(10,2)` | Coupon discount actually applied, already clamped to `subtotal` (a fixed coupon larger than the cart discounts to zero, never negative). |
+-| `shipping_fee` | `DECIMAL(10,2)` | Snapshot of `settings.shipping_fee`, or `0.00` when `subtotal - discount_total >= settings.free_shipping_threshold`. Snapshotting matters: the client edits these in Settings and must not retroactively change last month's orders. |
++| `shipping_fee` | `DECIMAL(10,2)` | Snapshot of `settings.shipping_fee`, or `0.00` when `subtotal - discount_total >= settings.free_shipping_threshold`. Snapshotting matters: the client edits these in Settings and must not retroactively change last month's orders. (Superseded by 08 §2.4 C-43: the predicate is `subtotal >= free_shipping_threshold` — the **pre-discount** subtotal, 06a §4.1. The value is whatever the single 06a §2.2 function returned inside the transaction.) |
+ | `cod_fee` | `DECIMAL(10,2)` | Reserved, `0.00` in v1. Present now because adding a money column to a live orders table on shared hosting is the kind of task that gets a non-developer stuck. |
+ | `grand_total` | `DECIMAL(10,2)` | `subtotal - discount_total + shipping_fee + cod_fee`. Stored, not computed on read — it is what the customer agreed to pay. |
+ | `item_count` | `SMALLINT UNSIGNED` | Sum of `order_items.quantity`. Denormalised for the admin list, which must not join to count. |
+@@ -497,6 +497,8 @@
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ ```
+ 
++> Amended by 08-decisions-register.md §2.4 — C-57 / C-65: the canonical `payment_proofs` (C-08 columns, keyed on `order_id`) also carries `file_path VARCHAR(160) NULL` (NULL = the post-commit write failed or the file has been purged) and `purged_at DATETIME NULL`. The privacy purge (`/admin/tools/purge`, 05b §0.4) deletes the file and sets `file_path = NULL, purged_at = :now` for orders `delivered`/`cancelled` more than 90 days ago; the row, `transaction_ref` and verdict are kept.
++
+ The decision, stated plainly: **a separate table, because re-uploads are the normal case.**
+ A customer sends a cropped screenshot, the client asks for a clearer one on WhatsApp, a second
+ arrives. A `payments.proof_filename` column would overwrite the first — destroying evidence in
+@@ -559,6 +561,7 @@
+ 3. Reject if `subtotal < min_order_total`.
+ 4. Global: `usage_limit IS NOT NULL` and
+    `SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id = ? AND status = 'applied'` `>= usage_limit` → reject.
++   > Superseded by 08-decisions-register.md §2.4 — C-44: the global limit is checked **only** by the guarded `UPDATE coupons SET used_count = used_count + 1 WHERE id = ? AND is_active = 1 AND (usage_limit IS NULL OR used_count < usage_limit)` with `rowCount() === 1` (06b §1.5 step 5). The ledger count is not consulted for the global limit.
+ 5. Per-phone: `per_phone_limit IS NOT NULL` and the same count with
+    `AND phone_normalized = ?` `>= per_phone_limit` → reject. Served by `idx_redeem_coupon_phone`.
+ 6. Compute the discount, insert the redemption row, snapshot `coupon_code`/`type`/`value` onto
+@@ -569,6 +572,7 @@
+ offers a one-click recount. Cancelling an order sets the redemption's `status = 'reverted'` and
+ decrements `used_count`, which returns the use to the customer — the behaviour a shop owner
+ expects when they cancel a duplicate order.
++> Superseded by 08-decisions-register.md §2.4 — C-44: **`coupons.used_count` is authoritative for the global limit**; `coupon_redemptions` is the audit trail and the only per-phone check. **There is no recount feature** — it would let a seeded or hand-set counter (07 A.3 seeds `FIRST50` at 50/50 with no ledger rows) reopen a closed code. Cancellation as described (status `reverted` + decrement, one transaction) stands and wins over 06a §3.7's delete.
+ 
+ Counting the ledger rather than the counter is what makes the per-phone rule honest: the
+ counter cannot express "per phone" at all, and any design that tries ends up with a second
+diff -ru -x P plan-snapshot-before-integrate/01c-schema-rules.md plan/01c-schema-rules.md
+--- plan-snapshot-before-integrate/01c-schema-rules.md	2026-09-25 16:46:25
++++ plan/01c-schema-rules.md	2026-09-25 17:12:14
+@@ -341,6 +341,7 @@
+ - Declared at three levels so no default can leak in: on `CREATE DATABASE`, on every
+   `CREATE TABLE`, and at the top of every `.sql` file as
+   `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;`.
++  > Amended by 08-decisions-register.md §2.4 — C-55: **no `CREATE DATABASE` and no `USE` in any shipped `.sql`** — a Hostinger DB user has no `CREATE DATABASE` privilege and the database name is assigned by hPanel, so the line would stop the phpMyAdmin import at statement 1. Collation is declared on every `CREATE TABLE` and by `SET NAMES`; every `CREATE TABLE` also carries `ROW_FORMAT=DYNAMIC` so a legacy MariaDB account with `innodb_default_row_format=COMPACT` (767-byte index cap) still accepts `VARCHAR(190) UNIQUE` under utf8mb4.
+ - The PDO DSN carries `;charset=utf8mb4`.
+ - `.sql` files are saved **UTF-8 without BOM** — a BOM breaks the phpMyAdmin import that
+   the client will actually use.
+@@ -371,7 +372,13 @@
+ 1. `date_default_timezone_set('Asia/Karachi');` at the top of the bootstrap, before any
+    `date()` call.
+ 2. `SET time_zone = '+05:00';` executed on every PDO connection (numeric offset, never the
+-   named zone), so that any stray `NOW()` / `CURDATE()` agrees with PHP.
++   named zone), so that any stray `NOW()` / `CURDATE()` agrees with PHP — immediately followed by
++   `SET SESSION sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'`
++   (08 C-55). C-03's "UNSIGNED is the loud failure" holds only under strict mode, which is the
++   host's `my.cnf` choice unless the app sets it; a permissive MariaDB image would otherwise clamp
++   `stock - 5` on `3` to `0` with a warning. 07 B.4.4 tests that such an `UPDATE` raises error 1264.
++   `DECIMAL(10,2) UNSIGNED` is deprecated from MySQL 8.0.17 and warns on the local MySQL 9.3 — the
++   warning is accepted (MariaDB does not emit it); verified once in stage 1 and recorded.
+ 3. All `created_at` / `updated_at` values are written from PHP
+    (`date('Y-m-d H:i:s')`), not from `NOW()` and not from a column default. This is also
+    forced by the portability rule: `DEFAULT CURRENT_TIMESTAMP` on more than one column per
+@@ -621,6 +628,9 @@
+ 
+ **Phase 1 — session setup:** `SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+ `SET time_zone = '+05:00';`, `SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;`.
++> Amended by 08 C-55: the shipped `.sql` files carry **only** `SET NAMES`. Time zone, `sql_mode`
++> and the isolation level are issued from PHP (02c §2.1, 06b §1.1); a `SET SESSION` line in a
++> phpMyAdmin paste is meaningless and confuses the reader.
+ 
+ **Phase 2 — create tables, in dependency order** (numbered; the numbers are referenced by
+ the teardown order below):
+@@ -655,3 +665,9 @@
+ Teardown, if the client ever needs a clean re-import, is the exact reverse of Phase 2
+ (18 → 1). `db/seed.sql` ships the `DROP TABLE IF EXISTS` statements in that reverse order
+ at the top of the file for the same reason.
++> Superseded by 08-decisions-register.md §2.4 — C-55: **no shipped `.sql` file contains a `DROP`.**
++> `db/schema.sql` is `CREATE TABLE IF NOT EXISTS` only and `db/seed.sql` is `INSERT IGNORE` keyed on
++> the sample slugs, SKUs and coupon codes, so re-importing either file six months in is a no-op
++> that cannot touch `orders`, `order_items`, `payment_proofs` or `coupon_redemptions`. The
++> teardown order above is documentation for the "drop the database by hand in phpMyAdmin"
++> instruction in 02c §7.2; it is not a file the owner can accidentally run.
+diff -ru -x P plan-snapshot-before-integrate/02a-architecture-tree.md plan/02a-architecture-tree.md
+--- plan-snapshot-before-integrate/02a-architecture-tree.md	2026-09-25 16:46:25
++++ plan/02a-architecture-tree.md	2026-09-25 17:12:14
+@@ -51,7 +51,9 @@
+ │                              written for a non-developer.
+ ├── install.php                One-time installer: checks PHP version and extensions,
+ │                              creates tables, seeds data, creates the admin account,
+-│                              writes config.php, then prints "DELETE THIS FILE".
++│                              writes config.php, then deletes itself (08 C-47).
++├── cron.php                   OPTIONAL accelerator for the email outbox (06b §5.2, 08 C-56).
++│                              CLI or ?key=; the site never depends on it.
+ ├── .htaccess                  Root rewrite rules: HTTPS, www→apex, trailing-slash strip,
+ │                              asset pass-through, everything else → index.php.
+ ├── robots.txt                 Static. Disallows /admin, /api, /cart, /checkout, /order.
+@@ -163,17 +165,19 @@
+ │
+ ├── admin/                     Admin area. Its own front controller, its own layout.
+ │   ├── index.php              Admin front controller. Auth gate, then dispatch (§3.7).
+-│   ├── .htaccess              Rewrites everything under /admin to admin/index.php.
+-│   ├── controllers/
++│   ├── .htaccess              Headers only (X-Robots-Tag, no-store). NO RewriteEngine line —
++│   │                          /admin is routed by the root file, rule 3.6a (08 C-54).
++│   ├── controllers/           (own deny .htaccess + index.php stub; 08 C-54)
+ │   │   ├── login.php  dashboard.php  products.php  product-edit.php
+ │   │   ├── collections.php  orders.php  order-detail.php  coupons.php
+ │   │   ├── reviews.php  messages.php  subscribers.php  pages.php
+ │   │   ├── settings.php  account.php  export.php  invoice.php  logout.php
+-│   ├── views/                 Mirrors controllers one-to-one, plus layout.php and login.php.
++│   ├── views/                 Mirrors controllers one-to-one, plus layout.php and login.php. (denied, C-54)
+ │   └── partials/              admin-header.php, admin-sidebar.php, table-toolbar.php,
+-│                              status-badge.php, pager.php, image-uploader.php.
++│                              status-badge.php, pager.php, image-uploader.php. (denied, C-54)
+ │
+ ├── assets/                    Public, cacheable, never written to at runtime.
++│   ├── .htaccess              ErrorDocument 404 "Not found" + cache headers (08 C-54).
+ │   ├── css/
+ │   │   └── site.css           THE stylesheet. Tokens, layout, components, admin, print.
+ │   ├── js/
+@@ -204,13 +208,29 @@
+ │   └── .htaccess              Denied. It contains no secrets but there is no reason to serve it.
+ │
+ └── storage/                 → Runtime scratch, denied.
+-    ├── sessions/              SFSHOP + SFADMIN session files (08 C-26)
+-    └── proofs/{YYYY}/{MM}/    payment proofs, admin-streamed only (08 C-25)
+-    ├── .htaccess              Denied.
++    ├── sessions/shop/         SFSHOP session files, 3-day lifetime (08 C-26, C-53)
++    ├── sessions/admin/        SFADMIN session files, 12 h lifetime (08 C-53)
++    ├── proofs/{YYYY}/{MM}/    payment proofs, admin-streamed only (08 C-25)
++    ├── .htaccess              Denied, with a <FilesMatch "."> fallback (08 C-74).
++    ├── .installed             Install lock (08 C-47). MAINTENANCE flag file lives here too (C-70).
+     ├── logs/                  app-YYYY-MM.log — the only place errors are written in prod.
+-    └── cache/                 sitemap cache, settings cache, rate-limit counters.
++    └── cache/                 sitemap cache, settings.json (08 C-70).
+ ```
+ 
++`app/tools/reset-password.php` (denied tree, 05a §2.8, 08 C-64) replaces the old
++`admin/reset-password.php.disabled`: the owner copies it out to the root only when needed.
++
++**1.2 ZIP manifest (08 C-77).** The delivered ZIP is built with `zip -r -X` from a clean export
++(never Finder *Compress*), archive root flat (no `public_html/` wrapper), and verified by
++`unzip -l`. It **contains** every file above except `config.php`, `router.php`, `.git`,
++`.DS_Store`, `__MACOSX`, `docs/`, and the contents of `storage/logs|cache|sessions|proofs`
++(the directories themselves ship, each with its `index.php` stub). It **must** contain, by
++count: 10 `.htaccess` files (root, `app/`, `db/`, `storage/`, `uploads/`, `assets/`,
++`admin/`, `admin/controllers/`, `admin/views/`, `admin/partials/`), `.user.ini`,
++`config.sample.php`, `install.php`, `cron.php`, five woff2 files, and the 12 sample products'
++pre-generated derivatives under `uploads/products/`. The fresh-install rehearsal in PLAN §12
++stage 6 starts from this ZIP, not from the working tree.
++
+ **Directories the web server must refuse:** `app/`, `db/`, `storage/`. Each carries its own
+ `.htaccess` with both the 2.4 and pre-2.4 directives, because Hostinger's LiteSpeed honours
+ `.htaccess` but the exact Apache generation is not something a non-developer will verify.
+@@ -225,6 +245,8 @@
+ 
+ ### 3.1 The rewrite layer
+ 
++> Superseded by 08-decisions-register.md §2.4 — C-54: **the block below is struck.** 02b §3 is the only root `.htaccess` text (its HTTPS rule carries the `SERVER_PORT` condition and `[NE]`, ships as `R=302`, and routes `/admin` with rule 3.6a). Two claims below are also wrong and corrected in 02b: `ErrorDocument 404 /index.php` *does* fire for a missing image (rule 4 only stops rewriting), so `uploads/.htaccess` and `assets/.htaccess` carry `ErrorDocument 404 "Not found"`; and rule 5's pattern belongs in the root file, not in `admin/.htaccess`, where `^admin(/.*)?$` can never match.
++
+ Root `.htaccess`, in order. Assets and uploads are matched *before* the catch-all so that a
+ missing image returns a real 404 from the server instead of rendering a full HTML 404 page
+ (which would waste a DB connection per broken image on a product grid).
+@@ -416,6 +438,7 @@
+ - A fatal in the admin cannot take the shop down, and vice versa.
+ 
+ `admin/.htaccess` rewrites `^admin(/.*)?$` to `admin/index.php`. Boot order:
++> Superseded by 08-decisions-register.md §2.4 — C-54: the rewrite is rule 3.6a of the **root** `.htaccess`. A per-directory `RewriteEngine On` in `admin/.htaccess` would replace the inherited rule set on both Apache and LiteSpeed, so `http://…/admin/login` would never be redirected to HTTPS and the password would post in clear. `admin/.htaccess` carries header lines only (05a §1).
+ 
+ 1. `require '../config.php'` then `require '../app/bootstrap.php'` — the same PDO, session,
+    settings and lib stack. Nothing is duplicated.
+@@ -434,6 +457,7 @@
+ from one `ip_hash` within 15 minutes locks that IP for 15 minutes, counted on
+ `was_success = 0` rows. The username is recorded but never used as the lock key, so an
+ attacker cannot lock the owner out by guessing their username.
++(Confirmed by 08 C-51: this paragraph wins over 05a §2.6's username hard lock; 05a's username counter becomes a progressive delay plus a known-device exemption. `ip_hash` is from `client_ip()`, C-50.)
+ 
+ ---
+ 
+@@ -530,6 +554,8 @@
+ ---
+ 
+ ## 5. Installed in a subdirectory
++
++> Superseded by 08-decisions-register.md §2.4 — C-71: **sub-folder installs are not supported in v1.** The app lives at the root of a host — `skyfragrances.com` or the root of a `*.hostingersite.com` preview — and `install.php` refuses to run when `dirname($_SERVER['SCRIPT_NAME'])` is not `/`, saying so in plain words. The `BASE_PATH` plumbing below (items 3, 4, 7–9) stays in the code at `''` so a later release can enable it; items 1, 2, 5, 6 and 10's `BASE_PATH` clause are void. Reason: `RewriteBase` only affects relative substitutions — 02b §3 rules 3.4/3.5 (`/$1`), 3.6 (`^/(uploads|assets)/`), the `ErrorDocument` paths and `admin/.htaccess` are all absolute, so a sub-folder install was five hand edits sold to the owner as one line. Staging is done on the preview host's root instead, where `site_indexable = 0` already protects the real shop.
+ 
+ A real Hostinger scenario: the client stages the site at `skyfragrances.com/shop-new/` before
+ pointing the domain, or runs it on a free `*.hostingersite.com` preview under a folder. If the
+diff -ru -x P plan-snapshot-before-integrate/02b-architecture-htaccess.md plan/02b-architecture-htaccess.md
+--- plan-snapshot-before-integrate/02b-architecture-htaccess.md	2026-09-25 16:46:25
++++ plan/02b-architecture-htaccess.md	2026-09-25 17:08:56
+@@ -119,10 +119,14 @@
+ 
+ All three are expressed as `RewriteCond`s that must *all* fail before the redirect fires (§3.2).
+ 
++**The same proxy hides the client IP.** Behind the edge layer `REMOTE_ADDR` may be the proxy, so every rate limit and every `ip_hash` audit column depends on one function, `client_ip()` in `app/lib/request.php` (02c §1, 08 C-50): trust the **rightmost** untrusted hop of `X-Forwarded-For` only when `REMOTE_ADDR` is inside the trusted-proxy CIDR list that `install.php` wrote from its own probe request (`config['trusted_proxies']`, overridable in Settings › Advanced); otherwise use `REMOTE_ADDR` and ignore the header entirely. Never read `X-Forwarded-For` unconditionally — one forged header would then bypass every limit and poison the audit trail.
++
+ ---
+ 
+ ## 3. `public_html/.htaccess` — the root file, in full
+ 
++> 08-decisions-register.md §2.4 — C-54: **this is the only root `.htaccess` text.** 02a §3.1's shorter block is struck. `/admin` is routed from this file (rule 3.6a); `admin/.htaccess` carries no `RewriteEngine` line at all (05a §1) so the HTTPS and `www` rules below apply to `/admin/*` too. C-52: the HTTPS redirect ships as `R=302` and is flipped to `R=301` by `install.php`'s Finish screen (or Settings › Advanced) once its own https self-check passes — a 301 cached against a not-yet-issued certificate is the failure §3.2 describes.
++
+ This is the only file in the project that rewrites. Order matters: canonicalisation redirects
+ (301, externally visible) must all fire **before** the internal front-controller rewrite,
+ otherwise a request is served and *then* redirected, doubling work and leaking the ugly URL.
+@@ -138,15 +142,29 @@
+ ErrorDocument 404 /index.php
+ ErrorDocument 403 /index.php
+ 
++# --- 3.0 Files that must never be served, whatever else fails (08 C-54) --------------------
++# dotfiles (.user.ini, .htaccess, .installed, .env), shipped-disabled/backup/dump/doc files,
++# the config template. Real files pass rule 3.6 otherwise.
++<FilesMatch "(^\.|\.(disabled|sql|md|log|bak|old|swp|dist|lock)$|^config.*\.php$)">
++  <IfModule mod_authz_core.c>
++    Require all denied
++  </IfModule>
++  <IfModule !mod_authz_core.c>
++    Order allow,deny
++    Deny from all
++  </IfModule>
++</FilesMatch>
++
+ <IfModule mod_rewrite.c>
+ RewriteEngine On
+ RewriteBase /
+ 
+ # --- 3.2 Force HTTPS (proxy-aware; all three conditions must fail to redirect) -------------
++# Ships as R=302. install.php rewrites this line to R=301 after its https self-check (08 C-52).
+ RewriteCond %{HTTPS} !=on
+ RewriteCond %{HTTP:X-Forwarded-Proto} !=https [NC]
+ RewriteCond %{SERVER_PORT} !^443$
+-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301,NE]
++RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=302,NE]
+ 
+ # --- 3.3 Canonical host: strip www -----------------------------------------------------------
+ RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+@@ -166,11 +184,16 @@
+ RewriteCond %{REQUEST_FILENAME} -d
+ RewriteRule ^ - [L]
+ 
++# --- 3.6a Admin front controller (routed here, not in admin/.htaccess — 08 C-54) -------------
++RewriteRule ^admin(/.*)?$ admin/index.php [L]
++
+ # --- 3.7 Front controller: everything else is a pretty URL -----------------------------------
+ RewriteRule ^ index.php [L]
+ </IfModule>
+ ```
+ 
++Three consequences of rule 3.0 and 3.6 worth stating: `cron.php` (an optional accelerator, 06b §5.2) is a real root file and is served, so it runs only when `PHP_SAPI === 'cli'` or `?key=` equals `config['cron_key']`, and does nothing but drain due outbox rows either way; `db/schema.sql` and `.user.ini` are denied by name pattern even if a subdirectory `.htaccess` is lost; and `admin/reset-password.php.disabled` no longer exists at a web path — the recovery script ships inside `app/tools/` (05a §2.8, 08 C-64).
++
+ (Static-asset caching, compression and security headers continue in the same file — §3.8–§3.10
+ and §6 below are appended verbatim to this block.)
+ 
+@@ -186,9 +209,9 @@
+ - **`AddDefaultCharset UTF-8`** — the seed copy contains em dashes and typographic quotes
+   (07-seed-seo-quality §0.3). Without a charset on the response header, a browser that ignores
+   the `<meta charset>` renders `â€"`. Cheap insurance, one line.
+-- **`ErrorDocument 404 /index.php`** — routes unmatched *filesystem* 404s (e.g. a missing image)
++- **`ErrorDocument 404 /index.php`** — routes unmatched *filesystem* 404s
+   into the front controller, which renders the branded 404 (route 41 of doc 03) and, crucially,
+-  sends a real `404` status, not a `200`. The front controller must set
++  sends a real `404` status, not a `200`. (08 C-54: a missing **image or asset** must *not* boot PHP — `uploads/.htaccess` and `assets/.htaccess` override this with the quoted-string form `ErrorDocument 404 "Not found"`, §5. Otherwise every stale `srcset` URL a crawler holds after a photo replacement costs one PHP process and one DB connection, which is the 508 §8.5 exists to prevent.) The front controller must set
+   `http_response_code(404)` itself; `ErrorDocument` pointing at a script does not preserve the
+   status automatically.
+ - **`ErrorDocument 403 /index.php`** — turns every `Require all denied` hit (§4) into the same
+@@ -205,6 +228,8 @@
+ link" as a hard ordering constraint: a 301 cached by a browser before the certificate exists
+ produces an untrusted-certificate error the owner cannot clear remotely.
+ 
++> Amended by 08-decisions-register.md §2.4 — C-52: because the go-live guide has the owner open `install.php` on the domain, possibly before hPanel has issued the certificate, the shipped rule is **`R=302`**. `install.php` Finish (and Settings › Advanced › *Make HTTPS permanent*) performs a self-check — a `curl` to `https://{host}/robots.txt` with a 5 s timeout that must return 200 with a valid certificate — and only then rewrites the line to `R=301` (temp file + rename). The guide's order is also fixed: **DNS → padlock confirmed in hPanel → upload → install** (07 Part C).
++
+ HSTS is deliberately **not** enabled at launch — see §6.3.
+ 
+ ### 3.3 `www` stripping
+@@ -234,6 +259,7 @@
+ requests — by count, ~90% of all requests — skip the rewrite engine's remaining work entirely.
+ It also guarantees that a missing image returns a plain 404 rather than being swallowed by the
+ front controller and rendered as a full HTML 404 page inside an `<img>` tag.
++> Corrected by 08-decisions-register.md §2.4 — C-54: `RewriteRule ^ - [L]` stops *rewriting*; it does not stop `ErrorDocument 404 /index.php` from firing an internal subrequest into the front controller for a missing file. The plain-404 guarantee comes from the `ErrorDocument 404 "Not found"` line in `uploads/.htaccess` and `assets/.htaccess` (§5), not from this rule.
+ 
+ ### 3.7 Front controller
+ 
+@@ -325,7 +351,7 @@
+ 
+ ### Layer 1 — the directory `.htaccess`
+ 
+-Identical file, placed in **each** of `app/`, `includes/`, `config/`, `lib/`, `db/`:
++Identical file, placed in **each** of `app/`, `includes/`, `config/`, `lib/`, `db/` — read as `app/`, `db/`, `storage/` (C-23) **plus `admin/controllers/`, `admin/views/`, `admin/partials/`** (08 C-54: those files execute directly otherwise, since rule 3.6 passes any real file). In `storage/` the last-resort `<FilesMatch>` below is `<FilesMatch ".">` (08 C-74): proofs are `<32hex>.jpg` and session files are extensionless `sess_*`, neither of which the extension list catches. `install.php` writes all of these `.htaccess` files from string literals and probes them (§7.4):
+ 
+ ```apache
+ # Sky Fragrances — deny all direct web access to this directory.
+@@ -381,6 +407,7 @@
+ 
+ Every PHP file under `app/`, `includes/`, `config/` and `lib/` begins with the same two lines.
+ This is the only layer that still works when `.htaccess` has been lost entirely.
++(08 C-54: the guard list is `app/**`, `admin/controllers/**`, `admin/views/**`, `admin/partials/**`, `db/sample-manifest.php` and `config.php`; the only files that define `SKYFR` are `index.php`, `admin/index.php`, `install.php` and `cron.php`.)
+ 
+ **The pattern.** `index.php` (and `admin/index.php`, and `install.php`) define the constant
+ before including anything:
+@@ -444,8 +471,13 @@
+ # LSAPI, which ignores php_flag/php_value entirely — the line would look like protection and
+ # provide none. Handler removal is what both LiteSpeed and Apache honour.
+ 
+-Options -Indexes -ExecCGI
++# Options -Indexes is inherited from the root file. No -ExecCGI: on Apache with a restricted
++# AllowOverride Options= list that line is "Options not allowed here" — a 500 for every image.
++# (08 C-72)
+ 
++# 0. A missing image is a plain text 404 — never the PHP front controller (08 C-54).
++ErrorDocument 404 "Not found"
++
+ # 1. Strip every handler mapping that could make a file executable.
+ #    Honoured by: Apache (mod_mime) AND LiteSpeed (its own MIME/handler layer).
+ RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .pht .phar .cgi .pl .py .shtml
+@@ -473,12 +505,16 @@
+   <IfModule mod_authz_core.c>
+     Require all granted
+   </IfModule>
+-  Header set Cache-Control "public, max-age=31536000, immutable"
+-  Header set X-Content-Type-Options "nosniff"
+-  Header set Content-Disposition "inline"
++  <IfModule mod_headers.c>
++    Header set Cache-Control "public, max-age=31536000, immutable"
++    Header set X-Content-Type-Options "nosniff"
++    Header set Content-Disposition "inline"
++  </IfModule>
+ </FilesMatch>
+ ```
+ 
++> 08-decisions-register.md §2.4 — C-72: **this text is the single canonical `uploads/.htaccess`** and is the literal embedded in `install.php` (§7.4). The variants printed in 02c §5.4 and 07 B.3.5 are struck. `assets/.htaccess` ships too, containing only `ErrorDocument 404 "Not found"` and the §3.8 cache headers inside `<IfModule mod_headers.c>`.
++
+ ### 5.1 Which server honours which directive — the point of the redundancy
+ 
+ | Rule | Apache | LiteSpeed (Hostinger) | Comment |
+@@ -488,7 +524,7 @@
+ | `AddType text/plain .php` | Honoured | Honoured | Re-maps the extension to an inert type. Load-bearing on LiteSpeed. |
+ | `<FilesMatch> Require all denied` | Honoured (2.4) | Honoured | Independent of MIME handling entirely; works even if a handler survives. |
+ | `SetHandler none` | Honoured | **Unreliable** — LiteSpeed may fall back to the inherited handler | Not used; `RemoveHandler` + `AddType` covers it portably. |
+-| `Options -ExecCGI` | Honoured | Honoured | Covers `.cgi`/`.pl` in the unlikely event `suexec` is enabled. |
++| `Options -ExecCGI` | Honoured **only if `ExecCGI` is in the host's `AllowOverride Options=` list; otherwise a 500** | Honoured | **Not used** (C-72). `.cgi`/`.pl` are already covered by rules 1–3. |
+ 
+ Rules 1, 2 and 3 are three independent mechanisms. A crafted upload has to defeat all three.
+ `.htaccess` itself is in the rule-3 deny list so an attacker who does get a write primitive
+@@ -523,6 +559,8 @@
+ 
+ ## 6. Security headers — exact values
+ 
++> Superseded by 08-decisions-register.md §2.4 — C-60: **one owner per header.** PHP sends `Content-Security-Policy`, `Referrer-Policy`, `Permissions-Policy` and `X-Frame-Options` on every HTML response (07 B.3.6 is the canonical policy); the root `.htaccess` sends only `X-Content-Type-Options`, `Cross-Origin-Resource-Policy` and the `X-Powered-By` unsets, and only inside a `<FilesMatch "\.(css|js|woff2|svg|png|jpe?g|webp|ico|txt|xml)$">` block for static responses. Two CSP headers on one response are enforced as their intersection, so a later change in PHP would be silently ignored. The policy below is void; the canonical one is `default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'sha256-{hash}'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; frame-src 'none'; upgrade-insecure-requests` where `{hash}` is the SHA-256 of the one constant 3-line `html.js` bootstrap in 04b Part 5, computed once by hand and stored as a PHP constant — no nonce, no build step. JSON-LD `<script type="application/ld+json">` is not executed and is not governed by `script-src`; cart-count hydration reads a `data-cart-count` attribute from `cart.js`. No Google Fonts hosts: fonts are self-hosted (C-32). No HSTS from PHP (Q-23).
++
+ Appended to the root `.htaccess`. `always` is used throughout so the headers are also present on
+ error responses (a 404 or 500 without CSP is still a page an attacker can try to use).
+ 
+@@ -564,6 +602,8 @@
+ | `object-src` / `base-uri` | `'none'` / `'self'` | Kills plugin embeds and `<base>`-tag hijacking of every relative URL on the page. |
+ | `upgrade-insecure-requests` | — | Any stray `http://` asset URL in seed content is fetched over TLS instead of producing a mixed-content warning. |
+ 
++> The `'unsafe-inline'` argument above is void under C-60: the only inline script is the constant `html.js` snippet, allowed by hash, so an escaping slip in a view (the content-page HTML sink, C-62; a review; a setting) does **not** execute. The 03 §1.2 JSON-LD blocks need no allowance.
++
+ **Honest summary of the residual risk:** this policy does not stop an XSS that manages to inject
+ inline script. It stops external script loading, `eval`, form hijacking, framing, base-tag
+ hijacking and plugin objects. The actual defence against injected inline script is output
+@@ -574,7 +614,8 @@
+ 
+ LiteSpeed's LSAPI adds `X-Powered-By: PHP/8.2.x` unless told otherwise. `expose_php = Off` in
+ `.user.ini` (§8.2) is the real fix; the two `Header unset` lines catch the case where the ini is
+-not applied. Both spellings are present because `Header unset` and `Header always unset` operate
++not applied.
++> Corrected by 08-decisions-register.md §2.4 — C-46: `expose_php` is `PHP_INI_ONLY` and **cannot** be set from `.user.ini`; the line is removed. The two `Header unset` lines plus `header_remove('X-Powered-By')` in `bootstrap.php` are the whole fix. Both spellings are present because `Header unset` and `Header always unset` operate
+ on different response tables.
+ 
+ ### 6.3 HSTS is off at launch, on after two weeks
+@@ -610,13 +651,15 @@
+ 2. **`__MACOSX/` and `.DS_Store` extracted alongside.** Harmless but must be deleted; they
+    confirm the ZIP was built on macOS and therefore that dotfile handling needs checking.
+ 
++**How the ZIP is built** (08 C-77, manifest owned by 02a §1.2): never with Finder *Compress*. From a clean export of the repository: `zip -r -X skyfragrances.zip . -x 'router.php' '.git/*' '.DS_Store' '__MACOSX/*' 'config.php' 'docs/*' 'storage/logs/*' 'storage/cache/*' 'storage/sessions/*' 'storage/proofs/*'`, run from inside the tree so the archive root is **flat** (no `public_html/` wrapper — hPanel Extract merges, and a wrapper yields `public_html/public_html/`). Verified before delivery by `unzip -l skyfragrances.zip | grep -c htaccess` returning **7** (root, `app/`, `db/`, `storage/`, `uploads/`, `assets/`, `admin/`) plus `admin/controllers/`, `admin/views/`, `admin/partials/` (10 in total), `.user.ini` present, `config.php` absent, the `storage/` tree present with its `index.php` stubs and empty `logs/ cache/ sessions/shop/ sessions/admin/ proofs/` directories. `install.php` re-creates every one of these directories and `.htaccess` files anyway (§7.4), so a dropped dotfile is repaired, not merely detected.
++
+ ### 7.2 Target permissions
+ 
+ | Path | Mode | Notes |
+ |---|---|---|
+ | All directories | `0755` | Never `0777`. On shared hosting PHP runs as the owning user, so `0755` is already writable by PHP. `0777` adds nothing and is flagged by scanners. |
+ | All `.php`, `.css`, `.js`, `.sql`, `.md` | `0644` | Read for the server, write for the owner. |
+-| `config/config.php` | `0600` | Contains the DB password. `0600` is readable by the owning user, which is the PHP process — so the app still works, while any other tenant is excluded even if directory traversal between accounts were possible. File Manager can set this via Permissions → uncheck Group/World. |
++| `config/config.php` | `0600` | Contains the DB password. `0600` is readable by the owning user, which is the PHP process — so the app still works, while any other tenant is excluded even if directory traversal between accounts were possible. File Manager can set this via Permissions → uncheck Group/World. (08 C-70: root `config.php`; `install.php` sets **`0400`** after writing it — read-only even to the app. Nothing in the panel ever rewrites `config.php`: maintenance mode is a settings key, and the one post-install edit — `R=302` → `R=301` — touches `.htaccess`, not config.) |
+ | `uploads/` and every subdirectory | `0755` | Writable by PHP because PHP is the owner. |
+ | Files written into `uploads/` by GD | `0644` | Set explicitly with `chmod()` after `imagewebp()`; the default from a script can be `0600`, which the *web server* can still read on this stack but which breaks if the host ever separates the two users. |
+ | `install.php` | `0644`, then **deleted** | §7.4. |
+@@ -635,16 +678,18 @@
+ `mkdir($path, 0755, true)` succeeds because the parent `public_html` is owned by the PHP user.
+ `install.php` therefore creates `uploads/products`, `uploads/collections`, `uploads/settings`
+ and `uploads/proofs`, and — this is the part that matters — **writes `uploads/.htaccess` itself**
+-from a string literal in its own source. That removes the dependency on the ZIP preserving a
++from a string literal in its own source. (08 C-47 / C-54: it does the same for `storage/.htaccess` (with the `<FilesMatch ".">` fallback), `app/.htaccess`, `db/.htaccess`, `assets/.htaccess` and the three `admin/*/.htaccess` files, and creates `storage/{logs,cache,sessions/shop,sessions/admin,proofs}` with their `index.php` stubs. The embedded `uploads/.htaccess` literal is exactly the §5 text; `uploads/proofs` is not created — proofs live in `storage/proofs/` (C-25).) That removes the dependency on the ZIP preserving a
+ dotfile for the single most security-critical `.htaccess` in the project. It then verifies its
+ own work by writing `uploads/.probe.php` containing `<?php echo 'EXEC';`, fetching it over HTTP
+ through the site's own URL, asserting the response body is **not** `EXEC`, and deleting it. The
+ install report shows a green or red line for that test, in words a non-developer understands:
+ "Uploads folder cannot run programs — PASS".
+ 
++> Amended by 08-decisions-register.md §2.4 — C-47: every self-fetch probe is **advisory, never a blocker** — it runs `curl` with a 5 s timeout, `FOLLOWLOCATION` off, and treats a 301/302 to `https://` as a pass; when it cannot reach its own host (DNS not yet pointed, preview host, certificate pending, outbound rate-limit) the line reads *"Could not verify — open https://…/uploads/.probe.php on your phone; it must NOT show the word EXEC"*. Two more probes: `GET /db/schema.sql` and `GET /storage/.htaccess` must not return 200 with a body. The client-IP probe (C-50) records the `REMOTE_ADDR` the server saw for the installer's own request as the trusted-proxy hint and shows *"Client IP detection — PASS / WARN"*.
++
+ `install.php` must delete itself on success (`unlink(__FILE__)`) and, if that fails, print an
+ unmissable red instruction to delete it via File Manager. It is the only file on the server that
+-can create an admin account.
++can create an admin account. (08 C-47: exactly this order — `unlink` first, the 02c §7.2 red panel only if it fails; the lock file is `storage/.installed` only, never `db/.installed`.)
+ 
+ ---
+ 
+@@ -676,12 +721,12 @@
+ 
+ ```ini
+ ; public_html/.user.ini  — LSAPI reads this; .htaccess php_value does NOT work here.
+-expose_php = Off
++; (expose_php is PHP_INI_ONLY and cannot be set here — removed, 08 C-46)
+ display_errors = Off
+ display_startup_errors = Off
+ log_errors = On
+ error_reporting = E_ALL & ~E_DEPRECATED & ~E_NOTICE
+-upload_max_filesize = 8M
++upload_max_filesize = 10M
+ post_max_size = 12M
+ max_execution_time = 60
+ memory_limit = 256M
+@@ -693,6 +738,8 @@
+ session.use_strict_mode = 1
+ ```
+ 
++(`Lax` is the storefront default; the admin panel overrides it to `Strict` with `session_set_cookie_params()` before `session_start()`, 05a §2.3 — PHP code wins over `.user.ini` for that call. `memory_limit = 256M` is a request, not a promise: the pool's `php_admin_value` may clamp it lower, so the installer's requirements screen prints `ini_get('memory_limit')` and the image pixel budget derived from it (§8.3). `.user.ini` is cached for 300 s, so the first minutes after upload run on pool defaults — the guide says to wait five minutes before opening `install.php`.)
++
+ `.user.ini` is itself served as plain text if requested, so the root `.htaccess` adds:
+ 
+ ```apache
+@@ -710,31 +757,35 @@
+ ### 8.3 Staying inside the upload limits
+ 
+ - The checkout payment-screenshot field and the admin image uploader both declare
+-  `MAX_FILE_SIZE` and enforce **5 MB** server-side, well under the 8 MB ini value. The gap is
++  `MAX_FILE_SIZE` and enforce **5 MB** server-side, well under the 8 MB ini value.
++  > 08-decisions-register.md §2.4 — C-46 fixes the numbers once: app caps **5 MB** per customer proof and **6 MB** per admin image; `.user.ini` `upload_max_filesize = 10M`, `post_max_size = 12M`; **one image per request** everywhere (05a §4.3's per-file XHR is the one uploader contract; the non-JS fallback is a single-file form) so a POST can never exceed `post_max_size`. Before reading `$_FILES`, the handler compares `$_SERVER['CONTENT_LENGTH']` with `ini_get('post_max_size')` and returns the real *"That file is too large (max 6 MB)"* message instead of an empty `$_FILES` and a 419. The gap is
+   deliberate: a POST that exceeds `post_max_size` arrives with `$_POST` and `$_FILES` **empty
+   and no error**, which looks to the user like the form silently failing. Enforcing below the
+   ini limit means we always get a real `UPLOAD_ERR_*` code to show a message for.
+ - Admin multi-upload is capped at 8 files per submission (under `max_file_uploads = 20`) and
+   each is processed and freed (`imagedestroy()`) before the next is opened, so peak memory is
+-  one image, not eight. A 4000×5000 JPEG costs roughly 4000 × 5000 × 4 bytes ≈ 80 MB in GD —
++  one image, not eight. (Void under C-46: one file per request.) A 4000×5000 JPEG costs roughly 4000 × 5000 × 4 bytes ≈ 80 MB in GD —
+   comfortably inside 256 MB for one image, catastrophic for eight held simultaneously.
+ - Before any `imagecreatefrom*()` call, `getimagesize()` is used to reject images whose pixel
+   count would exceed the memory budget, returning "this image is too large, please resize it"
+   rather than a fatal memory exhaustion with a white screen.
++  > 08 C-46: the budget is computed at runtime, not assumed — `max_pixels = (memory_limit_bytes − 48 MB) / 5` (one truecolor source at 4 bytes/px plus the resize buffer), edge cap **10,000 px**, so a 256M pool accepts ~43 MP and an 8000×6000 phone frame passes. The rejection copy is phone-actionable: *"This photo is too large for the server to process. Choose 'Medium' or 'Large' when sharing it from your gallery, or take it at a lower resolution."*
+ 
+ ### 8.4 Staying inside execution time, and not needing disabled functions
+ 
+ - No image processing happens in a page request other than an admin upload. Derivatives
+   (400/600/900w WebP + JPEG fallback, doc 03 §1.3) are generated once at upload, never on view.
++  (08 C-45: the set is **400/600/900/1400** px. Admin *Regenerate all derivatives* and the install seed are batched by `?offset=` with a self-redirect after ~20 s of work, C-73; the seed prefers the pre-generated files shipped under `uploads/products/` (07 A.2) and only encodes when they are missing.)
+ - `install.php` does the most work in one request: DDL for ~14 tables, ~200 seed rows, and image
+   derivative generation for 12 sample products. It runs in stages driven by
+   `?step=1..5`, each step well under 60 seconds and each idempotent, so a timeout is recoverable
+   by reloading rather than by dropping the database.
+ - Sitemap generation (`/sitemap.xml`, route 39) queries and streams output directly; with a
+   catalogue in the low hundreds it is a sub-second query, so no cron and no cached file.
++  (Superseded by 07 B.1.7 / 08 §1.3: a 1-hour file cache in `storage/cache/` exists.)
+ - Email is sent with vendored **PHPMailer over SMTP** to Hostinger's mail host, not `mail()`,
+   and not `curl` to an external API — no disabled function, no `allow_url_fopen` dependency.
+-  SMTP timeout is set to 10s so a mail-server hiccup cannot consume the request budget; order
++  SMTP timeout is set to 10s (08 C-56: **5 s**, the one value in the codebase) so a mail-server hiccup cannot consume the request budget; order
+   confirmation is written to the DB and shown to the customer *before* the mail attempt, so a
+   failed email never loses an order.
+ - Nothing in the codebase calls `exec`, `shell_exec`, `system`, `passthru`, `proc_open`,
+@@ -767,10 +818,14 @@
+ 7. `https://skyfragrances.com/uploads/` → [403/404, no file listing]
+ 8. `https://skyfragrances.com/app/controllers/checkout.php` → [empty or 404, no output, no error text]
+ 9. `https://skyfragrances.com/.user.ini` and `/db/schema.sql` → [403/404]
++9a. `http://skyfragrances.com/admin/login` → [redirects to `https://…/admin/login`; the login form is never shown over plain HTTP] (08 C-54)
++9b. `https://skyfragrances.com/storage/.htaccess`, `/storage/sessions/shop/`, `/admin/controllers/orders.php` → [403/404, no source, no listing]
++9c. `https://skyfragrances.com/uploads/products/1/does-not-exist.webp` → [plain "Not found" text, 404 status — not the branded HTML page] (08 C-54)
+ 10. `https://skyfragrances.com/this-page-does-not-exist` → [branded 404 **with HTTP status 404**, verified in devtools or via an online status checker]
+ 11. Install report line "Uploads folder cannot run programs" → [PASS]
+ 12. `install.php` → [404; the file is gone]
+-13. Any product page, fonts rendering as serif Cormorant headings → [confirms `style-src`/`font-src` are right; Times New Roman means the CSP or the Google Fonts link is wrong]
++13. Any product page, fonts rendering as serif Cormorant headings → [confirms `font-src 'self'` and the self-hosted woff2 paths are right; Times New Roman means a font file is missing or the CSP `font-src` was edited — there is no Google Fonts link (C-32)]
++13a. Browser devtools → Network → the HTML response carries exactly **one** `Content-Security-Policy` header (from PHP) and the console shows zero CSP violations on home, product, cart and checkout (08 C-60; 07 B.4.9)
+ 14. Add to cart from a product card → [drawer opens; a browser-console CSP violation here means an inline script was blocked — do not "fix" it by widening the policy without reading §6.1]
+ 
+ ---
+diff -ru -x P plan-snapshot-before-integrate/02c-architecture-runtime.md plan/02c-architecture-runtime.md
+--- plan-snapshot-before-integrate/02c-architecture-runtime.md	2026-09-25 16:46:25
++++ plan/02c-architecture-runtime.md	2026-09-25 17:10:59
+@@ -97,6 +97,11 @@
+ session_start();
+ ```
+ 
++> Amended by 08-decisions-register.md §2.4 — C-53. Three changes to the block above:
++> 1. **Two save paths.** `session_save_path(APP_ROOT . '/storage/sessions/shop')` here and `.../storage/sessions/admin` in `admin/index.php` (05a §2.3). PHP's file handler garbage-collects the whole save path with the *current* request's `gc_maxlifetime`, so one shared directory with a 12 h admin lifetime would silently trim the 3-day cart to 12 h. `install.php` creates both directories with `index.php` stubs.
++> 2. **GC actually runs.** `ini_set('session.gc_probability', '1'); ini_set('session.gc_divisor', '100')` in both bootstraps — Hostinger's own sweeper never touches a custom path, and every crawler hit would otherwise leave a file against the inode quota. Session files past their lifetime are also removed by the opportunistic purge (C-56).
++> 3. **Lazy storefront session.** `session_start()` runs only when an `SFSHOP` cookie is present, or the request is a `POST`, or the path is `/api/cart/*`, `/checkout` or `/track`. A first-time GET of a product page by a crawler creates no session file and no cookie; the first *Add to cart* does. `csrf_token()` starts the session on demand for forms rendered on cookie-less pages.
++
+ Regeneration rules (the only three places `session_regenerate_id(true)` is called):
+ 
+ 1. Immediately after a successful admin login.
+@@ -108,6 +113,8 @@
+ carries session data forward; `true` deletes only the old file). Logout uses
+ `session_unset()` + `session_destroy()` + an expired cookie, in that order.
+ 
++**Step 3a — client IP (08 C-50).** `client_ip(): string` in `app/lib/request.php` is the only source of the visitor's address for every rate limit and every `ip_hash` column: if `REMOTE_ADDR` is inside one of the CIDRs in `config['trusted_proxies']` (written by `install.php` from the `REMOTE_ADDR` it saw on its own requests, editable in Settings › Advanced as `trusted_proxies`), return the **rightmost** `X-Forwarded-For` entry that is not itself a trusted proxy; otherwise return `REMOTE_ADDR` and ignore the header. `ip_hash = hash('sha256', client_ip() . config['security']['app_key'])`. An empty proxy list means "trust nobody" — with Hostinger's edge in front, that collapses every visitor into one bucket, which is why the installer's Step 1 shows a *Client IP detection — PASS / WARN* row and 07 B.4.1 tests it on the live host.
++
+ **Step 4 — timezone and encoding.** `date_default_timezone_set('Asia/Karachi')` — set in PHP,
+ never relied upon from `php.ini`, because Hostinger defaults to UTC *(assumption)* and every
+ order timestamp, coupon `expires_at` comparison and "24 Sep 2026" render depends on it.
+@@ -129,8 +136,9 @@
+ `var_export`ed PHP array in `/storage/cache/settings.php` and invalidated by the admin on every
+ settings write (delete the file). If the cache file exists and is newer than 300 seconds it is
+ `include`d and the query is skipped entirely — this removes one query from every page.
++> Superseded by 08-decisions-register.md §2.4 — C-70: the cache is **`/storage/cache/settings.json`**, read with `file_get_contents` + `json_decode`, never `include`d. lsphp's OPcache keeps serving the old opcodes of a rewritten `.php` file for up to its revalidate window, so an `include`d cache made "the announcement bar I just changed" stay old for a minute. Runtime-written state is never PHP source.
+ 
+-**Step 8 — maintenance gate.** §8.2.
++**Step 8 — maintenance gate.** §8.2 (08 C-70: reads `settings.maintenance_mode` from the step-7 cache, or the presence of the flag file `storage/MAINTENANCE` — never `config.php`).
+ 
+ **Step 9 — CSRF token ensure.** §4.
+ 
+@@ -162,6 +170,8 @@
+ ]);
+ ```
+ 
++Immediately after connecting, two session statements run in this order (08 C-55): `SET time_zone = '+05:00'` (01c §4.2) and `SET SESSION sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'`. The second is what makes C-03's `INT UNSIGNED` a loud failure: without strict mode a MariaDB image shipped with a permissive `sql_mode` clamps `stock - 5` on `3` to `0` with a warning instead of raising 1264. The app owns its `sql_mode`; it never depends on the host's `my.cnf`. `SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED` (06b §1.1) is likewise issued from PHP at checkout, never from a `.sql` file.
++
+ `ATTR_EMULATE_PREPARES => false` is the load-bearing one: it makes `LIMIT :n` bind as an
+ integer and makes injection through a bound parameter structurally impossible. `charset=utf8mb4`
+ in the DSN is the third leg of the encoding discipline in `07` §0.3. On connect failure the
+@@ -320,7 +330,7 @@
+ | HTML text, quoted attribute | `e($v)` | the default |
+ | URL path segment / query value | `eu($v)` = `rawurlencode` | then `e()` if it lands in an attribute |
+ | Inside `<script>` (JSON-LD, JS config) | `ejs($v)` = `json_encode` with `JSON_HEX_TAG\|JSON_HEX_AMP\|JSON_HEX_APOS\|JSON_HEX_QUOT\|JSON_UNESCAPED_UNICODE\|JSON_UNESCAPED_SLASHES` | prevents `</script>` breakout |
+-| Admin rich text (product description) | `sanitize_html($v)` | allowlist of `p, br, strong, em, ul, ol, li, a[href]`, `a` forced to `rel="nofollow noopener"`; everything else stripped. This is the **only** place unescaped markup reaches the page, and only from an authenticated admin. |
++| Admin rich text (product description) | `sanitize_html($v)` | allowlist of `p, br, strong, em, ul, ol, li, a[href]`, `a` forced to `rel="nofollow noopener"`; everything else stripped. This is the **only** place unescaped markup reaches the page, and only from an authenticated admin. (08 C-62: the product description is **plain text** (05a §4.3) and is `e()`d. The one HTML sink is `content_pages.body`, and `sanitize_html()` is defined as: `DOMDocument::loadHTML` on a UTF-8-declared fragment; walk the tree and unwrap every element not in `p, br, strong, em, b, i, ul, ol, li, a, h2, h3, blockquote`; strip **every** attribute except `href` on `a`; keep `href` only when `parse_url` gives scheme `http`/`https`/`mailto` or a site-relative path starting with `/` and not `//`; force `rel="nofollow noopener"`; `saveHTML()` the body children. `strip_tags()` is never used — it keeps `onmouseover` and `javascript:` attributes. Applied on **save and on render**, so a row written by any other path is still safe.) |
+ | CSS value | never interpolated | no user input reaches CSS |
+ 
+ Enforcement: a `grep -n '<?= *\$' app/views` in the pre-launch checklist must return nothing —
+@@ -422,7 +432,8 @@
+ the header or a `_csrf` body field, so a form degrading to a normal POST without JS still works.
+ The API also requires `Content-Type: application/json` **and** rejects requests whose `Origin`
+ header is present and is not the site origin — belt and braces, since a cross-origin form post
+-cannot set a custom header but can set `Content-Type` in a few legacy shapes. Cart endpoints are
++cannot set a custom header but can set `Content-Type` in a few legacy shapes.
++> Amended by 08-decisions-register.md §2.4 — C-49: "the site origin" is the **request's own origin** — `request_origin()` = scheme (from the 02b §2.3 three-signal HTTPS detection) + `://` + `$_SERVER['HTTP_HOST']` (lower-cased, port stripped) — **never `config['base_url']`**. The same rule applies to the admin POST check in 05a §2.5. `base_url` is written once at install and is wrong on the preview host, before the DNS switch, or after an http→https change; comparing against it killed the cart drawer and 419'd every admin form in every realistic go-live order. `base_url` is used only for canonical/OG/sitemap/email links, is editable on Settings › Advanced, and the dashboard shows *"You opened the panel at https://X but the site address is set to Y"* whenever the two differ. Cart endpoints are
+ POST-only; `GET /api/cart` is read-only and therefore exempt from the token but still returns
+ `Cache-Control: no-store`.
+ 
+@@ -439,6 +450,7 @@
+ 1. `$_FILES[...]['error'] === UPLOAD_ERR_OK` and `is_uploaded_file()`.
+ 2. Size ≤ **8 MB** per file, ≤ 10 files per request. Checked against the actual byte count, and
+    the form also carries `MAX_FILE_SIZE` purely as a client courtesy.
++   > Superseded by 08-decisions-register.md §2.4 — C-46: **6 MB** per admin image, **5 MB** per customer proof, **one file per request** (05a §4.3 is the uploader contract; the non-JS fallback is a single-file form). `CONTENT_LENGTH` is compared with `ini_get('post_max_size')` before `$_FILES` is read.
+ 3. `finfo_file(finfo_open(FILEINFO_MIME_TYPE), $tmp)` ∈ `{image/jpeg, image/png, image/webp}`.
+ 4. `getimagesize($tmp)` returns a truthy array whose `[2]` ∈
+    `{IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP}` **and whose type agrees with the finfo
+@@ -446,6 +458,7 @@
+ 5. Dimensions: `50 ≤ w,h ≤ 8000`, and `w*h ≤ 40_000_000` — the decompression-bomb guard, checked
+    *before* any `imagecreatefrom*` call, because GD allocates `w*h*4` bytes and a 30k×30k PNG
+    would exhaust the shared-hosting memory limit and take the site down with a fatal.
++   > Amended by 08-decisions-register.md §2.4 — C-46: edge cap **10,000 px** (an 8000×6000 phone frame is the normal case, not an attack), and the pixel cap is computed at runtime: `max_pixels = (ini_bytes('memory_limit') − 48·2^20) / 5`. The installer's requirements screen prints the effective `memory_limit` and the resulting megapixel budget. Rejection copy: *"This photo is too large for the server to process. Choose 'Medium' or 'Large' when sharing from your gallery."*
+ 
+ The original upload is **never** stored or served. It is decoded into a GD resource and every
+ delivered file is re-encoded from that resource. This is the EXIF strip: GD's encoders write no
+@@ -467,6 +480,8 @@
+ | `zoom` | 1400 × 1750 | 4:5 | PDP main image and its zoom | 84 | 82 |
+ | `og` | 1200 × 630 | 1.91:1 | `og:image`, primary image only | 85 | — (JPEG only; crawlers) |
+ 
++> Superseded by 08-decisions-register.md §2.4 — C-45: the product derivative set is **400 / 600 / 900 / 1400 px wide** (4:5, so 400×500, 600×750, 900×1125, 1400×1750), named `w400`, `w600`, `w900`, `w1400`, each as WebP + JPEG, plus `og` (1200×630, JPEG) for the primary image — nine files per accepted upload. `srcset` lists all four widths; `w1400` is the zoom/LCP source and the regeneration source. The 200 px `thumb` is struck (admin lists and the drawer use `w400`). Collection images get **one ratio, 3:4** (`w600` 600×800 and `w1400` 1400×1867), reused under a scrim on the collection hero; 05a §4.4's 16:9 is struck (F-15).
++
+ Resizing is cover-crop to the target ratio then `imagescale($img, $w, $h, IMG_BICUBIC_FIXED)`;
+ an upload smaller than a target is **not** upscaled — that size simply reuses the next one down
+ and the `srcset` omits the missing width. `imageinterlace($img, true)` on JPEG so a slow Pakistani
+@@ -483,7 +498,7 @@
+ - WebP unavailable → only JPEG is written, and `partials/product-card.php` omits the `<source>`
+   element entirely. Nothing 404s, no broken image, the page is simply a little heavier.
+ - The check is per-server, so a site that starts on a WebP-less host and is later migrated can
+-  backfill by running the admin "Regenerate all image derivatives" job, which walks
++  backfill by running the admin "Regenerate all image derivatives" job (08 C-73: batched — it processes rows from `?offset=` for ~20 s of wall-clock, then self-redirects to the next offset with a progress line, so it never meets `max_execution_time`; `install.php` Step 4 seeds images the same way), which walks
+   `product_images` and re-derives from… nothing, because originals are not kept. **Accepted
+   trade-off, stated explicitly:** regeneration re-derives from the largest surviving derivative
+   (`zoom`), which is lossy-from-lossy but visually acceptable at these sizes. Keeping originals
+@@ -510,7 +525,7 @@
+ └── .htaccess
+ ```
+ 
+-`/uploads/.htaccess` disables execution rather than trusting the filename:
++`/uploads/.htaccess` disables execution rather than trusting the filename (08 C-72: the block below is **void** — 02b §5 is the single canonical text and the literal `install.php` embeds):
+ 
+ ```apache
+ # (php_flag engine off removed — LiteSpeed ignores it and some Apache builds 500; 08 C-37. See 02b §5.)
+@@ -566,7 +581,7 @@
+ `Require all denied` + `Deny from all`. Transport settings: `isSMTP()`, `SMTPAuth = true`,
+ host/port/user/pass from `config.php`, `SMTPSecure = 'tls'` on 587 (Hostinger's documented
+ submission port *(assumption — verify in hPanel at deploy time)*), `CharSet = 'UTF-8'`,
+-`Encoding = 'base64'`, `Timeout = 15`. `From` is forced to the SMTP username regardless of what a
++`Encoding = 'base64'`, `Timeout = 15` (08 C-56: **`Timeout = 5`** — the one SMTP timeout in the codebase). `From` is forced to the SMTP username regardless of what a
+ template asks for, with `addReplyTo()` carrying the customer address — a mismatched `From` is the
+ same DMARC failure by another route.
+ 
+@@ -583,7 +598,7 @@
+ | `order-confirmation` | customer | order placed | order number, line items with size and price, subtotal/discount/shipping/total, payment method and (if manual) the bank/JazzCash/Easypaisa details to pay into, delivery address, track link `/track`, WhatsApp number |
+ | `order-admin-alert` | `settings.admin_email` | order placed | order number, total, payment method, customer name + phone as a `tel:` link, items, direct link to `/admin/orders/{id}` |
+ | `order-status` | customer | admin changes status | new status, human sentence per status, courier + tracking number when `shipped`, track link. Not sent for `pending`→`confirmed` if the admin unticks "notify customer" |
+-| `contact-autoreply` | sender | contact form saved | acknowledgement, expected reply window from `settings.reply_time`, WhatsApp number. Sent **once per address per hour** (a `contact_messages` timestamp check) so a bot cannot use it as an amplifier |
++| `contact-autoreply` | sender | contact form saved | acknowledgement, expected reply window from `settings.reply_time`, WhatsApp number. Sent **once per address per hour** (a `contact_messages` timestamp check) so a bot cannot use it as an amplifier. (08 C-63: **never** the message body or any sender-supplied text beyond the subject line; only after honeypot and time-trap pass; skipped when the address has a `contact_messages` row in the last 24 h; site-wide cap 30 per hour, beyond which the row is queued and never sent.) |
+ 
+ ### 6.4 Failure — the order is never lost
+ 
+@@ -591,7 +606,7 @@
+ 
+ 1. `Db::transaction()` writes the order, items, coupon usage and stock decrement. Commit.
+ 2. Redirect target is computed. Only then is `Mailer::send()` called, inside its own
+-   `try/catch`, with a 15-second SMTP timeout.
++   `try/catch`, with a 15-second SMTP timeout (08 C-56: 5 s, and at checkout only the customer confirmation is attempted inline; the admin alert waits for the next admin page load).
+ 3. On any exception: log at error level with the order number, write a row into
+    `email_outbox(id, to_email, template, payload_json, attempts, last_error, created_at, sent_at)`,
+    and **continue**. The customer still reaches the confirmation page; the page shows the order
+@@ -603,6 +618,7 @@
+    `/cron.php?key={settings.cron_key}` every 15 minutes, which drains `email_outbox` with
+    exponential backoff, max 5 attempts. The cron is optional by design — nothing breaks without
+    it *(assumption: the client may never configure cron)*.
++   > 08 C-56 states the drain rule once: **every admin page load**, after the response is flushed, only due rows, at most 2 sends and 12 s per load, `Timeout = 5`, 6 attempts then `failed`; dashboard shows *"{n} emails waiting"* whenever queued rows exist. `cron.php` (key from `config['security']['cron_key']`, or CLI) is the optional accelerator and is in 02a's tree.
+ 
+ `email_outbox` is a new table this document introduces; it is a **cross-stream contract addition**
+    Superseded by 08-decisions-register.md §2 — C-16: the table is `email_outbox` with the 06b §0.2 DDL (this document originally called it `email_queue`).
+@@ -639,6 +655,8 @@
+ ];
+ ```
+ 
++> Amended by 08-decisions-register.md §2.4 — C-49 / C-50 / C-70: `base_url` is written by `install.php` as **`https://` + the canonical host** (`skyfragrances.com`, or the host the installer was opened on when that is not a `*.hostingersite.com` preview) regardless of the scheme the installer was opened on, and is **never** used for Origin/Referer checks (§4). It can be overridden by the `base_url` key on Settings › Advanced. `security.maintenance` and `security.maintenance_bypass` are **removed** — maintenance mode is `settings.maintenance_mode` plus the `storage/MAINTENANCE` flag file (§8.2). `'trusted_proxies' => ['…/24']` is added (C-50). After install the file is `0400` and nothing in the application writes it again.
++
+ It ships as `config.sample.php`; `install.php` writes the real one. `/.htaccess` denies direct
+ access to `config*.php` as a second line of defence behind PHP's own "a `.php` file is executed,
+ not listed" behaviour — which fails the moment PHP is misconfigured, which is exactly when you
+@@ -677,6 +695,7 @@
+ `/storage/logs`, `/storage/cache`, `/uploads`; `.htaccess` rewrites actually working (tested by
+ fetching `{base_url}/__rewrite-probe` and checking for the sentinel the router returns). Each row
+ is pass/warn/fail with a plain-English fix. Failures block Next.
++> Amended by 08-decisions-register.md §2.4 — C-47 / C-46 / C-50. Only the **local** checks (PHP version, extensions, writable directories) can block Next. Every self-fetch probe (`__rewrite-probe`, `uploads/.probe.php`, `GET /db/schema.sql`, `GET /storage/.htaccess`) is advisory: 5 s `curl`, no redirect following, a 301/302 to `https://` counts as a pass, and an unreachable host prints *"Could not verify — open this URL on your phone and confirm …"*. Step 1 also prints the effective `memory_limit` and the image megapixel budget derived from it; warns when `public_html/default.php` (Hostinger's placeholder) or a nested `public_html/public_html/` exists; shows *Client IP detection — PASS / WARN* and records `REMOTE_ADDR` into `trusted_proxies`; and creates every `storage/*` directory (incl. `sessions/shop`, `sessions/admin`) plus the `.htaccess` files for `app/`, `db/`, `storage/`, `uploads/`, `assets/` and `admin/{controllers,views,partials}/` from string literals.
+ 
+ **Step 2 — database, validated before anything is written.** The form takes host, name, user,
+ password. On submit the installer opens a PDO connection with the same options as §2.1, runs
+@@ -694,8 +713,8 @@
+ `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`, no functional defaults, no
+ `JSON_TABLE`, `TIMESTAMP` columns given explicit `DEFAULT CURRENT_TIMESTAMP` only where MariaDB
+ 10.4 allows it, all `DECIMAL(10,2)` for money. The same DDL is also shipped as `db/schema.sql` for
+-a phpMyAdmin import path. Then the admin form: email, password (≥ 12 chars, confirmed, strength
+-meter), store name, WhatsApp number. The password is stored with `password_hash($p, PASSWORD_DEFAULT)`
++a phpMyAdmin import path (08 C-55: `CREATE TABLE IF NOT EXISTS … ROW_FORMAT=DYNAMIC` only — no `CREATE DATABASE`, no `USE`, no `DROP`, no `SET SESSION`; `db/seed.sql` is `INSERT IGNORE` keyed on the sample slugs/SKUs/codes so a re-import six months later is a no-op that cannot touch orders). Then the admin form: email, password (≥ 12 chars, confirmed, strength
++meter), store name, WhatsApp number. (08 C-47 / F-10: the entered email is written into `settings.order_notify_email` **and** `contact_email` when those are blank, so the owner's "new order" alert has a recipient on day one; the SMTP credentials entered on this screen are verified by a **Send test email** button that must succeed or be explicitly skipped, and the guide requires the `@skyfragrances.com` mailbox to exist in hPanel → Emails *before* this step.) The password is stored with `password_hash($p, PASSWORD_DEFAULT)`
+ and the plaintext is never logged, never echoed back into the form, and never put in a flash.
+ 
+ **Step 4 — seed.** A checkbox, default **on**, labelled "Install 12 sample perfumes, 5 collections
+@@ -706,7 +725,7 @@
+ the storefront reads them unconditionally.
+ 
+ **Finish.** Write `install_completed_at` into `settings` and the `/storage/.installed` lock, then
+-render a page whose entire top third is one red panel:
++render a page whose entire top third is one red panel (08 C-47: first try `unlink(__FILE__)`; the panel below is shown **only if that fails**, otherwise the page says *"install.php has deleted itself"*. C-52: Finish also runs the https self-check and, on success, flips the root `.htaccess` HTTPS rule from `R=302` to `R=301`; otherwise it says *"HTTPS is not confirmed yet — Settings › Advanced › Make HTTPS permanent once the padlock shows"*. Finish sets `site_indexable = 0` when the host is not `skyfragrances.com`):
+ 
+ > **⚠ Delete `install.php` now.** Anyone who can reach
+ > `https://skyfragrances.com/install.php` while this file exists can see your server details.
+@@ -750,6 +769,7 @@
+ `config['security']['maintenance'] = true`, toggled from Admin → Settings (which rewrites
+ `config.php` through the same temp+rename as the installer) or by editing the file in File Manager
+ — both paths must work, because the reason to enable it is often that the admin panel is broken.
++> Superseded by 08-decisions-register.md §2.4 — C-70: the panel **never writes `config.php`**. Maintenance is on when `settings.maintenance_mode = '1'` (Settings › Advanced, 05a §4.9) **or** the file `storage/MAINTENANCE` exists — the File-Manager fallback for when the panel is down (create an empty file with that name; delete it to reopen). The bypass secret is `settings.maintenance_bypass` (generated at install, shown on the Advanced tab). C-76: it is entered in a small **POST form on the maintenance page itself**, never as `?bypass=` in a URL, so it never lands in access logs, browser history or a Referer header; success sets the 12-hour `sf_bypass` cookie. The settings cache is JSON (step 7), so the change is visible on the next request without an OPcache window.
+ 
+ Behaviour, at bootstrap step 8, before routing and before any DB-heavy work:
+ 
+diff -ru -x P plan-snapshot-before-integrate/03-storefront-pages.md plan/03-storefront-pages.md
+--- plan-snapshot-before-integrate/03-storefront-pages.md	2026-09-25 16:46:25
++++ plan/03-storefront-pages.md	2026-09-25 17:16:11
+@@ -76,7 +76,7 @@
+ **`PRODUCT_CARD`**
+ - Image: primary image at 4:5, `loading="lazy"` (except the first row of the first
+   grid on a page, which is `loading="eager"` + `fetchpriority="high"`), `srcset` at
+-  400/600/900w, `<picture>` with WebP source and JPEG fallback, `alt` =
++  400/600/900w (08 C-45: the generated set is **400/600/900/1400** w; cards list the first three, the PDP all four), `<picture>` with WebP source and JPEG fallback, `alt` =
+   `"{product name} — {size range} perfume by Sky Fragrances"`.
+ - Hover (pointer devices only): cross-fades to the second image over 350ms and scales
+   to 1.04. No hover effect on touch.
+@@ -249,8 +249,10 @@
+ - Data: `settings.announcement_enabled` (0/1), `announcement_text`, `announcement_link`
+   (optional; whole bar becomes a link), `announcement_bg` (hex, default `#D4B084`),
+   `announcement_fg` (hex, default `#0A0A0A`).
++  > Superseded by 08 Q-15 / §2.4 (F-14): there are **no `announcement_bg` / `announcement_fg` keys** — gold-on-black is a design token (04a). Only the three keys in 05a §4.9 exist ("all six fields" below reads as three).
+ - Dismissible: an × on the right sets `localStorage.sf_ann_v` to a hash of the text.
+   Changing the text in admin re-shows it to everyone automatically.
++  > Superseded by 08 Q-15: **`sessionStorage`**, keyed on a hash of the text — the bar returns on the next browser session, and a text change re-shows it within one.
+ - Empty state: `announcement_enabled = 0` or empty text → the bar is not rendered at
+   all (no empty strip, no layout shift).
+ - 375px: font drops to 12px, text truncates to one line with ellipsis; if the text is
+@@ -412,6 +414,7 @@
+   invalid email → inline red helper text under the field, field keeps focus.
+ - With JS disabled the form posts to `/contact#newsletter` and returns a full page with
+   the same states.
++  > Corrected by 08 §2.4 (F-17): the non-JS form posts to **`POST /api/newsletter`** itself, which detects a non-JSON `Accept`/`Content-Type` and answers with a 303 back to the referring page plus a flash (`?newsletter=ok|invalid`) rendered in the block; there is no `/contact#newsletter` route.
+ - Empty state: none (static copy).
+ - 375px: full-width stacked field then button (not side-by-side), 52px tall each.
+ - Editable: heading, text, CTA label.
+@@ -831,7 +834,7 @@
+ - **Desktop hover-zoom:** on pointer devices with a fine pointer, hovering the main image
+   shows a 2× magnified region following the cursor, rendered by translating a
+   `background-image` at 200% size inside the same box — no second overlay panel, no library.
+-  Implementation note: the zoom source is the 1600px derivative; if it has not finished
++  Implementation note: the zoom source is the 1600px derivative (08 C-45: **1400 px**, `w1400`); if it has not finished
+   loading the hover does nothing rather than showing a blurred upscale. Suppressed entirely
+   under `prefers-reduced-motion` and on coarse pointers.
+ - **Mobile:** a swipeable `RAIL` of full-width 4:5 images with scroll-snap and dot
+@@ -840,7 +843,7 @@
+   images, × to close, Escape to close, body scroll locked. No custom pinch maths — the
+   browser's own gesture handling is better than anything hand-rolled here.
+ - First image: `loading="eager"`, `fetchpriority="high"`, explicit `width`/`height`. All
+-  others lazy. `<picture>` with WebP + JPEG, `srcset` at 600/900/1600w.
++  others lazy. `<picture>` with WebP + JPEG, `srcset` at 600/900/1600w (08 C-45: **400/600/900/1400w**).
+ - `alt` per image from `product_images.alt_text`; never blank (doc 07 §B.1.8 seeds it).
+ - Empty state: zero image rows → `/assets/img/placeholder-bottle.webp` at the same
+   aspect ratio, and the gallery still renders its frame. No broken image, ever.
+@@ -902,6 +905,7 @@
+   to `POST /api/restock-alert` with the same CSRF + honeypot + time-trap as every other form
+   (§14.3), writing to `restock_alerts` (`product_size_id`, `email`, `created_at`,
+   `notified_at`). Success replaces the form with `We'll email you the moment it lands.`
++  > Superseded by 08-decisions-register.md §4 / §2.4 — C-67: `restock_alerts` is **cut** and there is no `/api/restock-alert` and no "Notify me". With a sold-out size selected, `Add to Cart` is replaced by a disabled `Sold out` button and the WhatsApp button becomes the primary action, carrying the out-of-stock message from §6.9 (*"…is {size} coming back in stock?"*). A back-in-stock email capture is a v2 item (PLAN §14).
+ - The WhatsApp button stays enabled and its message changes (§6.9) — for an out-of-stock
+   size a WhatsApp conversation is exactly what the client wants.
+ - Every size out of stock → a `SOLD OUT` badge on the gallery, the quantity stepper hidden,
+@@ -1031,6 +1035,7 @@
+ - 64px tall, `env(safe-area-inset-bottom)` respected, `z-index` above the WhatsApp button
+   (which shifts up 72px per §1.5) and below the cart drawer.
+ - Out-of-stock size → the button reads `Notify Me` and scrolls to the form in §6.4.
++  > Superseded by 08 C-67: the bar's button reads **`WhatsApp`** and opens the §6.9 out-of-stock message.
+ - Hidden while the cart drawer, the lightbox or any bottom-sheet is open.
+ 
+ ### 6.9 WhatsApp order button
+@@ -1151,6 +1156,7 @@
+ Computed server-side against the **subtotal after any coupon discount** — a coupon that
+ drops the order below the threshold must re-add shipping, and saying so before checkout is
+ the honest behaviour.
++> Superseded by 08-decisions-register.md §2.4 — C-43: the bar, the fee and the order are all computed against the **pre-discount** subtotal (06a §4.1, PLAN §7.3). Read `discounted_subtotal` below as `subtotal`. A coupon never moves the bar backwards and never re-adds shipping.
+ 
+ - `threshold = 0` or empty → the bar is not rendered anywhere, and the trust lines that
+   interpolate it (§4.2, §6.2) fall back to copy without the threshold.
+@@ -1211,6 +1217,7 @@
+ 
+ Rate limit: 10 coupon attempts per session per hour, then `Too many attempts. Please try
+ again later.` — this is a brute-forceable surface.
++> Superseded by 08 C-66: the limit is per **`ip_hash`** in `rate_limits` bucket `coupon` — 10 per hour and 50 per 24 h (a session is a cookie a guesser discards) — and row 4 (`not_started`) returns the row-2 message `That coupon code isn't valid.`, so a scheduled launch code cannot be confirmed before it starts. The `NOW()` comparisons in rows 4–5 bind a PHP Asia/Karachi `:now` (06a §0). Rows 4–9 are the 06a §3.4 checks; 06a's messages are the canonical strings.
+ 
+ ---
+ 
+@@ -1323,12 +1330,12 @@
+ 4. **Payment screenshot** (`payment_proof`) — required. Validation:
+    - Extension and real MIME (via `finfo`) must both be JPEG, PNG or WebP. The extension
+      alone is never trusted.
+-   - `getimagesize()` must succeed and return sane dimensions (≥200×200, ≤8000×8000).
++   - `getimagesize()` must succeed and return sane dimensions (≥200×200, ≤8000×8000; 08 C-46: edge cap 10,000 and the runtime pixel budget from 02c §5.1).
+    - ≤5 MB, one file.
+    - Saved under `storage/proofs/{YYYY}/{MM}/` (08 C-25) with a generated name
+      `{32hex}.{ext}` (one `payment_proofs` row per upload) — the original filename is never used in a path.
+    - Re-encoded through GD on save, which strips EXIF and any embedded payload, and resized
+-     to a 1600px long edge.
++     to a 1600px long edge. (08 C-57: the re-encode and the write to `storage/proofs/` happen **after** the order transaction commits, from PHP's temporary file; Phase A only validates. A failed write never loses the order.)
+    - `/uploads` already blocks PHP execution (§1.1); `/uploads/payments/` additionally gets
+      `Require all denied` — a payment screenshot is not public. The admin panel serves it
+      through an authenticated PHP reader.
+@@ -1363,7 +1370,8 @@
+ 
+ The mechanism: the GET render writes a single-use `order_token` into the session and into a
+ hidden field. `POST /checkout` opens a transaction, and inside it: re-validates CSRF;
+-re-checks the token against the session and **deletes it immediately**; re-prices the cart
++re-checks the token against the session and **deletes it immediately**;
++> Superseded by 08-decisions-register.md §2.4 — C-61: the key is `orders.idempotency_key` (C-11) and 06b §1.6 / §2 own the semantics. The session key is checked with `hash_equals` but is **cleared only after `COMMIT`**, so a stock-race loser keeps its key and retries normally instead of being told *"This order has already been placed"* for an order that does not exist. A replay with a different cart re-renders checkout with a fresh key and *"Your previous order {number} was already placed. This is a new order."* re-prices the cart
+ (§7.4) with `SELECT ... FOR UPDATE` on the size rows; re-validates the coupon; decrements
+ stock with `UPDATE product_sizes SET stock = stock - ? WHERE id = ? AND stock >= ?` and
+ requires `rowCount() = 1` for every line (this is what makes overselling structurally
+@@ -1390,6 +1398,7 @@
+   one, the page renders the Track Order form pre-filled with the order number instead — not
+   a 404 and not the order. The token also makes the link safe to send by WhatsApp or email.
+   It never expires; the page is the customer's receipt.
++  (08 C-76: a **non-existent** order number renders the identical pre-filled track form — never a 404 — and every `GET /order/{n}` counts in the `track` rate bucket, so the URL is not an existence oracle. 08 C-59: the payment re-upload form (§8.5 fields) is shown on this page, and its POST accepted, **only while `payment_status IN ('unpaid','failed') AND status = 'pending'`**; once `paid`, the page is the receipt only, so a forwarded link can never drop a paid order back into the review queue. Thirty days after `delivered_at`/`cancelled_at` the street address and phone are no longer rendered — items, totals and status only.)
+ - `noindex,nofollow`, and `Referrer-Policy: no-referrer` on this response.
+ - Content, in order: a gold check mark; `Thank you, {first name}.`; the order number in 24px
+   serif with a copy button; `We've sent a confirmation to {email}` (omitted entirely when no
+@@ -1447,6 +1456,7 @@
+   `settings.courier_track_url_{slug}` holds a URL pattern — a `Track with {courier}` outbound
+   link with the number interpolated. No pattern, no link; a broken courier link is worse
+   than none.
++  > Superseded by 08 Q-09 / C-75 (F-12): the link is **`orders.tracking_url`**, pasted by the admin per order and rendered only when it begins with `https://`; there are no `courier_track_url_*` settings.
+ 
+ ### 10.2 What is deliberately not shown
+ 
+@@ -1563,7 +1573,8 @@
+ `pages(id, slug, title, body, seo_title, seo_description, is_active, updated_at)`. `body` is
+ a restricted HTML subset — the admin editor allows `p, h2, h3, ul, ol, li, strong, em, a,
+ br, blockquote` and nothing else, sanitised on save against an allow-list (never on output
+-only, and never a full WYSIWYG that pastes Word markup). Seeded with real starting copy for
++only, and never a full WYSIWYG that pastes Word markup).
++> 08 C-62 names the sanitiser: `sanitize_html()` in 02c §3.2 — `DOMDocument`, this tag list (plus `b`/`i` mapped to `strong`/`em`), every attribute dropped except `href` on `a` (http/https/mailto or site-relative only, `rel="nofollow noopener"` forced), applied on save **and** on render. Never `strip_tags()`. This is the only HTML sink in the application. Seeded with real starting copy for
+ all five so the site is never live with a blank Privacy Policy.
+ 
+ Rendering: a shared narrow-measure template (max 720px, 18px body, generous leading), H1 from
+@@ -1618,9 +1629,9 @@
+    **2 hours** → a real error, `This form expired. Please try again.`, with the values
+    preserved.
+ 3. **CSRF token**, per-session, rotated on order placement, compared with `hash_equals`.
+-4. **Rate limit** per IP-hash (`sha256(ip . install_secret)`, never the raw IP) per form:
++4. **Rate limit** per IP-hash (`sha256(ip . install_secret)`, never the raw IP — and `ip` is `client_ip()`, 02c §1, 08 C-50) per form:
+    contact 5/hour, newsletter 5/hour, review 3/day, restock 10/day, track 8/15min,
+-   coupon 10/hour. Exceeded → `Too many attempts. Please try again later.` Counters live in
++   coupon 10/hour (08 C-66: coupon is a real `rate_limits` bucket, 10/hour and 50/24 h; `restock` is void, C-67). Exceeded → `Too many attempts. Please try again later.` Counters live in
+    a `rate_limits(bucket, ip_hash, window_start, hits)` table with a unique index on
+    `(bucket, ip_hash, window_start)` — no APCu, no Redis, neither exists on shared hosting.
+ 
+@@ -1776,9 +1787,9 @@
+ | `/scent/{slug}` | Slug resolves to the display family without a SQL slugify; unknown family 404s |
+ | `/new-arrivals` `/best-sellers` `/sale` | Each defaults to its own sort with no `sort` in the URL; sold-out products sort last |
+ | `/search` | Scorer ranks name matches above note matches; a unique SKU match redirects to the product; zero results are logged to `search_queries`; `q` is escaped in the title, H1 and page; always `noindex` |
+-| `/product/{slug}` | Desktop hover-zoom and mobile pinch lightbox both work; size change updates price, stock, button and sticky bar with no request; out-of-stock shows the notify form and keeps WhatsApp enabled; pyramid omits empty tiers; meters carry text equivalents; only `approved` non-sample reviews appear and drive the average; related products return exactly 4 or the section is omitted; the WhatsApp message matches §6.9 character for character; `Product` JSON-LD validates with correct availability |
+-| `/cart` + drawer | Every price comes from the DB on every render; a deactivated product is removed with a message; quantity clamps to stock; the progress bar uses the post-discount subtotal; all nine coupon states produce their exact message; removal undo works |
+-| `/checkout` | All five phone formats normalise to one stored value; a landline is rejected; free-text city is accepted and stored; only enabled payment methods render; no enabled method shows the WhatsApp panel instead of the form; the manual branch requires both txn ID and a real image, stores it outside the web root and re-encodes it; a double tap creates one order; a stock race fails the guard instead of going negative; Back shows the already-placed message |
++| `/product/{slug}` | Desktop hover-zoom and mobile pinch lightbox both work; size change updates price, stock, button and sticky bar with no request; out-of-stock shows a disabled Sold out button and promotes WhatsApp with the out-of-stock message (08 C-67 — no notify form); pyramid omits empty tiers; meters carry text equivalents; only `approved` non-sample reviews appear and drive the average; related products return exactly 4 or the section is omitted; the WhatsApp message matches §6.9 character for character; `Product` JSON-LD validates with correct availability |
++| `/cart` + drawer | Every price comes from the DB on every render; a deactivated product is removed with a message; quantity clamps to stock; the progress bar uses the **pre-discount** subtotal (08 C-43); all nine coupon states produce their exact message; removal undo works |
++| `/checkout` | All five phone formats normalise to one stored value; a landline is rejected; free-text city is accepted and stored; only enabled payment methods render; no enabled method shows the WhatsApp panel instead of the form; the manual branch requires both txn ID and a real image, stores it in the denied `storage/proofs/` tree after commit and re-encodes it; a double tap creates one order; a stock race fails the guard and the customer can retry with the same key (08 C-61); a second transfer order from a phone with one still awaiting verification is refused (08 C-58); Back with an unchanged cart shows the already-placed message |
+ | `/order/{number}` | Without the token it shows the track form, never the order; `noindex,nofollow`; the no-email variant shows the save-this-page copy; COD shows the cash-ready line, manual payment shows the verification panel and never the screenshot |
+ | `/track` | Order number alone never returns an order; wrong-phone and non-existent give the identical message; the timeline matches `orders.status`; cancelled replaces the timeline; nothing from §10.2 appears in the HTML source |
+ | `/scent-finder` | Completes in five steps with JS off; the result URL is shareable and deterministic; no product is recommended that is out of stock; fewer than three matches fills from best sellers under its own heading |
+diff -ru -x P plan-snapshot-before-integrate/04b-design-components.md plan/04b-design-components.md
+--- plan-snapshot-before-integrate/04b-design-components.md	2026-09-25 16:46:25
++++ plan/04b-design-components.md	2026-09-25 17:18:55
+@@ -713,6 +713,8 @@
+ Total: **five files, no dependencies, no bundler, ~11 KB unminified**, all loaded with
+ `defer` at the end of `<head>`, plus one 3-line inline script that sets `html.js`.
+ 
++> 08 §2.4 — C-60: that 3-line snippet is the **only** inline script on the site and is a byte-for-byte constant (`<script>document.documentElement.classList.add('js')</script>` plus the two surrounding lines, no whitespace variation, no interpolation). Its SHA-256 is computed once and shipped as the `'sha256-…'` source in the PHP-sent `Content-Security-Policy` (`script-src 'self' 'sha256-…'`, 07 B.3.6), so the policy needs no `'unsafe-inline'` and no nonce. Any change to the snippet changes the hash — the pre-launch checklist recomputes it. The cart count on first paint is server-rendered into `data-cart-count`, not an inline script; JSON-LD blocks are `type="application/ld+json"` and are not executed, so they need no allowance.
++
+ | File | ~Size | Behaviours it owns |
+ |---|---|---|
+ | `reveal.js` | 0.6 KB | §18 scroll reveal; the header transparent→solid sentinel; the sticky add-to-cart bar sentinel. One shared `IntersectionObserver` factory. |
+diff -ru -x P plan-snapshot-before-integrate/05a-admin-core.md plan/05a-admin-core.md
+--- plan-snapshot-before-integrate/05a-admin-core.md	2026-09-25 16:46:25
++++ plan/05a-admin-core.md	2026-09-25 17:14:01
+@@ -122,17 +122,21 @@
+ storefront front controller never sees them. Rewrite block, placed in `/admin/.htaccess`:
+ 
+ ```apache
+-RewriteEngine On
+-RewriteBase /admin/
+-RewriteCond %{REQUEST_FILENAME} !-f
+-RewriteCond %{REQUEST_FILENAME} !-d
+-RewriteRule ^ index.php [L]
++# admin/.htaccess — headers only. NO RewriteEngine line (08 C-54): a per-directory
++# "RewriteEngine On" replaces the root rule set, so http://…/admin/login would never be
++# redirected to HTTPS. /admin is routed by rule 3.6a of the root .htaccess (02b §3).
++<IfModule mod_headers.c>
+ Header always set X-Frame-Options "DENY"
+ Header always set X-Content-Type-Options "nosniff"
+ Header always set Referrer-Policy "same-origin"
+ Header always set Cache-Control "no-store, no-cache, must-revalidate, private"
++</IfModule>
+ ```
+ 
++`admin/controllers/`, `admin/views/` and `admin/partials/` each carry the 02b §4 deny `.htaccess`
++and an `index.php` stub, and every file in them starts with the `SKYFR` guard (08 C-54) — they are
++included by `admin/index.php`, never requested.
++
+ Every route except 1, 2 and 3 requires an authenticated session (§2). Every `POST` requires a valid
+ CSRF token (§2.5). No admin route is ever indexable: the shell emits
+ `<meta name="robots" content="noindex,nofollow">` and `/robots.txt` carries `Disallow: /admin`.
+@@ -176,6 +180,11 @@
+ | 35 | `GET /admin/orders*` | — | Owned by `05b-admin-orders.md` |
+ | 36 | `GET /admin/orders/export.csv` | `export.php` | CSV download (§5), spec here |
+ | 37 | `*` unmatched under `/admin` | `notfound.php` | 404 inside the shell |
++| 38 | `GET /admin/tools` | `tools.php` | Tools index: sample-data removal, privacy purge, regenerate derivatives, storage usage (08 C-65, C-73) |
++| 39 | `POST /admin/tools/remove-sample-data` | `tools.php` | 07 A.7 |
++| 40 | `POST /admin/tools/purge` | `tools.php` | Privacy purge (08 C-65): lists what it will delete, then deletes proof files for orders delivered/cancelled > 90 days (`payment_proofs.file_path = NULL`, `purged_at` set), stubs `email_outbox.body_html` on rows sent > 60 days, prunes `rate_limits` / `admin_login_attempts` > 30 days and expired session files; logs one `admin_activity_log` row with the counts. The same routine runs silently on a 1-in-20 admin page load. |
++| 41 | `GET|POST /admin/tools/regenerate-images?offset=` | `tools.php` | Batched derivative regeneration (02c §5.3, 08 C-73) |
++| 42 | `POST /admin/settings/https-permanent` | `settings.php` | Runs the https self-check and flips the root `.htaccess` redirect from 302 to 301 (08 C-52) |
+ 
+ Design rule: **every mutation is a POST to its own URL and answers with a 303 redirect** back to the
+ list or form it came from, carrying a one-shot flash message in the session. There is no PRG
+@@ -228,7 +237,8 @@
+ | `session.use_strict_mode` | `1` | Rejects an attacker-supplied session id (fixation) |
+ | `session.use_only_cookies` | `1` | No session id in URLs |
+ | `session.gc_maxlifetime` | `43200` | Floor only; real expiry is enforced in PHP (§2.4) |
+-| `session.save_path` | `storage/sessions/` — inside `public_html`, denied tree (08 C-26) | Shared-hosting `/tmp` is readable by neighbours |
++| `session.save_path` | `storage/sessions/admin/` — inside `public_html`, denied tree (08 C-26, **C-53**: its own directory, because PHP's GC sweeps a save path with the *current* request's lifetime and would trim the 3-day shop sessions to 12 h if they shared one) | Shared-hosting `/tmp` is readable by neighbours |
++| `session.gc_probability` / `gc_divisor` | `1` / `100` | Hostinger's sweeper never touches a custom path (08 C-53) |
+ 
+ The save path is created by `install.php` and written into `config.php`. If it is not writable the
+ panel refuses to start with a plain-language error rather than silently falling back to `/tmp`.
+@@ -250,6 +260,7 @@
+ 7. On success: `session_regenerate_id(true)` (destroying the old file), then write the session keys,
+    then insert `admin_login_attempts(..., was_success=1)`, then delete that username's failed rows,
+    then update `last_login_at` / `last_login_ip_hash`, then log `login.ok`.
++   **7a. Known-device cookie (08 C-51):** issue `SFDEV` = `bin2hex(random_bytes(32))` (path `/admin`, Secure, HttpOnly, SameSite=Strict, 365 days) and store `sha256` of it in `admin_users.known_devices` (JSON array, newest first, capped at 5 — the oldest is dropped). A request carrying a cookie whose hash is in that array is exempt from the username delay in §2.6; it is never exempt from the password check or the IP lock.
+ 8. 303 to the `?next=` path if it is a same-host path starting `/admin/` and is not `/admin/login`;
+    otherwise to `/admin`.
+ 
+@@ -274,7 +285,7 @@
+ ### 2.5 CSRF token lifecycle
+ 
+ - **Creation:** on login, `bin2hex(random_bytes(32))` into `$_SESSION['csrf_token']` with
+-  `csrf_issued_at`. One token per session, not per form — per-form tokens break on a phone the moment
++  `csrf_issued_at`. (08 C-76: the login form itself needs a token, so `admin/index.php` starts the `SFADMIN` session and ensures a token on the first request — pre-auth — and **rotates** it on successful login; "on login" above reads as "rotated on login".) One token per session, not per form — per-form tokens break on a phone the moment
+   the owner opens a product in a second tab, and the shop has no untrusted co-authors.
+ - **Emission:** every `<form method="post">` in the panel carries
+   `<input type="hidden" name="_token" value="...">`. There are no GET mutations, so no token ever
+@@ -286,7 +297,7 @@
+ - **Rotation:** rotated on login and on password change only. Rotating on every submit would destroy
+   every other open tab, which the owner does have on a desktop session.
+ - **Double submit / origin check:** in addition, every POST verifies the `Origin` header (falling
+-  back to `Referer`) matches the canonical host. Requests with neither header present are allowed —
++  back to `Referer`) matches the canonical host. (08 C-49: "the canonical host" means the **request's own** scheme + `HTTP_HOST` via `request_origin()` (02c §4), never `config['base_url']` — otherwise every admin form 419s on the preview host, before the DNS switch, or after an http→https change.) Requests with neither header present are allowed —
+   some Pakistani carrier proxies strip `Referer` — so the token remains the primary defence and the
+   origin check is a cheap second layer.
+ 
+@@ -297,6 +308,7 @@
+ 
+ - `k_ip` = `SHA-256(ip_salt || client_ip)` — `ip_salt` is a per-install random string in `config.php`,
+   so the table never stores a raw IP (privacy, and a DB dump does not hand over the owner's home IP).
++  `client_ip` is `client_ip()` from 02c §1 (08 C-50), so Hostinger's edge proxy does not put every visitor in one bucket.
+ - `k_user` = the submitted username, lowercased.
+ 
+ The username key is the important one: on mobile data the attacker's IP rotates for free, so an
+@@ -310,6 +322,7 @@
+    AND attempted_at > (now - W)`.
+ 3. `fails_ip` = the same count keyed on `ip_hash`.
+ 4. If `fails_user >= 5` → **locked on the username**.
++   > Superseded by 08-decisions-register.md §2.4 — C-51: **there is no username lock.** A hard lock keyed on a guessable username (`admin`, the shop name, the email local part) lets a one-line script posting five wrong passwords every 14 minutes keep the owner out of her own shop from every device, forever — no COD confirmations, no payment reviews. Step 4 becomes: `fails_user >= 5` → progressive delay of **2 s** (step 8 extended), unless the request carries a valid known-device cookie (§2.4 step 7a), in which case no delay applies. The per-IP hard lock in step 5 stays.
+ 5. Else if `fails_ip >= 10` → **locked on the IP**. (The IP ceiling is higher so one shop Wi-Fi with
+    the owner and a mistyping family member is not locked by a single bad actor on the same NAT.)
+ 6. If locked, compute `unlock_at = oldest failure inside the window + W` and refuse.
+@@ -332,7 +345,7 @@
+ | State | HTTP | Message shown |
+ |---|---|---|
+ | Wrong credentials, under the limit | 200 on the re-rendered form | "Wrong username or password." |
+-| Locked (either key) | 429 | "Too many failed attempts. Try again in **{n} minutes**." Password field cleared and disabled; button disabled; a plain-text line underneath: "If you are locked out, you can wait — the lock clears by itself." |
++| Locked (either key) | 429 | "Too many failed attempts. Try again in **{n} minutes**." Password field cleared and disabled; button disabled; a plain-text line underneath: "If you are locked out, you can wait — the lock clears by itself." (08 C-51: only the **IP** key locks; a username under attack slows to one attempt per ~2.5 s but the owner's own phone, carrying its `SFDEV` cookie, is never delayed or locked.) |
+ | Locked and the credentials were in fact correct | 429 | Same message. Correct credentials never shorten a lock; that would leak validity. |
+ | Account deactivated | 200 | "Wrong username or password." — same generic text, so the field is not an account oracle. |
+ 
+@@ -356,7 +369,8 @@
+ `reset-password.php.disabled`**. The owner renames it in hPanel File Manager, opens it once, sets a
+ new password, and renames it back. It refuses to run if `admin_users` has more than one row, it
+ rate-limits itself to one successful use per hour, and it prints a large red banner telling the owner
+-to rename it back. Physical access to File Manager is already total control of the site, so this adds
++to rename it back.
++> Superseded by 08-decisions-register.md §2.4 — C-64. A `.disabled` file at a web path is served as text by the exists-guard (its source and the recovery procedure become public), and once renamed it was an **unauthenticated** page anyone who knew the name could race the owner to. Instead: the script ships as **`app/tools/reset-password.php`** (denied tree). Recovery = in File Manager, *copy* it to `public_html/reset-password.php`, open it. It proves File-Manager access before doing anything: it prints a random filename (`storage/reset-{16hex}`) the owner must create as an empty file, then reload; only when that nonce file exists does it show the new-password form (CSRF-protected, ≥ 12 chars). On success it writes the hash, **deletes every `admin_login_attempts` row for the username** (so a lock cannot outlive the reset), deletes the nonce file, unlinks its own copy at the root, and tells the owner to confirm it is gone. It still refuses when `admin_users` has more than one row. Step 9 of the setup guide (07 Part C) carries these steps with screenshots. Physical access to File Manager is already total control of the site, so this adds
+ no new attack surface — it only avoids an email dependency.
+ 
+ ### 2.9 Logout
+@@ -468,6 +482,8 @@
+ Query shapes (all parameterised; `:from`/`:to` are Asia/Karachi day boundaries converted to the
+ storage timezone by PHP, never by MySQL, so DST-free but server-timezone-proof):
+ 
++> Superseded by 08-decisions-register.md §2.3 / §2.4 (F-05): every `placed_at` in the queries below reads **`created_at`** — the canonical `orders` DDL has no `placed_at`; `idx_orders_status_created (status, created_at)` and `idx_orders_created` already serve them. Query 3's status counts are month-to-date; the chip row is labelled *"This month"* so the number is not read as an all-time count.
++
+ 1. **Revenue + count, one row per bucket, one query:**
+    `SELECT DATE(placed_at) d, COUNT(*) c, COALESCE(SUM(grand_total),0) v FROM orders
+     WHERE status IN ('confirmed','packing','shipped','delivered') AND placed_at >= :month_start
+@@ -481,6 +497,7 @@
+    because it is the only status that needs the owner.
+ 4. **Attention strip** — the only actionable block. Three counters, each a link, each hidden when
+    zero: *n orders awaiting confirmation*, *n reviews awaiting moderation*, *n unread messages*.
++   Plus, from the hardening review (08 C-56, C-57, C-49, C-65): *n emails waiting to send* (any `email_outbox.status = 'queued'`), *n emails could not be sent* (`failed`, red), *"You opened the panel at {request host} but the site address is set to {base_url}"* when they differ, *n transfer orders unpaid for more than {manual_hold_hours} h* (links to the 05b §1.7 bulk action), and a one-line `storage/` disk-usage figure with a red state above 80 % of the plan's quota when `disk_total_space()` reports it.
+ 5. **Latest orders (5):**
+    `SELECT id, order_number, customer_name, city, grand_total, status, placed_at FROM orders
+     ORDER BY placed_at DESC LIMIT 5` — card list per §3.3.
+@@ -556,12 +573,12 @@
+ **Section 3 — Images (uploader).** Drop zone plus a full-width `Choose photos` button that maps to
+ the phone camera/gallery picker (`accept="image/jpeg,image/png,image/webp"`, `multiple`).
+ Per file, client side: reject anything not JPEG/PNG/WEBP by extension *and* by the first bytes read
+-through `FileReader`, reject > 8 MB, show an immediate local preview with a progress bar. Server
++through `FileReader`, reject > 8 MB (08 C-46: **6 MB**), show an immediate local preview with a progress bar. Server
+ side, per file (`POST /admin/products/{id}/images`, one request per file so a dropped mobile
+ connection loses one photo, not ten): re-validate with `finfo` MIME **and** `getimagesize()`, reject
+ anything whose extension disagrees with its real type, strip all metadata by re-encoding through GD,
+-generate 400/600/900/1200w WebP derivatives plus a JPEG fallback at 900w, write to
+-`/uploads/products/{product_id}/{random32}-{w}.webp`, and insert `product_images`. Filenames are
++generate 400/600/900/1200w WebP derivatives plus a JPEG fallback at 900w (08 C-45: **400/600/900/1400 w, each as WebP + JPEG**, plus the 1200×630 OG JPEG for the primary image — 02c §5.2 is canonical), write to
++`/uploads/products/{product_id}/{random32}-{w}.webp`, and insert `product_images`. This one-request-per-file XHR is **the** uploader contract for the whole project (08 C-46); the non-JS fallback is a single-file form that posts one image per submit. Filenames are
+ random, never the user's — an uploaded `shell.php.jpg` can then never be guessed. `/uploads` already
+ denies PHP execution.
+ Reorder: drag on desktop (HTML5 drag events), ▲/▼ buttons always present for touch; the new order is
+@@ -602,7 +619,7 @@
+ 
+ Form fields: `name` (required, ≤80), `slug` (same slug rules and `slug_redirects` behaviour as
+ products, `entity_type='collection'`), `tagline` (≤120), `description` (textarea), `mood` (≤160),
+-`image` (single upload, same pipeline as §4.3, 16:9, used on the collection hero and the home tiles),
++`image` (single upload, same pipeline as §4.3, 16:9, used on the collection hero and the home tiles — 08 C-45 / F-15: the crop is **3:4** (the storefront card ratio, 03 §4.3, 04b §3); the collection hero reuses it under a scrim; no 16:9 derivative exists),
+ `sort_order`, `is_active`, `seo_title`, `seo_description`.
+ 
+ Delete is **blocked while any product references the collection**: the button explains
+@@ -730,6 +747,8 @@
+ | `free_shipping_threshold` | shipping | money | `3000.00` |
+ | `delivery_time` | shipping | text | `2–4 working days` |
+ | `cod_enabled` | payments | bool | `1` |
++| `cod_max_total` | payments | money | `0` = no cap (08 C-69; the brief asks for COD with no ceiling — a value above 0 disables COD at checkout for larger orders with *"Orders above Rs. {n} are prepaid only."*) |
++| `manual_hold_hours` | payments | int 6–240 | `48` — amber badge on unpaid transfer orders after this many hours, and the age threshold for the 05b §1.7 bulk cancel (08 Q-07, C-58) |
+ | `cod_note` | payments | textarea | `Pay the courier when your parcel arrives.` |
+ | `bank_enabled`, `bank_name`, `bank_account_title`, `bank_account_number`, `bank_iban` | payments | bool / text | `0` + blanks |
+ | `jazzcash_enabled`, `jazzcash_account_title`, `jazzcash_number` | payments | bool / text | `0` + blanks |
+@@ -740,8 +759,12 @@
+ | `google_verification`, `gsc_analytics_id` | seo | text | *(blank)* |
+ | `low_stock_threshold` | advanced | int 0–999 | `5` |
+ | `admin_rows_per_page` | advanced | int 10–100 | `20` |
+-| `maintenance_mode` | advanced | bool | `0` |
++| `maintenance_mode` | advanced | bool | `0` — **this key is the switch** (08 C-70); the panel never writes `config.php`. The Advanced tab also shows the File-Manager fallback: *"If the panel is unreachable, create an empty file named `MAINTENANCE` inside `storage/`."* |
+ | `maintenance_message` | advanced | textarea | default copy |
++| `maintenance_bypass` | advanced | text (read-only, regenerate button) | random 16 hex at install (08 C-70, C-76: entered in a POST form on the maintenance page, never in a URL) |
++| `base_url` | advanced | url | blank = use `config['base_url']` (08 C-49). Hint under the field: *"You opened this page at https://{host} — use that unless you know why not."* Used only for canonical, OG, sitemap and email links; never for security checks. |
++| `trusted_proxies` | advanced | text (comma-separated CIDRs) | written by `install.php` from its probe (08 C-50); *"Change only if the setup guide tells you to."* |
++| `https_permanent` | advanced | bool (read-only, action button) | `0` until the https self-check flips the root redirect to 301 (08 C-52) |
+ | `site_indexable` | advanced | bool | `1` — added by 08 §1.4; `install.php` writes `0` when the host is not `skyfragrances.com` |
+ | `business_hours` | contact | text | *(blank)* — added by 08 §1.4 (03 §12.2) |
+ | `instagram_tile_{1..6}_image`, `instagram_tile_{1..6}_url` | home | image / url | *(blank)* — added by 08 §4; replaces the `instagram_posts` table |
+@@ -820,6 +843,7 @@
+    rather than defensively.
+ 7. Newlines inside a field (order notes) are preserved inside the quoted field; a literal `NUL` byte
+    is stripped.
++8. **Every export writes one `admin_activity_log` row** (`orders.export` / `subscribers.export`) with the filter summary and the row count — never the rows (08 C-65). `before_json` / `after_json` on any entity carry field names and non-PII values only; `customer_phone`, `customer_email`, `address` and account numbers are recorded as `"(changed)"`.
+ 
+ ### 5.2 Subscribers — `GET /admin/subscribers/export.csv`
+ 
+@@ -916,7 +940,7 @@
+ 3. **Change an order's totals directly.** `subtotal`, `discount_total`, `shipping_fee` and
+    `grand_total` are computed server-side at checkout and are read-only forever after. The owner
+    controls the *status* and the *payment status*, not the arithmetic.
+-4. **Decrement `coupons.used_count` or delete a used coupon** (§4.5). It is a ledger of events.
++4. **Decrement `coupons.used_count` or delete a used coupon** (§4.5). It is a ledger of events. (Cancelling an order decrements it by exactly one inside the cancel transaction — that is the system, not the owner, 08 C-44. There is no recount button.)
+ 5. **Hard-delete a product that appears on any order.** `POST /admin/products/{id}/delete` sets
+    `is_active = 0` and says *"Hidden from the shop. It stays on your past orders."* Only a product
+    with zero order lines is removed from the table, and its image files with it. A dangling
+diff -ru -x P plan-snapshot-before-integrate/05b-admin-orders.md plan/05b-admin-orders.md
+--- plan-snapshot-before-integrate/05b-admin-orders.md	2026-09-25 16:46:25
++++ plan/05b-admin-orders.md	2026-09-25 17:14:43
+@@ -177,6 +177,8 @@
+ | 10 | `/admin/orders/{order_number}/invoice` | GET | Printable invoice |
+ | 11 | `/admin/orders/{order_number}/packing-slip` | GET | Printable packing slip |
+ | 12 | `/admin/orders/bulk` | POST | Bulk actions |
++| 13 | `/admin/orders/cancel-unpaid` | POST | The one bulk cancel (08 C-58): cancels every `bank|jazzcash|easypaisa` order still `pending` with `payment_status IN ('unpaid','awaiting_verification','failed')` and older than `settings.manual_hold_hours`, with one typed reason, restoring stock per order under the §6.2 guard; shows the list and count before the confirm tap. |
++| 14 | `/admin/orders/{order_number}/stock-back` | POST | *Parcel received back — restore stock* for an order cancelled from `shipped` (08 C-48); same guard as §6.2. |
+ 
+ Every POST carries a CSRF token and is answered with a 303 redirect back to the detail
+ screen carrying a flash message — never a rendered response, so a refresh cannot repeat a
+@@ -248,6 +250,7 @@
+    and comparing against a normalised column expression; the stored value is already
+    normalised at checkout to `03XXXXXXXXX`, so this is `customer_phone LIKE CONCAT(:d,'%')`
+    on the last 10 digits — index-usable.
++   > Amended by 08 C-14 / C-75: `customer_phone` is stored **as typed**; the search runs `phone_normalize($q)` and queries `phone_normalized = :p` (exact, indexed by `idx_orders_phone_created`), with a `LIKE CONCAT(:p10, '%')` on the last digits only when fewer than 10 digits were typed.
+ 3. Anything else → name search, `customer_name LIKE CONCAT(:q,'%')` first (prefix, indexed),
+    and only if that returns nothing, a second `LIKE CONCAT('%',:q,'%')` pass.
+ 
+@@ -301,6 +304,7 @@
+ 
+ **Cancel is deliberately not a bulk action.** Cancelling touches stock and is irreversible;
+ it requires the detail screen, a reason, and one deliberate confirmation each.
++> One deliberate exception (08 C-58): **Cancel unpaid transfer orders older than {manual_hold_hours} h** (route 13). Transfer orders hold stock from placement and are never auto-cancelled (Q-07), so a run of never-paid orders — accidental or a denial-of-inventory attempt — would otherwise cost the owner one detail screen, one reason and two taps per order while the storefront shows *Sold out*. The action lists the orders it will cancel, takes one reason for all, runs the §6.2 restore per order in its own transaction, and emails each customer the standard cancellation. COD orders are never included.
+ 
+ Every bulk run is wrapped in a single transaction per order (not per batch) so one failure
+ cannot half-apply the rest, and it writes one `admin_activity_log` row per order plus one
+@@ -478,6 +482,7 @@
+ | `shipped → packing` | none | none | clears `shipped_at`, `courier_name`, `tracking_number` | yes + reason |
+ | `shipped → delivered` | none | customer: *Delivered* + review request | `delivered_at` | yes ("this cannot be undone") |
+ | `any → cancelled` | **restores stock** (§6) | customer: *Cancelled* | `cancelled_at`, `cancel_reason` | yes ("this cannot be undone") + reason required |
++| | > 08 C-48: automatic restore applies to cancel from **`pending`, `confirmed`, `packing`** only. `shipped → cancelled` writes `cancelled_at` + reason and leaves `stock_restored_at NULL`; a parcel with the courier or refused at the door is not on the shelf, and putting it back into `product_sizes.stock` would sell it before it returns. Stock comes back only through *Parcel received back — restore stock* (route 14, §6.2). | | | |
+ 
+ Stock is decremented **once, at checkout**, inside the order transaction. No forward status
+ transition ever touches stock again. Only cancellation gives it back. This single rule is why
+@@ -488,6 +493,7 @@
+ a system note (`email to customer failed: <reason>`) plus an amber banner on the next render.
+ An order with no `customer_email` silently skips the send and the note records `no email on
+ file`. The admin copy of every customer email goes to `settings.admin_email`.
++> 08 §1.4 / C-56: the key is `settings.order_notify_email` (falls back to `contact_email`; `install.php` writes the owner's email into both). The timeout is the single 5 s SMTP timeout; status emails go through `email_outbox` like every other mail.
+ 
+ ### 3.3 The status control
+ 
+@@ -660,6 +666,7 @@
+ `Stock restored 25 Sep 2026, 7:02 pm` or, for the manual path, a `Restore stock` button that
+ is present only when `status = 'cancelled' AND stock_restored_at IS NULL` (the escape hatch
+ for an order cancelled before this feature existed, or one whose restore failed).
++> 08 C-48: that button is labelled **Parcel received back — restore stock** and is the *normal* path for an order cancelled from `shipped`, whose stock is deliberately not restored automatically (§3.2). It is route 14 and runs steps 1–7 above unchanged.
+ 
+ Cancelling never deletes an order. There is no delete button for orders anywhere in the admin
+ panel — the accounting history of the business is not an editable list.
+@@ -679,6 +686,7 @@
+   `0`, replace the leading `0` with `92`; if it starts `92`, leave it; if it already starts
+   `+92`, drop the `+`. Anything that does not resolve to 12 digits disables the button and
+   shows `Phone number cannot be dialled`.
++  (08 C-75: `<digits>` is `orders.phone_normalized` without its `+` — the shared `phone_normalize()` helper, not a second rule here. `{tracking_url}`, when rendered in a message or on the track page, is emitted only if it begins with `https://` (05a §4.9 `url` rule); otherwise the number alone is shown.)
+ - `<encoded>` is `rawurlencode()` of the message — **not** `urlencode()`. `urlencode` emits
+   `+` for a space, which WhatsApp renders literally as a plus sign. Newlines must survive as
+   `%0A`, which `rawurlencode` produces from `"\n"`.
+@@ -884,7 +892,7 @@
+ 
+ | Field | After placement | Rule |
+ |---|---|---|
+-| `customer_name`, `customer_phone`, `customer_email` | **Editable** until `shipped` | Typos and wrong digits are the single most common data problem. Every edit is logged with before/after. After `shipped` the fields freeze — the parcel is already labelled. |
++| `customer_name`, `customer_phone`, `customer_email` | **Editable** until `shipped` | Typos and wrong digits are the single most common data problem. Every edit is logged with before/after. After `shipped` the fields freeze — the parcel is already labelled. (08 C-75: the route-7 handler **recomputes `phone_normalized`** with `phone_normalize()` whenever `customer_phone` changes and logs both columns; otherwise the customer can no longer track the order and the per-phone coupon ledger diverges. The activity-log row records `"(changed)"`, not the numbers — 05a §5.1 rule 8.) |
+ | `city`, `address_line`, `postal_code` | **Editable** until `shipped` | Same rule, same logging. A post-shipping address change is handled by talking to the courier, not by editing history. |
+ | `customer_notes` | **Frozen forever** | It is the customer's words. Admin observations go in `admin_notes`. |
+ | `admin_notes` | **Always editable** | Append-friendly textarea; each save logs a diff summary, not the whole text. |
+diff -ru -x P plan-snapshot-before-integrate/06a-commerce-pricing.md plan/06a-commerce-pricing.md
+--- plan-snapshot-before-integrate/06a-commerce-pricing.md	2026-09-25 16:46:25
++++ plan/06a-commerce-pricing.md	2026-09-25 17:05:10
+@@ -193,6 +193,8 @@
+ 
+ Every step below is server-side. Steps are executed in this order and no other.
+ 
++> Confirmed by 08-decisions-register.md §2.4 — C-43: this algorithm is implemented **once**, as `cart_price(array $lines, ?array $coupon, array $settings, string $now): array` in `app/lib/cart.php`, and called from every cart/drawer/checkout render **and** from inside the order transaction on the `FOR UPDATE`-locked rows (§5.3 step 2). 06b §1.4 steps 3–8, which re-implemented pricing inline with a post-discount shipping test and paisa rounding, are struck. `$now` is always bound from PHP in Asia/Karachi (§0).
++
+ **Step 1 — Unit price.**
+ ```
+ if sale_price IS NOT NULL AND sale_price > 0 AND sale_price < price:
+@@ -375,7 +377,7 @@
+ | 1 | Format | non-empty after trim, ≤ 40 chars, matches `^[A-Z0-9-]{1,40}$` | `invalid` |
+ | 2 | Exists | a `coupons` row with this `code` | `invalid` |
+ | 3 | Active | `is_active = 1` | `invalid` |
+-| 4 | Started | `starts_at IS NULL OR starts_at <= now` | `not_started` |
++| 4 | Started | `starts_at IS NULL OR starts_at <= now` | `not_started` → returned to the customer as `invalid` (08 C-66: a scheduled launch code must not be confirmable before it starts) |
+ | 5 | Not expired | `expires_at IS NULL OR expires_at >= now` | `expired` |
+ | 6 | Global limit | `usage_limit IS NULL OR used_count < usage_limit` | `exhausted` |
+ | 7 | Cart not empty | at least one purchasable line | `empty_cart` |
+@@ -386,6 +388,8 @@
+ Checks 1–8 and 10 run on every cart render. Check 9 needs a phone number and therefore
+ runs only at the checkout POST, where a phone has been entered.
+ 
++`POST /api/cart/coupon` is rate-limited in `rate_limits` bucket `coupon`, subject `ip_hash`: 10 attempts per hour and 50 per 24 hours (08 C-66); over the limit the response is the `invalid` message. Per-session limits (03 §7.7) are struck — a session is a cookie a guesser discards.
++
+ A deactivated coupon (check 3) deliberately returns the same message as a non-existent one.
+ Distinguishing them tells a code-guesser that they found a real code.
+ 
+@@ -433,6 +437,8 @@
+ If that count `>= per_phone_limit`, the coupon fails check 9 and the order is re-priced
+ without it (§3.8).
+ 
++> Amended by 08-decisions-register.md §2.4 — C-44: the count is `... AND status = 'applied'` on the 01b §6 columns (`phone_normalized`), and it runs **inside the transaction after the coupon row is locked `FOR UPDATE`** (06b §1.5 step 5a), so two concurrent checkouts with the same phone cannot both redeem a 1-per-phone code. The ledger is the only per-phone check; it is never used for the global limit.
++
+ This is honest about its own limit: a determined customer with two SIMs defeats it. It
+ exists to stop the ordinary case — one person reusing a welcome code weekly — not fraud.
+ 
+@@ -465,6 +471,7 @@
+ decremented with a floor (`used_count = GREATEST(used_count - 1, 0)`), in the same
+ transaction as the stock restore. Without this, a cancelled order permanently consumes a
+ limited code.
++> Superseded by 08-decisions-register.md §2.4 — C-44: the row is **not deleted** — it is set to `status = 'reverted'` (01b §6) so the audit trail survives; `used_count` is decremented with the same floor, in the same transaction as the cancel. A reverted row no longer counts toward the per-phone limit.
+ 
+ ### 3.8 When a coupon dies between cart and checkout
+ 
+@@ -524,7 +531,7 @@
+ | Key | Group | Meaning | Seed |
+ |---|---|---|---|
+ | `shipping_fee` | `shipping` | Flat nationwide delivery fee in PKR | `250` |
+-| `free_shipping_threshold` | `shipping` | Subtotal at or above which shipping is `0` | `5000` |
++| `free_shipping_threshold` | `shipping` | Subtotal at or above which shipping is `0` | `5000` → **`3000`** (08 §1.4, C-43; the Rs. 5,000 in the §4.1 worked example is illustrative only) |
+ 
+ Both are read once per request into the settings cache. A missing, non-numeric or negative
+ value falls back to the seed constant rather than to `0` — a `shipping_fee` that silently
+@@ -626,6 +633,8 @@
+ `subtotal = SUM(order_items.line_total)`.
+ 
+ ### 5.3 Order placement transaction
++
++> Confirmed by 08-decisions-register.md §2.4 — C-43 / C-44: this is the canonical placement sequence; 06b §1.5 supplies the statement-level detail (order number retry, idempotency replay, lock ordering) and 06b §1.5 step 5a the per-phone check. Step 4 applies to **every** difference, favourable or not, and to quantity clamps.
+ 
+ ```
+ BEGIN
+diff -ru -x P plan-snapshot-before-integrate/06b-commerce-orders.md plan/06b-commerce-orders.md
+--- plan-snapshot-before-integrate/06b-commerce-orders.md	2026-09-25 16:46:25
++++ plan/06b-commerce-orders.md	2026-09-25 17:33:39
+@@ -190,6 +190,7 @@
+ `coupon_redemptions.usage_limit` enforcement uses `coupons.used_count`; the redemption
+ row is the audit trail and the per-phone guard. `rate_limits` is shared by track-order,
+ checkout submit, contact and proof upload — one table, four `bucket` values.
++(08 §1.2 / C-66: the canonical bucket list is `checkout|track|proof|contact|newsletter|review|coupon` — seven values; `subject_hash` is `sha256` of `client_ip()` or of the phone/order id as each bucket specifies.)
+ 
+ ### 0.3 Order number format
+ 
+@@ -255,11 +256,12 @@
+ 1. **CSRF**: `hash_equals($_SESSION['csrf'], $_POST['csrf'])`. Failure → 419-style
+    re-render, message: *"Your session expired. Please review your order and try
+    again."* The cart is preserved.
+-2. **Rate limit**: bucket `checkout`, subject = `ip_hash`. Max 10 submissions per IP
++2. **Rate limit**: bucket `checkout`, subject = `ip_hash` (of `client_ip()`, 02c §1 — 08 C-50). Max 10 submissions per IP
+    per 10 minutes. Over limit → *"Too many attempts. Please wait a few minutes and try
+    again, or message us on WhatsApp to place this order."*
+ 3. **Idempotency key** present and 32 hex chars (§2). Missing/malformed → treated as a
+    CSRF failure.
++   > Amended by 08-decisions-register.md §2.4 — C-61: the check is `hash_equals($_SESSION['idem'] ?? '', $_POST['idem_key'])`, not a format check alone; a mismatch is treated as a CSRF failure and the form re-renders with a fresh key.
+ 4. **Cart non-empty**. Empty → 303 to `/cart` with *"Your cart is empty."*
+ 5. **Field validation**, all server-side, all with `filter_var`/regex:
+    - `customer_name` 2–120 chars after `trim`, must contain a non-digit.
+@@ -276,12 +278,16 @@
+ 6. **Bank/JazzCash/Easypaisa only**: `transaction_ref` and the uploaded file are
+    validated here, before the transaction, per §4.2. A failed upload must never leave a
+    half-written order.
++   > Amended by 08-decisions-register.md §2.4 — C-57: Phase A validates the upload (error code, size, `finfo`, `getimagesize`) but keeps **only the PHP temporary path**. Nothing is written under `storage/proofs/` until after `COMMIT` (§1.6 rule 1).
++7. **Manual methods only — one outstanding transfer at a time** (08 C-58): if any order with the same `phone_normalized` **or** the same `ip_hash` has `payment_method IN ('bank','jazzcash','easypaisa')`, `status = 'pending'` and `payment_status IN ('awaiting_verification','failed')`, the submit is refused: *"You already have a transfer order waiting for verification ({number}). Once it is verified you can place another, or message us on WhatsApp."* COD is never blocked by this rule (§7.1).
+ 
+ Field errors re-render checkout with every value repopulated (except the file input,
+ which browsers will not repopulate — the page says so explicitly).
+ 
+ ### 1.4 Phase B — re-price (authoritative, server-side)
+ 
++> Superseded by 08-decisions-register.md §2.4 — C-43: steps 3–8 below are **struck**. Phase B runs inside the transaction on the `FOR UPDATE`-locked rows and calls the single 06a §2.2 pricing function plus the 06a §3.4 validation (all ten checks, `now` bound from PHP in Asia/Karachi — never SQL `NOW()`). There is no second pricing pipeline: no post-discount shipping test, no `ROUND(...,2)`, no per-phone gate behind a settings key. Steps 1–2 (the one query, dropping vanished/inactive lines) stand.
++
+ The browser's prices are **read and discarded**. For each cart line, keyed by
+ `product_size_id`:
+ 
+@@ -312,6 +318,7 @@
+ *"Some details changed while you were checking out. Please review and confirm."* A
+ favourable change (a price dropped, shipping became free) proceeds silently at the
+ better price.
++> Superseded by 08-decisions-register.md §2.4 — C-43: direction is **not** special-cased. Any difference between the re-priced `grand_total` (or any quantity, or the coupon) and the total the customer last saw (06a §6.2 re-price token) rolls back, writes no order and re-confirms with the 06a §7.7 notice — a favourable change included.
+ 
+ ### 1.5 Phase C — the transaction
+ 
+@@ -375,6 +382,8 @@
+    `INSERT INTO coupon_redemptions (coupon_id, order_id, code, amount, phone_hash,
+    created_at)`, whose `UNIQUE (order_id)` makes a double-count structurally
+    impossible.
++   > Amended by 08-decisions-register.md §2.4 — C-44: this guarded `UPDATE` is the **only** global-limit check in the system (01b §6's ledger `COUNT(*)` for the global limit is struck). The `expires_at` comparison binds a PHP-computed Asia/Karachi `:now`, not `NOW()`.
++   **5a. Per-phone check (check 9), between the stock decrements and the coupon `UPDATE`:** with the coupon row held `FOR UPDATE` (06a §5.3 step 3), `SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id = :id AND phone_normalized = :phone AND status = 'applied'`; `>= per_phone_limit` → roll back with `phone_limit` (06a §3.5). Because the coupon row is locked, two concurrent checkouts with the same phone cannot both pass. The ledger row is then inserted with the 01b §6 columns (`phone_normalized`, `discount_amount`, `order_subtotal`, `status = 'applied'`).
+ 6. `INSERT INTO order_status_history (order_id, from_status = NULL, to_status =
+    'pending', changed_by = 'system', created_at = NOW())`.
+ 7. `COMMIT`.
+@@ -391,11 +400,13 @@
+    disk **before** `BEGIN` under a temporary name and only *linked* to the order after
+    `COMMIT`; an orphaned temp file is swept by the same cron that drains the outbox
+    (§5.6), which deletes unlinked proof files older than 24 hours.
++   > Superseded by 08-decisions-register.md §2.4 — C-57: nothing is written to `storage/proofs/` before `COMMIT`. The GD re-encode and the write to `storage/proofs/{YYYY}/{MM}/{32hex}.{ext}` happen in the **post-commit step**, inside the same `try/catch` as the `email_outbox` insert, from the PHP temporary file validated in Phase A. A write failure never loses the order: the `payment_proofs` row is written with `file_path = NULL` and the admin order page shows *"Proof missing — request it on WhatsApp"*. Orphaned files (a `storage/proofs/` file with no `payment_proofs` row after 24 h) are removed by the opportunistic purge that runs on admin page loads (C-56, C-65); there is no §5.6 and no cron dependency. The dashboard shows `storage/` disk usage.
+ 2. **The cart is never cleared on failure.** `unset($_SESSION['cart'])` happens after
+    `COMMIT` returns true, never before.
+ 3. **The idempotency key is not consumed on failure.** Because the key lives in the
+    `orders` row itself, a rolled-back attempt leaves no key behind and the customer's
+    retry with the same key succeeds normally.
++   > Confirmed by 08-decisions-register.md §2.4 — C-61: this rule wins over 03 §8.7 (which deleted the session key inside the transaction). `$_SESSION['idem']` is cleared only after `COMMIT` returns true.
+ 4. A duplicate-key error on `uq_orders_number` is not a failure: catch SQLSTATE `23000`
+    on that specific key, regenerate the random suffix and retry the insert, up to 5
+    times. A duplicate on `uq_orders_idem` is a **replay**, handled by §2, not an error.
+@@ -439,6 +450,7 @@
+ 4. On that duplicate: roll back, `SELECT id, order_number, access_token FROM orders
+    WHERE idempotency_key = :key`, and 303 to that order's confirmation URL. The
+    customer sees their order, once, exactly as the winning request left it.
++   > Amended by 08-decisions-register.md §2.4 — C-61: before redirecting, compare the existing order's line fingerprint (`sha256` of sorted `product_size_id:quantity` pairs) with the current session cart. **Same** → clear the cart and 303 to the receipt (the double-tap case). **Different** (a stale tab submitted after the customer built a new cart) → do not redirect: rotate `$_SESSION['idem']`, re-render `/checkout` with *"Your previous order {number} was already placed. This is a new order — please review and place it."* The cart is never silently lost on the replay path.
+ 5. `COMMIT` is followed by `unset($_SESSION['idem'])` and `unset($_SESSION['cart'])`,
+    so the next checkout starts a fresh key.
+ 
+@@ -488,6 +500,8 @@
+ | `shipped` → `cancelled` | admin | **+qty restore** | customer "Order cancelled" | no |
+ | `delivered` → `cancelled` | admin | **+qty restore** | customer "Order cancelled" | no |
+ 
++> Superseded by 08-decisions-register.md §2.4 — C-48: **05b §3.1 is the canonical transition table.** `delivered` and `cancelled` are terminal (no `delivered → shipped`, no `delivered → cancelled`); `confirmed → shipped` is allowed (courier + tracking still required). Stock is restored automatically **only** on cancel from `pending`, `confirmed` or `packing`. `shipped → cancelled` records `cancelled_at` + reason and leaves `stock_restored_at NULL`; stock comes back only through the explicit 05b §6.2 *"Parcel received back — restore stock"* action, still under the C-12 guard. A parcel with the courier is not on the shelf.
++
+ Rules the admin controller enforces:
+ 
+ - Any transition not in the table is rejected server-side with "That status change
+@@ -536,6 +550,7 @@
+ - COD is capped at `settings.cod_max_total` (default Rs. 30,000). Above the cap the COD
+   radio is disabled at checkout with "Orders above Rs. 30,000 are prepaid only." and
+   the server rejects a forced submit with the same text.
++  > Amended by 08-decisions-register.md §2.4 — C-69: `cod_max_total` is a real Settings › Payments key (05a §4.9), **default `0` = no cap**, because the brief asks for COD with no ceiling. The disabled-radio behaviour above applies only when the owner sets a non-zero value; the message interpolates the configured amount.
+ - `payment_status` moves `unpaid → paid` only by an explicit admin "Mark as paid"
+   action, normally at `delivered`. It is never inferred from `status`.
+ - COD orders carry a repeat-abuse check (§7.1) but are never auto-blocked; the owner
+@@ -598,6 +613,7 @@
+ 6. The file is written **before** `BEGIN` (§1.6). `order_payment_proofs` is inserted
+    after `COMMIT`, in its own small transaction, with `review_status = 'pending'` and
+    `orders.payment_status = 'awaiting_verification'`.
++   > Superseded by 08-decisions-register.md §2.4 — C-57 / C-59: the file is re-encoded and written **after** `COMMIT` (§1.6 rule 1). The `payment_status` move is a guarded statement — `UPDATE orders SET payment_status = 'awaiting_verification' WHERE id = :id AND payment_status IN ('unpaid','failed')` with `rowCount() === 1` — so a proof can never move a `paid` order backwards.
+ 
+ **Admin review.** `/admin/orders/{id}` shows the proof inline next to the order total,
+ the claimed amount and the transaction ID, with two buttons:
+@@ -609,9 +625,10 @@
+   `payment_status` back to `unpaid`. Sends the customer an email naming the reason and
+   inviting a re-upload via `/order/{number}?t={token}`, which re-opens the upload form
+   while `status = 'pending'`.
++  > Amended by 08-decisions-register.md §2.4 — C-59 (and C-09: reject sets `failed`, not `unpaid`). The re-upload form **and** its POST are reachable only while `payment_status IN ('unpaid','failed') AND status = 'pending'`. Once `paid`, the confirmation link renders the receipt only — no form, no POST accepted (403 with the receipt). The proof insert uses the guarded `UPDATE` in step 6. Thirty days after `delivered_at`/`cancelled_at` the confirmation page stops rendering the street address and phone; it shows the item list, totals and status only.
+ 
+ **Anti-abuse rules for prepaid:** re-uploads are limited to 3 per order (bucket
+-`proof`, subject `order_id`) and 5 per IP per hour; an order with a rejected proof
++`proof`, subject `order_id`) and 5 per IP per hour (IP = `client_ip()`, C-50); a phone or IP with a transfer order still awaiting verification cannot place a second transfer order (§1.3 step 7, C-58); the owner can clear a backlog with the bulk *Cancel unpaid transfer orders older than {hold_hours}* action (05b §1.7, C-58); an order with a rejected proof
+ cannot be re-submitted after it is `cancelled`; approving a proof is logged in
+ `order_status_history` with `changed_by`; a proof whose `amount_claimed` is below
+ `grand_total` renders a red "Short payment" warning — the system never auto-approves
+@@ -651,10 +668,10 @@
+ | 3 | `payment_received` | admin approves a proof (§4.2) | customer | `Payment received for order SF-260925-K7QF` | Amount received, transaction ID, what happens next, track link. |
+ | 4 | `payment_rejected` | admin rejects a proof | customer | `We couldn't verify your payment — order SF-260925-K7QF` | The admin's note verbatim, the correct account details again, a link back to re-upload, WhatsApp escape hatch. |
+ | 5 | `status_confirmed` | `pending → confirmed` | customer | `Order SF-260925-K7QF is confirmed` | Confirmation + expected dispatch window + track link. |
+-| 6 | `status_shipped` | `packing → shipped` | customer | `Your order SF-260925-K7QF is on its way` | Courier name, tracking number, courier's own tracking URL if `settings.courier_track_url_{slug}` is set, delivery estimate, COD amount to keep ready if COD. |
++| 6 | `status_shipped` | `packing → shipped` | customer | `Your order SF-260925-K7QF is on its way` | Courier name, tracking number, courier's own tracking URL if `settings.courier_track_url_{slug}` is set, delivery estimate, COD amount to keep ready if COD. (Superseded by 08 Q-09 / §2.4 C-75: the link is `orders.tracking_url`, rendered only when it starts with `https://`; no `courier_track_url_*` settings exist.) |
+ | 7 | `status_delivered` | `shipped → delivered` | customer | `Delivered — order SF-260925-K7QF` | Thank-you; a review invitation deep-linking each purchased product; exchange window from `settings.returns_days`. |
+ | 8 | `status_cancelled` | any `→ cancelled` | customer | `Order SF-260925-K7QF has been cancelled` | Cancellation note if the owner supplied one; confirmation that nothing is owed; WhatsApp link to re-order. |
+-| 9 | `contact_autoreply` | `POST /contact` succeeds | the sender | `We've received your message — Sky Fragrances` | One paragraph, expected response time from `settings.contact_reply_time`, a copy of their message, WhatsApp number, links to FAQ / Shipping / Returns. |
++| 9 | `contact_autoreply` | `POST /contact` succeeds | the sender | `We've received your message — Sky Fragrances` | One paragraph, expected response time from `settings.contact_reply_time`, a copy of their message, WhatsApp number, links to FAQ / Shipping / Returns. (Superseded by 08 §2.4 C-63: **no copy of the message and no sender text** in the body — a fixed acknowledgement with the subject line only. Sent only after honeypot + time-trap pass, skipped when the address already has a `contact_messages` row in the last 24 h, and subject to a site-wide cap of 30 auto-replies per hour, after which the row is queued silently and never sent.) |
+ | 10 | `contact_admin` | same | `settings.order_notify_email` | `Contact form: {subject}` | Name, phone, email, message, `Reply-To` set to the sender. |
+ 
+ `packing` is deliberately silent — customers do not want an email for it, and the track
+@@ -671,7 +688,8 @@
+    `next_try_at = NOW()`. This is a fast local write and is the *only* thing the
+    checkout request must do for email.
+ 2. Still in-request, opportunistically attempt to send the queued rows once, inside
+-   `try/catch`, with an SMTP timeout of **8 seconds**. On success →
++   `try/catch`, with an SMTP timeout of **8 seconds**.
++   > Superseded by 08-decisions-register.md §2.4 — C-56: at checkout only the **customer** confirmation (#1) is attempted inline, with PHPMailer `Timeout = 5`; the admin alert (#2) is left queued for the next admin page load. One SMTP timeout exists in the codebase: **5 s** (`mail.php`), replacing the 6/8/15 s values in 02c §6 and here. On success →
+    `status = 'sent'`, `sent_at = NOW()`. On failure → `status = 'queued'`,
+    `attempts + 1`, `last_error` truncated to 255 chars,
+    `next_try_at = NOW() + INTERVAL (5 * POW(2, attempts)) MINUTE`.
+@@ -688,6 +706,7 @@
+ 5. If the hosting plan has no cron, the drain also runs on a 1-in-20 chance at the end
+    of any admin page load. Stated as an assumption: Hostinger shared plans do provide
+    cron, so the piggyback is a safety net, not the design.
++   > Superseded by 08-decisions-register.md §2.4 — C-56 (steps 4–5). **The drain runs at the end of every admin page load**, after the response body is flushed, budgeted by wall-clock not rows: only rows with `next_try_at <= :now`, at most **2** sends and **12 s** total per load (each send `Timeout = 5`), so a dead SMTP server costs one admin click ~10 s and never reaches `max_execution_time`. `next_try_at` back-off stays (5·2^attempts minutes); after 6 attempts the row is `failed` and the dashboard shows the red banner. Whenever queued rows exist the dashboard shows *"{n} emails waiting to send"*. The same hook runs the opportunistic purge (C-65): `sent` rows older than 60 days, orphaned proof files older than 24 h, `rate_limits` and `admin_login_attempts` older than 30 days, session files past their lifetime. `cron.php` **is shipped** (root, allow-listed in 02b §3.6 and present in 02a's tree) as an optional accelerator only — the go-live guide does not require it.
+ 
+ ---
+ 
+@@ -721,7 +740,7 @@
+ 
+ ### 6.3 Rate limiting
+ 
+-Bucket `track`, two subjects checked together:
++Bucket `track`, two subjects checked together (`ip_hash` is `sha256(client_ip())`, 02c §1 / 08 C-50 — never `REMOTE_ADDR` alone behind Hostinger's edge proxy):
+ 
+ | Subject | Limit | On breach |
+ |---|---|---|
+@@ -775,6 +794,7 @@
+ - Same for `ip_hash` over 10 orders/24 h.
+ - COD fake-order risk is handled by the owner calling to confirm, which is exactly what
+   `pending → confirmed` exists for. The system never auto-cancels.
++  > Amended by 08-decisions-register.md §2.4 — C-58: the flag-only rule above is for **COD**. For `bank|jazzcash|easypaisa` the cap is **blocking**: one outstanding manual-payment order per phone and per IP at a time (§1.3 step 7). Denial-of-inventory (placing transfer orders for a size's whole stock and never paying) is otherwise only bounded by the owner cancelling each order by hand; the bulk action in 05b §1.7 restores that stock in one tap under the C-12 guard. Still no auto-cancel (Q-07).
+ 
+ ### 7.2 Coupon exhausted mid-checkout
+ 
+@@ -786,6 +806,7 @@
+ and returns the same message. The customer's second submit succeeds without the coupon.
+ A per-phone reuse guard uses `coupon_redemptions (coupon_id, phone_hash)` when
+ `settings.coupon_one_per_phone = 1`.
++> Superseded by 08-decisions-register.md §2.4 — C-44: there is no `coupon_one_per_phone` setting. The per-phone limit is `coupons.per_phone_limit` (01b §6) and is enforced in Phase C step 5a on `coupon_redemptions (coupon_id, phone_normalized, status = 'applied')` while the coupon row is locked.
+ 
+ ### 7.3 Stock gone mid-checkout
+ 
+@@ -812,7 +833,8 @@
+ and additionally never above that size's current `stock`. The cart API applies the same
+ clamps so the customer sees the limit early with *"Maximum 10 per size per order."* The
+ clamp is silent-but-reported: the quantity is reduced, the order proceeds, and the
+-customer is told what changed. `quantity` is `SMALLINT UNSIGNED` so a negative or
++customer is told what changed.
++> Superseded by 08-decisions-register.md §2.4 — C-43: at the checkout POST a clamp is a **change to the agreed order** — the transaction rolls back, no order is written, and the customer re-confirms the new quantity and total (06a §5.3 step 4, §7.7). "Reduce and proceed" applies only to cart renders before checkout. `quantity` is `SMALLINT UNSIGNED` so a negative or
+ absurd value cannot be stored even if every check above were bypassed. Negative or
+ non-integer quantities in the POST are coerced with `filter_var(..., FILTER_VALIDATE_INT)`
+ and a failure sets the line to 1, not 0 — a 0 would silently drop a line the customer
+@@ -822,6 +844,7 @@
+ 
+ 1. COD cap Rs. 30,000, max 10/line and 20/order, 5 orders/phone/day — all settings,
+    all guessed defaults, all changeable without code.
++   Resolved — 08 §2.4 C-69: the COD cap ships **off** (`cod_max_total = 0`) and is a Settings › Payments key; the other caps are constants (Q-06).
+ 2. PDF is accepted as payment proof alongside images. If the owner would rather not,
+    Resolved — 08-decisions-register.md Q-08: images only; PDF is not accepted.
+    remove `application/pdf` from the allowlist in one place.
+diff -ru -x P plan-snapshot-before-integrate/07-seed-seo-quality.md plan/07-seed-seo-quality.md
+--- plan-snapshot-before-integrate/07-seed-seo-quality.md	2026-09-25 16:46:25
++++ plan/07-seed-seo-quality.md	2026-09-25 17:22:01
+@@ -438,6 +438,8 @@
+ | `EIDSALE500` | `fixed` | 500.00 | 4,000.00 | 200 | 137 | seed − 120 days | seed − 45 days | 1 | **Expired** (grey) |
+ | `FIRST50` | `fixed` | 750.00 | 5,000.00 | 50 | 50 | seed − 60 days | seed + 180 days | 1 | **Limit reached** (amber) |
+ 
++> 08 §2.4 — C-44: the seeded `used_count` values (137, 50) are the **authoritative** global counters — the guarded `UPDATE coupons … WHERE used_count < usage_limit` is the only global-limit check, so `FIRST50` is genuinely closed even though the seed writes **no** `coupon_redemptions` rows for it. There is no recount button that could reopen it. `WELCOME10` also seeds `per_phone_limit = 1` (01b §6); PLAN §14.2 asks the owner whether the one-per-phone rule and the one-year expiry are wanted (F-16).
++
+ Note that `EIDSALE500` and `FIRST50` are both `is_active = 1`. That is deliberate: the
+ admin toggle means *"the owner switched it off"*, not *"it is currently redeemable"*.
+ Redeemability is derived, never stored, and it is derived in exactly one function:
+@@ -503,6 +505,7 @@
+ one of them is marked `is_sample = 1`. That column is the entire reason §A.7 is possible.
+ 
+ Eight rows: five `approved`, three `pending`.
++> Superseded by 08 §2.4 — C-68: **all eight rows are seeded `pending`** with `approved_at = NULL`, so no invented rating ever renders on the storefront, in `aggregateRating` or in a stage screenshot (brief: *no fake reviews*). The "approved" column below reads as the state the developer reaches by approving those five in the admin during stage 4 (B.4.5 approves one to prove the PDP and the star bar), on the local build only. `products.rating_avg`/`rating_count` seed as `0`.
+ 
+ | Product | Name | City | ★ | Title | Status |
+ |---|---|---|---|---|---|
+@@ -556,6 +559,8 @@
+ 
+ ### A.5.1 Store, contact and social
+ 
++> 08 §2.4 — C-47 / F-10: `install.php` writes the admin email entered on Step 3 into `order_notify_email` **and** `contact_email` when they are blank, so the "new order" alert has a real recipient on day one; the `orders@skyfragrances.com` literal below is the example value, not a mailbox the build assumes exists.
++
+ | Key | Group | Seeded value |
+ |---|---|---|
+ | `store_name` | store | `Sky Fragrances` |
+@@ -705,6 +710,7 @@
+ 
+ `install.php` deletes **itself** after a successful run (or, if `unlink` fails on the
+ shared host, writes `db/.installed` and refuses to run again, and says so loudly).
++> Corrected by 08 §2.4 — C-47: the lock file is **`storage/.installed`** (written on every successful run, before the `unlink` attempt — `db/` is read-only), and the red "delete it in File Manager" panel of 02c §7.2 is shown only when `unlink` fails.
+ 
+ ---
+ 
+@@ -817,6 +823,7 @@
+    defaulted to 5, never borrowed from a sibling product, never seeded. Sample reviews
+    (`is_sample = 1`) are approved rows and do count while they exist — which is another
+    reason §A.7 must run before launch.
++   (08 C-68: sample reviews are seeded `pending`, so on a fresh install they count for nothing; only a review the developer approves locally does, and §A.7 still removes them before go-live.)
+ 6. `review` objects are emitted for up to the 5 most recent approved reviews, with real
+    `author`, `datePublished` and `reviewRating`. No review is invented to fill the block.
+ 
+@@ -971,7 +978,7 @@
+ ### B.2.4 JavaScript
+ 
+ One `assets/js/site.js`, loaded with `defer`, hand-written, target **under 15 KB**
+-uncompressed. It contains: cart drawer + AJAX cart, size sheet, search suggest, mobile menu,
++uncompressed. (Superseded by 08 C-31: **five** storefront files — `reveal, ui, cart, product, forms`, ~11 KB — plus `admin.js`; the budget and rules below apply to their sum.) It contains: cart drawer + AJAX cart, size sheet, search suggest, mobile menu,
+ gallery/zoom, quiz step swapping, scroll reveal, footer accordions, toasts.
+ 
+ - Nothing in it is required for the page to be readable, navigable or purchasable. The site
+@@ -1117,7 +1124,7 @@
+ 
+ ### B.3.5 Uploads directory hardening
+ 
+-`/uploads/.htaccess`:
++`/uploads/.htaccess` (08 C-72: the block below is **void** — 02b §5 is the single canonical text, embedded verbatim in `install.php`; it adds the `<IfModule mod_headers.c>` wrapper, drops `-ExecCGI`, and starts with `ErrorDocument 404 "Not found"`):
+ 
+ ```apache
+ # php_flag engine off — REMOVED (08 C-37: silently ignored under LiteSpeed/LSAPI; see 02b §5)
+@@ -1149,17 +1156,21 @@
+ 
+ ```
+ Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline';
+-                         script-src 'self'; font-src 'self'; frame-ancestors 'none';
+-                         base-uri 'self'; form-action 'self'; object-src 'none'
++                         script-src 'self' 'sha256-{HTML_JS_SNIPPET_HASH}'; font-src 'self';
++                         connect-src 'self'; frame-src 'none'; frame-ancestors 'none';
++                         base-uri 'self'; form-action 'self'; object-src 'none';
++                         upgrade-insecure-requests
+ X-Content-Type-Options: nosniff
+ Referrer-Policy: strict-origin-when-cross-origin
+-Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+-Strict-Transport-Security: max-age=31536000; includeSubDomains
++Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), interest-cohort=()
++X-Frame-Options: DENY
+ ```
+ 
++> 08 §2.4 — C-60: **this block is the only CSP on the wire** and PHP is its only sender; the root `.htaccess` sets no CSP/Referrer/Permissions header for HTML (02b §6 is void) so browsers never enforce an accidental intersection of two policies. `'sha256-{HTML_JS_SNIPPET_HASH}'` is the hash of the one constant 3-line `html.js` bootstrap in 04b Part 5 — computed once by hand, stored as a PHP constant, recomputed in B.4.9 whenever the snippet changes. **`Strict-Transport-Security` is struck from this block** (Q-23: HSTS is off at launch and is added later as one `.htaccess` line, never from PHP on day one).
++
+ `'unsafe-inline'` appears in `style-src` because the critical CSS is inlined; it is **not**
+-in `script-src`, and no inline `<script>` exists. `frame-ancestors 'none'` replaces
+-`X-Frame-Options`. HSTS is added **only after** the SSL certificate is confirmed working —
++in `script-src`, and the only inline `<script>` is the hashed bootstrap. `frame-ancestors 'none'` replaces
++`X-Frame-Options` (both are sent for old browsers). HSTS is added **only after** the SSL certificate is confirmed working —
+ setting it before a working cert locks the site out of its own domain for a year.
+ 
+ ### B.3.7 Sessions
+@@ -1201,6 +1212,7 @@
+ 3. Throttle: **5 failures from one `ip_hash` in 15 minutes → locked for 15 minutes**, and
+    separately **10 failures against one username in 1 hour → that username locked for 1
+    hour**, which blunts a distributed attempt. Successful login clears that ip's counters.
++   > Superseded by 08 §2.4 — C-51 (05a §2.6 is canonical): the IP lock is **10** failures / 15 min; the username is **never hard-locked** — from 5 failures it slows to a 2 s delay per attempt, and a request carrying the owner's known-device cookie (`SFDEV`) skips the delay. A username lock lets anyone keep the owner out of her shop with five wrong passwords every 14 minutes. `ip_hash` is derived from `client_ip()` (02c §1, C-50), not `REMOTE_ADDR`.
+ 4. The failure message is always the same — `Invalid username or password.` — whether the
+    user exists or not, and whether or not the account is currently throttled. Constant-time
+    comparison, plus a `usleep` jitter, so response time is not an oracle.
+@@ -1249,6 +1261,7 @@
+ - Retention: payment proofs are deleted **90 days** after the order reaches `delivered` or
+   `cancelled`, by an admin-triggered cleanup tool (shared hosting cron is unreliable), and
+   the dashboard nags when proofs older than 90 days exist. Order records themselves are kept.
++  (08 C-65 names the tool: **`POST /admin/tools/purge`** (05a §1 route 40), which also runs on a 1-in-20 admin page load. It nulls `payment_proofs.file_path`, sets `purged_at` and deletes the file; stubs `email_outbox.body_html` — which holds the full rendered confirmation with name, phone, address and account details — on rows sent more than 60 days ago; prunes `rate_limits` and `admin_login_attempts` older than 30 days and expired session files. `admin_activity_log.before_json/after_json` never carry PII values (05a §5.1 rule 8). The privacy page states the 90-day and 60-day rules.)
+ - The privacy policy page states exactly this list, in plain English, including the WhatsApp
+   contact and the 90-day proof deletion. It is seeded with real content, not lorem ipsum.
+ 
+@@ -1266,11 +1279,29 @@
+ - [ ] `install.php` runs on an empty database, creates every table, the admin account and all
+       sample data, and reports success.
+ - [ ] Re-running `install.php` is refused, not destructive.
+-- [ ] `install.php` is gone (or `db/.installed` exists and the page says so).
++- [ ] `install.php` is gone (or `db/.installed` exists and the page says so). (08 C-47: the lock is `storage/.installed`.)
+ - [ ] `db/seed.sql` imports cleanly through **phpMyAdmin** on the real host. Em dashes and
+       `°C` render correctly on the storefront afterwards — no `â€”`.
++- [ ] **Re-importing `db/schema.sql` and then `db/seed.sql` on a database that already holds two
++      real orders changes nothing**: no table dropped, order count unchanged, sample rows not
++      duplicated (08 C-55 — no `DROP`, `IF NOT EXISTS`, `INSERT IGNORE`). Neither file contains
++      `CREATE DATABASE`, `USE` or `SET SESSION`.
+ - [ ] The same SQL runs on MySQL 8 and MariaDB 10.4 with no collation error.
+ - [ ] `https://skyfragrances.com` forces HTTPS; `www` 301s to apex; a trailing slash 301s.
++- [ ] `http://skyfragrances.com/admin/login` redirects to `https://` before any form renders (08 C-54).
++- [ ] After the installer's Finish (or Settings › Advanced) https self-check, the redirect is a **301**;
++      before it, a 302 (08 C-52).
++- [ ] **Client IP on the live host** (08 C-50): two test orders placed from a phone on mobile data and
++      from a laptop on Wi-Fi carry **different** `orders.ip_hash` values, and the installer's
++      "Client IP detection" row read PASS. If both hashes match, `trusted_proxies` is wrong and every
++      rate limit is shared by all visitors.
++- [ ] Opening the admin panel on the `*.hostingersite.com` preview host and on the real domain both
++      let the cart drawer work and admin forms save (08 C-49 — Origin is checked against the request
++      host, not `base_url`); the dashboard shows the host-mismatch banner on the preview host only.
++- [ ] `GET /storage/.htaccess`, `/storage/sessions/shop/`, `/admin/controllers/orders.php`,
++      `/config.sample.php`, `/.user.ini`, `/db/schema.sql` all return 403/404 with no body.
++- [ ] `install.php` Step 1 on the live host printed the effective `memory_limit` and the image
++      megapixel budget (08 C-46).
+ 
+ ### B.4.2 Orders — every payment method, end to end
+ 
+@@ -1295,8 +1326,22 @@
+       mentions the minimum spend.
+ - [ ] `welcome10` in lowercase with leading spaces works.
+ - [ ] A coupon worth more than the basket cannot produce a negative total.
+-- [ ] Free-shipping progress bar is accurate at Rs. 4,999 and Rs. 5,000, and shipping
+-      becomes Rs. 0 at the threshold.
++- [ ] Free-shipping progress bar is accurate at Rs. 2,999 and Rs. 3,000, and shipping
++      becomes Rs. 0 at the threshold (08 §1.4 / C-43: the threshold is Rs. 3,000, not 5,000).
++- [ ] **Pre-discount rule (08 C-43):** a Rs. 3,100 cart with `WELCOME10` shows *Free delivery* on the
++      cart page, the checkout page, the confirmation page, the email and `orders.shipping_fee = 0.00`
++      — all five agree, and placing the order needs exactly one tap (no re-price bounce).
++- [ ] An odd subtotal (e.g. Rs. 4,955 with `WELCOME10`) rounds the discount to Rs. 496 everywhere and
++      the order places on the first tap (one pricing function, C-43).
++- [ ] A price change made in admin between checkout render and *Place Order* — in **either**
++      direction — writes no order and shows the "Your new total is …" notice; the second tap succeeds.
++- [ ] **Per-phone race (08 C-44):** two checkouts with the same phone and `WELCOME10` fired
++      simultaneously — exactly one gets the discount; the other is told the code was already used
++      with this phone number and re-prices.
++- [ ] `FIRST50` stays *Limit reached* after the coupon list is reloaded; there is no recount control.
++- [ ] Ten wrong coupon codes from one IP in an hour → the eleventh is refused with the generic
++      message; a scheduled (`starts_at` future) code reports *isn't valid*, not *isn't active yet*
++      (08 C-66).
+ - [ ] Removing the last item empties the drawer to its empty state without an error.
+ - [ ] The cart survives a page reload and a browser restart within the session lifetime.
+ 
+@@ -1309,7 +1354,15 @@
+ - [ ] **Concurrency:** two checkouts for the last unit fired simultaneously — exactly one
+       succeeds, stock lands at 0, never −1. Re-run 10 times.
+ - [ ] Cancelling an order restores stock and decrements `used_count`; cancelling it twice
+-      changes nothing further.
++      changes nothing further. The `coupon_redemptions` row is `status = 'reverted'`, not deleted (08 C-44).
++- [ ] **Strict mode (08 C-55):** `UPDATE product_sizes SET stock = stock - 5 WHERE id = {a size with stock 3}`
++      run through the app's PDO connection raises error 1264, never stores 0.
++- [ ] Cancelling a **shipped** order does **not** change stock; the order shows *Parcel received
++      back — restore stock*, which restores it exactly once (08 C-48).
++- [ ] A second bank-transfer order from a phone whose first transfer order is still awaiting
++      verification is refused with the C-58 message; after the first is marked paid it is accepted.
++- [ ] *Cancel unpaid transfer orders older than 48 h* cancels only qualifying orders, restores each
++      order's stock once, and skips COD orders.
+ - [ ] Saffron Zenith 50ml (stock 3) appears in the dashboard low-stock alert.
+ 
+ ### B.4.5 Every admin function
+@@ -1386,14 +1439,31 @@
+       nothing but return no results.
+ - [ ] `<script>alert(1)</script>` submitted as a review body, a customer name and an order
+       note renders as visible text in admin and on the storefront, never executes.
++- [ ] **Content-page sanitiser (08 C-62):** saving `<a href="javascript:alert(1)">x</a>`,
++      `<p onmouseover="alert(1)">x</p>`, `<img src=x onerror=alert(1)>` and `<iframe src=//evil>` into
++      `/privacy` stores and renders `<a>x</a>` (no href), `<p>x</p>`, nothing, nothing.
++- [ ] **CSP (08 C-60):** the HTML response carries exactly one `Content-Security-Policy` header, and the
++      browser console shows **zero** CSP violations on home, a product page, cart, checkout, track and an
++      admin order page; `html.js` is set (no FOUC) — the hashed bootstrap ran.
++- [ ] A paid manual order's confirmation link shows the receipt only; `POST`ing a new proof to it
++      returns 403 and `payment_status` stays `paid` (08 C-59).
++- [ ] `/order/SF-000000-XXXX` (non-existent) and `/order/{real}?t=wrong` render the identical
++      pre-filled track form (08 C-76).
++- [ ] The contact auto-reply contains none of the message body; 31 contact submissions in an hour
++      from rotating IPs produce at most 30 auto-replies (08 C-63).
++- [ ] Five wrong passwords on the admin username from one IP, then a correct login from the owner's
++      phone (known-device cookie) succeeds immediately; a sixth wrong attempt from the attacker's IP is
++      delayed ~2 s and the tenth locks that IP only (08 C-51).
+ - [ ] A form POSTed without a CSRF token is rejected with 419.
+ - [ ] `evil.jpg` containing `<?php echo 1; ?>` uploads, and requesting it directly does not
+       execute PHP. `shell.php.jpg` is rejected or neutralised.
+ - [ ] A payment proof URL cannot be reached without an admin session.
+ - [ ] Triggering a database error in production mode shows the branded 500 page with a
+       reference id and no path, no SQL, no trace.
+-- [ ] `config.php`, `/app`, `/includes`, `/logs` and directory listings are all inaccessible
+-      over HTTP. No `.bak`, `.zip`, `phpinfo.php` or `adminer.php` on the server.
++- [ ] `config.php`, `/app`, `/db`, `/storage`, `/admin/controllers`, `/admin/views`, `/admin/partials`
++      and directory listings are all inaccessible over HTTP (08 C-23 / C-54; there is no `/includes`
++      or `/logs`). No `.bak`, `.zip`, `.disabled`, `phpinfo.php`, `adminer.php` or leftover
++      `reset-password.php` on the server.
+ 
+ ### B.4.10 Performance verification
+ 
+@@ -1429,3 +1499,138 @@
+    confirmations in spam without SPF and DKIM on the domain. The owner must set both, or
+    accept that WhatsApp is the real confirmation channel.
+ 6. **Urdu** is explicitly out of scope for v1 (doc 03 §1.4). Confirm the owner agrees.
++
++---
++
++# PART C — The non-developer go-live guide (outline this document owns)
++
++> Added by the hardening review (08 §2.4 — C-78, F-11). PLAN §1 promises a step-by-step guide
++> and PLAN §12 stage 6 delivers it, but no specification owned its content. This Part is the
++> outline the finished guide must follow; the guide itself is written in stage 6 as
++> `docs/GO-LIVE-GUIDE.md` (and a PDF export), one numbered step per screen, every step with a
++> screenshot of hPanel or the installer at that moment, and every instruction phrased for
++> someone who has never opened a terminal. Steps are in the **only** order that works on
++> Hostinger: domain first, padlock second, files third, installer fourth.
++
++## C.1 Before you start (one page)
++
++1. What you need open: hPanel, this guide, your phone. Roughly 45 minutes.
++2. **What not to touch in hPanel** (C-52, C-70, hosting finding 12):
++   - *SSL → Force HTTPS* stays **off** — the site's own `.htaccess` does this correctly behind
++     Hostinger's proxy; hPanel's toggle writes a second rule that loops.
++   - *Advanced → PHP Configuration* stays at defaults except the PHP version (C.2 step 2);
++     the site ships its own `.user.ini`.
++   - No LiteSpeed Cache plugin, no "Website Builder", no WordPress auto-installer on this domain.
++   - File Manager: turn **Show hidden files** on (screenshot) — files starting with a dot
++     (`.htaccess`, `.user.ini`) are invisible otherwise, and the checks below depend on seeing them.
++3. Where to get help: the WhatsApp number of the developer, and what to send (the installer's
++   requirements screen screenshot, or the incident id from a branded error page).
++
++## C.2 Domain and padlock first (steps 1–3)
++
++1. **Point the domain.** hPanel → Domains → `skyfragrances.com` → nameservers/DNS to this hosting
++   plan. Wait until hPanel shows the domain as connected (up to a few hours).
++2. **Select PHP 8.2** (or newer 8.x) in hPanel → Advanced → PHP Configuration. The installer
++   refuses to run below 8.2 and says so.
++3. **Wait for the padlock.** hPanel → Security → SSL shows *Active* for `skyfragrances.com`
++   and `www`. Open `https://skyfragrances.com` in the phone browser: the default Hostinger page
++   with a padlock is what "ready" looks like. **Do not upload anything before this.** (C-52: the
++   site's HTTPS redirect ships as temporary and is made permanent by the installer only once
++   the certificate is confirmed, but the guide still front-loads SSL so step 8 never shows a
++   certificate warning.)
++
++## C.3 Database and mailbox (steps 4–5)
++
++4. **Create the database.** hPanel → Databases → MySQL Databases → create. Write down the three
++   values hPanel shows (database name `u…_skyfrag`, user `u…_sky`, password). You do **not**
++   create tables — the installer does. You never open phpMyAdmin in the normal path; it is only
++   the fallback in C.7.
++5. **Create the mailbox** `orders@skyfragrances.com` in hPanel → Emails **before** the installer
++   (it asks for the mailbox password on its Step 3 and sends a test email; without the mailbox
++   that step cannot pass). Note the SMTP host hPanel shows (normally `smtp.hostinger.com`, port
++   587). If your email is with Google Workspace or another provider, use *its* SMTP details —
++   Hostinger's server cannot send for an address it does not host.
++
++## C.4 Upload and check (steps 6–7)
++
++6. **Upload the ZIP.** File Manager → `public_html` → delete Hostinger's `default.php` if it is
++   there → Upload `skyfragrances.zip` → right-click → Extract **here** (the ZIP has no wrapper
++   folder, so files land directly in `public_html`). Delete the ZIP and any `__MACOSX` folder
++   afterwards. Wait five minutes before the next step (`.user.ini` is read every 300 s).
++7. **Check the files landed** (Show hidden files on): `index.php`, `install.php`, `.htaccess`,
++   `.user.ini`, and folders `app`, `admin`, `assets`, `db`, `storage`, `uploads`. Inside
++   `storage` and `uploads` there must be a `.htaccess` too. If any is missing, the installer
++   will recreate it — but tell the developer, because it means the ZIP tool dropped hidden files.
++
++## C.5 The installer (steps 8–11, one per screen)
++
++8. **Open `https://skyfragrances.com/install.php`.** Screen 1 — *Requirements*: every row
++   green, or amber with a plain sentence. A red row about PHP version or a folder not being
++   writable stops here (fix per the sentence, reload). Amber "could not verify" rows are not
++   blockers: open the URL they name on your phone and confirm what they ask (C-47). Note the
++   *Memory limit* and *Client IP detection* rows — send a screenshot if either is amber.
++9. **Screen 2 — Database:** paste the three values from step 4. The installer tests them before
++   saving anything; a wrong password is a friendly message, not a blank page.
++10. **Screen 3 — Your account and email:** choose your admin username (not `admin`) and a
++    12+ character password; enter your email (this becomes both the login email and the
++    address that receives *New order* alerts); enter the mailbox password from step 5; press
++    **Send test email** and confirm it arrives on your phone before continuing.
++11. **Screen 4 — Sample data and finish:** leave *Install sample perfumes* ticked (you remove
++    them later from the admin panel). Press Finish. The page confirms `install.php` deleted
++    itself, that HTTPS was confirmed and made permanent, and that `config.php` is locked
++    read-only. If it instead shows a red panel asking you to delete `install.php` in File
++    Manager, do exactly that, then reload the page to confirm it is gone.
++
++## C.6 First hour in the admin panel (steps 12–17)
++
++12. **Log in** at `https://skyfragrances.com/admin`. Your phone is now a *known device*
++    (C-51); log in once from your laptop too if you use one.
++13. **Settings → Payments:** replace every `REPLACE ME` bank / JazzCash / Easypaisa detail; the
++    red dashboard banner disappears when none remain and checkout starts offering those methods.
++    Decide whether COD needs a maximum (default: no cap).
++14. **Settings → Store / Home:** upload the real logo and hero images; check the announcement
++    text, WhatsApp number, delivery time and shipping fee.
++15. **Place one test order per payment method** from your phone (COD, bank, JazzCash,
++    Easypaisa), confirm the *New order* email reaches you and the customer email reaches a
++    test address, move one order through Confirmed → Shipped → Delivered, cancel one, and
++    check stock came back. Mark the bank order paid from its screenshot.
++16. **Tools → Remove sample data** when you are ready to launch — sample reviews must go before
++    launch (they are seeded unapproved, so nothing fake ever showed, but they must not be
++    approved by accident). Keep or remove the 12 sample perfumes as you prefer.
++17. **Settings → Advanced:** confirm *Site address* reads `https://skyfragrances.com` and
++    *Search engines may index this site* is **on** (it is off automatically on the preview
++    host). Confirm *HTTPS permanent* shows done; if not, press it now that the padlock shows.
++
++## C.7 After launch (steps 18–21)
++
++18. **Email deliverability:** hPanel → Emails → DNS / SPF & DKIM — follow Hostinger's
++    one-click setup for `skyfragrances.com` (Q-19). Send yourself a test order afterwards and
++    check it is not in spam. Until then, WhatsApp is the reliable confirmation channel.
++19. **Optional — faster email retries:** hPanel → Advanced → Cron Jobs → every 15 minutes:
++    `php /home/<user>/public_html/cron.php`. Nothing breaks without it; emails still go out
++    whenever you open the admin panel (C-56).
++20. **If you forget your password (recovery, step 9 of the login page footer):** File Manager →
++    `app/tools/reset-password.php` → copy to `public_html` → open it in the browser → it tells
++    you to create an empty file with a specific name inside `storage` → create it → reload →
++    set the new password. It deletes itself and the marker file when done (C-64). Confirm
++    `https://skyfragrances.com/reset-password.php` shows the branded 404 afterwards.
++21. **If the site must be paused** while you re-upload: Settings → Advanced → *Maintenance
++    mode*. If the admin panel itself is unreachable, create an empty file named `MAINTENANCE`
++    inside `storage` in File Manager; delete it to reopen (C-70).
++
++## C.8 Things the guide deliberately does not include
++
++- Installing in a sub-folder (`skyfragrances.com/shop/`) — not supported in v1 (C-71). Staging
++  happens on the Hostinger preview address instead.
++- Editing `config.php` or `.htaccess` by hand. Every value the owner controls is in Settings.
++- Importing `db/schema.sql` / `db/seed.sql` in phpMyAdmin. They exist only as a fallback the
++  developer may ask for; since C-55 they cannot delete anything, but the installer is the path.
++- Turning on HSTS (Q-23) — the developer does this after the certificate has been stable.
++
++## C.9 Acceptance for the guide itself
++
++- [ ] A person who has never seen the project follows the guide on a fresh Hostinger account,
++      from the ZIP, without asking a question, in under one hour (the stage-6 rehearsal).
++- [ ] Every step has a screenshot taken on the real hPanel at the moment of that step.
++- [ ] The guide's step order matches this outline; steps 1–3 precede step 6 without exception.
++- [ ] Every C-nn cited above resolves to a behaviour the installer or panel actually shows.
+Only in plan: integrate-delta.diff
