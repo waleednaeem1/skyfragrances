@@ -1,0 +1,8 @@
+ErrorDocument 404 "Not found"
+
+<IfModule mod_headers.c>
+<FilesMatch "\.(css|js|jpe?g|png|webp|svg|ico|woff2)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+  Header unset Pragma
+</FilesMatch>
+</IfModule>

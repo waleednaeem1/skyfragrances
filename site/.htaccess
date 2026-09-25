@@ -1,0 +1,81 @@
+Options -Indexes
+DirectoryIndex index.php
+AddDefaultCharset UTF-8
+ErrorDocument 404 /index.php
+ErrorDocument 403 /index.php
+
+<FilesMatch "(^\.|\.(disabled|sql|md|log|bak|old|swp|dist|lock)$|^config.*\.php$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https [NC]
+RewriteCond %{SERVER_PORT} !^443$
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=302,NE]
+
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301,NE]
+
+RewriteCond %{THE_REQUEST} \s/+index\.php(?:[/?]\S*)?\s [NC]
+RewriteRule ^index\.php(.*)$ $1 [L,R=301,NE]
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.+?)/+$ $1 [L,R=301,NE]
+
+RewriteCond %{REQUEST_URI} ^/(uploads|assets)/ [OR]
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+RewriteRule ^admin(/.*)?$ admin/index.php [L]
+
+RewriteRule ^ index.php [L]
+</IfModule>
+
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresDefault                          "access plus 1 hour"
+ExpiresByType text/html                 "access plus 0 seconds"
+ExpiresByType text/css                  "access plus 1 year"
+ExpiresByType application/javascript    "access plus 1 year"
+ExpiresByType image/jpeg                "access plus 1 year"
+ExpiresByType image/png                 "access plus 1 year"
+ExpiresByType image/webp                "access plus 1 year"
+ExpiresByType image/svg+xml             "access plus 1 year"
+ExpiresByType image/x-icon              "access plus 1 year"
+ExpiresByType font/woff2                "access plus 1 year"
+ExpiresByType application/xml           "access plus 1 hour"
+</IfModule>
+
+<IfModule mod_headers.c>
+<FilesMatch "\.(css|js|jpe?g|png|webp|svg|ico|woff2)$">
+  Header set Cache-Control "public, max-age=31536000, immutable"
+  Header unset Pragma
+</FilesMatch>
+<FilesMatch "\.(css|js|woff2|svg|png|jpe?g|webp|ico|txt|xml)$">
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+</FilesMatch>
+Header unset X-Powered-By
+Header always unset X-Powered-By
+</IfModule>
+
+AddType image/webp .webp
+AddType font/woff2 .woff2
+AddType image/svg+xml .svg
+
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+AddOutputFilterByType DEFLATE application/javascript application/json
+AddOutputFilterByType DEFLATE application/xml image/svg+xml
+</IfModule>

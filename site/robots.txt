@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+Disallow: /order/
+Disallow: /track
+Disallow: /search
+Disallow: /unsubscribe
+Disallow: /api/
+Disallow: /scent-finder/result
+Disallow: /*?sort=
+Disallow: /*?page=
+Sitemap: http://127.0.0.1:8088/sitemap.xml

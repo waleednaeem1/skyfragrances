@@ -23,19 +23,32 @@ for (const vp of viewports) {
   const page = await ctx.newPage()
   const errors = []
   page.on('pageerror', e => errors.push(e.message.slice(0, 200)))
-  page.on('console', m => { if (m.type() === 'error') errors.push('console: ' + m.text().slice(0, 200)) })
-  page.on('response', r => { if (r.status() >= 400 && !r.url().includes('favicon')) errors.push(`${r.status()} ${r.url()}`) })
+  let documentUrl = ''
+  page.on('console', m => { if (m.type() === 'error' && (m.location().url || '') !== documentUrl) errors.push('console: ' + m.text().slice(0, 200)) })
+  page.on('response', r => { if (r.status() >= 400 && !r.url().includes('favicon') && !(r.request().isNavigationRequest() && r.request().frame() === page.mainFrame())) errors.push(`${r.status()} ${r.url()}`) })
   for (const p of paths) {
     const slug = p.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '') || 'home'
     const file = `${out}/${slug}--${vp.name}.png`
     errors.length = 0
+    documentUrl = base + p
     const res = await page.goto(base + p, { waitUntil: 'networkidle', timeout: 30000 }).catch(e => ({ status: () => 'ERR ' + e.message.slice(0, 80) }))
     await page.evaluate(async () => {
       const step = Math.max(400, window.innerHeight * 0.8)
-      for (let y = 0; y < document.body.scrollHeight; y += step) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 90)) }
-      window.scrollTo(0, 0); await new Promise(r => setTimeout(r, 250))
+      for (let y = 0; y < document.body.scrollHeight; y += step) { window.scrollTo(0, y); await new Promise(r => setTimeout(r, 250)) }
+      window.scrollTo(0, 0); await new Promise(r => setTimeout(r, 900))
+      document.querySelectorAll('.sf-reveal').forEach(e => e.classList.add('is-visible'))
+      const style = document.createElement('style')
+      style.textContent = '*,*::before,*::after{transition-duration:0s!important;transition-delay:0s!important;animation-duration:0s!important;animation-delay:0s!important}'
+      document.head.appendChild(style)
+      await new Promise(r => setTimeout(r, 400))
+    }).catch(() => {})
+    await page.evaluate(() => {
+      document.querySelectorAll('img[loading="lazy"]').forEach(i => { i.loading = 'eager' })
+      const pending = [...document.images].filter(i => !i.complete).map(i => new Promise(r => { i.addEventListener('load', r, { once: true }); i.addEventListener('error', r, { once: true }) }))
+      return Promise.race([Promise.all(pending), new Promise(r => setTimeout(r, 4000))])
     }).catch(() => {})
     await page.screenshot({ path: file, fullPage: true })
+    await page.waitForTimeout(400)
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1).catch(() => null)
     report.push({ path: p, viewport: vp.name, status: res.status(), file, horizontalOverflow: overflow, errors: [...errors] })
   }

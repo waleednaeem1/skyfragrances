@@ -1,6 +1,13 @@
 site/config.php
 site/uploads/*
 !site/uploads/.htaccess
+!site/uploads/products/
+site/uploads/products/*
+!site/uploads/products/sample/
+!site/uploads/og/
+site/uploads/og/*
+!site/uploads/og/sample/
+!site/uploads/collections/
 !site/uploads/index.html
 site/storage/.installed
 site/storage/.install-key

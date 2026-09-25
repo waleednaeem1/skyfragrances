@@ -1,0 +1,402 @@
+[
+  {
+    "path": "/",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/home--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/shop--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop?gender=her&sort=price_asc",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/shop_gender_her_sort_price_asc--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/collections",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/collections--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/for-him",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/for_him--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/for-her",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/for_her--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/unisex",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/unisex--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/new-arrivals",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/new_arrivals--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/best-sellers",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/best_sellers--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/sale",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/sale--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/search?q=oud",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/search_q_oud--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/product_azure_oud--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/scent-finder",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/scent_finder--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/cart",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/cart--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/checkout--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/track",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/track--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/contact",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/contact--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/faq",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/faq--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/about",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/about--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shipping",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/shipping--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/returns",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/returns--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/privacy",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/privacy--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/terms",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/terms--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/this-page-does-not-exist",
+    "viewport": "desktop",
+    "status": 404,
+    "file": "docs/shots/stage2-final/this_page_does_not_exist--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/order/SF-260926-U6UR?t=8cd71f17374fc622508c42f62a8321c5",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/stage2-final/order_SF_260926_U6UR_t_8cd71f17374fc622508c42f62a8321c5--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/home--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/shop--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop?gender=her&sort=price_asc",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/shop_gender_her_sort_price_asc--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/collections",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/collections--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/for-him",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/for_him--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/for-her",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/for_her--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/unisex",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/unisex--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/new-arrivals",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/new_arrivals--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/best-sellers",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/best_sellers--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/sale",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/sale--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/search?q=oud",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/search_q_oud--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/product_azure_oud--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/scent-finder",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/scent_finder--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/cart",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/cart--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/checkout--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/track",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/track--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/contact",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/contact--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/faq",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/faq--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/about",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/about--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shipping",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/shipping--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/returns",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/returns--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/privacy",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/privacy--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/terms",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/terms--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/this-page-does-not-exist",
+    "viewport": "mobile",
+    "status": 404,
+    "file": "docs/shots/stage2-final/this_page_does_not_exist--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/order/SF-260926-U6UR?t=8cd71f17374fc622508c42f62a8321c5",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/stage2-final/order_SF_260926_U6UR_t_8cd71f17374fc622508c42f62a8321c5--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  }
+]

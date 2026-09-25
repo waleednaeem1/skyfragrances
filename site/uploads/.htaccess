@@ -1,0 +1,29 @@
+ErrorDocument 404 "Not found"
+
+RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .pht .phar .cgi .pl .py .shtml
+RemoveType    .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .pht .phar .cgi .pl .py .shtml
+
+<IfModule mod_mime.c>
+  AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .pht .phar .inc .cgi .pl .py .shtml .html .htm
+</IfModule>
+
+<FilesMatch "(?i)\.(php|phtml|php[0-9]|phps|pht|phar|inc|cgi|pl|py|sh|shtml|htaccess|htpasswd)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+<FilesMatch "(?i)\.(jpe?g|png|webp|gif|ico|avif)$">
+  <IfModule mod_authz_core.c>
+    Require all granted
+  </IfModule>
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=31536000, immutable"
+    Header set X-Content-Type-Options "nosniff"
+    Header set Content-Disposition "inline"
+  </IfModule>
+</FilesMatch>
