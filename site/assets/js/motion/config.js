@@ -134,7 +134,7 @@ window.SF_MOTION = {
       freq: [4, 7],
       pulse: { speed: 0.06, spread: 40, mix: 0.5, gain: 0.2 },
       breathe: { amp: 0.1, freq: 1.4, speed: 0.7 },
-      halo: { scale: 4.5, alpha: 0.2 },
+      halo: { scale: 3.4, alpha: 0.18 },
       gain: 0.6
     },
     sprite: { size: 512, opacity: 0.35, y: 0, scale: 2.6 },

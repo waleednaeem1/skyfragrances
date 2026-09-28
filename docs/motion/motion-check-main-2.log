@@ -1,0 +1,30 @@
+profile      path                st  err scroll fps/p95/long  hover fps/p95  ovl  hero            cart      buy path
+desktop-1440 /                   200 0   68/30.4/8            80/16          ok   gl                        hero CTA:ok(veil)@7ms
+desktop-1440 /shop               200 0   124/9.9/0            84/17.7        ok   desktop                   card price:ok@6ms card link:ok@6ms
+desktop-1440 /product/azure-oud  200 0   52/41.7/17           94/17.2        ok   desktop         ok 0->1   price:ok@5ms Add to Cart:ok@6ms COD trust row:ok@6ms
+desktop-1440 /scent-finder       200 0   120/8.7/0            120/8.9        ok   desktop                   quiz answer:ok@4ms quiz next:ok@4ms
+desktop-1440 /cart               200 0   120/8.9/0            120/8.6        ok   desktop         lines:1   cart price:ok@1ms checkout button:ok@2ms
+desktop-1440 /checkout           200 0   120/8.8/0            120/8.6        ok   desktop         lines:1   checkout form:ok@3ms COD option:ok@3ms place order:ok@3ms
+mobile-360   /                   200 0   115/8.5/1            -              ok   plates                    hero CTA:ok@5ms
+mobile-360   /shop               200 0   120/9/0              -              ok   mobile                    card price:ok@4ms card link:ok@4ms
+mobile-360   /product/azure-oud  200 0   111/9.1/2            -              ok   mobile          ok 0->1   price:ok@4ms Add to Cart:ok@4ms COD trust row:ok@4ms
+mobile-360   /scent-finder       200 0   119/8.7/0            -              ok   mobile                    quiz answer:ok@2ms quiz next:ok@2ms
+mobile-360   /cart               200 0   116/8.9/1            -              ok   mobile          lines:1   cart price:ok@2ms checkout button:ok@2ms
+mobile-360   /checkout           200 0   120/8.9/0            -              ok   mobile          lines:1   checkout form:ok@2ms COD option:ok@3ms place order:ok@3ms
+reduced-1440 /                   200 0   120/8.9/0            -              ok   reduced                   hero CTA:ok@4ms
+reduced-1440 /shop               200 0   120/8.5/0            -              ok   reduced                   card price:ok@4ms card link:ok@4ms
+reduced-1440 /product/azure-oud  200 0   97/16.7/3            -              ok   reduced         ok 0->1   price:ok@4ms Add to Cart:ok@4ms COD trust row:ok@4ms
+reduced-1440 /scent-finder       200 0   120/9.1/0            -              ok   reduced                   quiz answer:ok@3ms quiz next:ok@3ms
+reduced-1440 /cart               200 0   120/9.2/0            -              ok   reduced         lines:1   cart price:ok@4ms checkout button:ok@4ms
+reduced-1440 /checkout           200 0   120/9.2/0            -              ok   reduced         lines:1   checkout form:ok@3ms COD option:ok@3ms place order:ok@4ms
+intro desktop-1440: mode=full finished=true h1={"opacity":"1","visibility":"visible"} ctaAfter=true
+quiz desktop-1440: ok /scent-finder/result?a=1-1-1-1-1 price=true cta=true
+nav desktop-1440: home(/) → shop(/shop) → product(/product/azure-oud) → cart(/cart) → checkout(/checkout) → back(/cart)
+intro mobile-360: mode=none finished=false h1={"opacity":"1","visibility":"visible"} ctaAfter=true
+quiz mobile-360: ok /scent-finder/result?a=1-1-1-1-1 price=true cta=true
+nav mobile-360: home(/) → shop(/shop) → product(/product/azure-oud) → cart(/cart) → checkout(/checkout) → back(/cart)
+quiz reduced-1440: ok /scent-finder/result?a=1-1-1-1-1 price=true cta=true
+nav reduced-1440: home(/) → shop(/shop) → product(/product/azure-oud) → cart(/cart) → checkout(/checkout) → back(/cart)
+
+ALL CHECKS PASSED
+exit 0
