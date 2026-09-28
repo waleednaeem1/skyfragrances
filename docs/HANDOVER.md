@@ -257,3 +257,20 @@ confirmed**; bulk **Cancel unpaid** POST (order back-dated 3 days) cancelled 1 a
    the guide's Part 11 checklist.
 9. `build-zip.php` names the ZIP with UTC time (`date()` with PHP's default timezone); harmless,
    but the name and the file's modification time differ by five hours.
+
+## Deploy over SSH (how code reaches the live site)
+
+- Every push to `main` that touches `site/` runs `.github/workflows/deploy.yml`: PHP syntax check,
+  then `rsync` over SSH into `~/domains/skyfragrances.com/public_html` on the Hostinger server
+  (178.16.136.115, port 65002, user `u561152958`), then a live check that the home page serves
+  the motion layer. It never touches `config.php`, `install.php`, `storage/` or `uploads/`.
+- Credentials: an ed25519 deploy key. Public half is registered in hPanel → Advanced → SSH Access →
+  SSH keys (`skyfragrances-deploy`); private half lives only in the GitHub secret
+  `SSH_PRIVATE_KEY` (plus `SSH_HOST`, `SSH_PORT`, `SSH_USER`; optional `SSH_REMOTE_DIR`).
+  The developer's copy is `~/.ssh/skyfragrances_deploy` on the build Mac.
+- To rotate: generate a new key, replace the secret, add the new public key in hPanel, delete the
+  old one there. To disable deploys: delete the key in hPanel.
+- The old FTP secrets (`FTP_*`) are unused and can be deleted.
+- Manual fallback: `dist/skyfragrances-public_html-folder.zip` (full site, folder-wrapped) with the
+  three-item preservation steps in GO-LIVE-GUIDE Part 8b, or the flat update pack from
+  `dev-tools/build-update-pack.sh` extracted inside `public_html`.

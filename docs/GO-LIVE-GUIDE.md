@@ -772,6 +772,31 @@ is your accounting record.
 
 ---
 
+## Part 8b — Updating the shop later by replacing the whole public_html folder
+
+When the developer sends a new `skyfragrances-public_html-folder.zip`, you can replace the whole
+site in one go. Three things inside the old folder are **yours** and must be carried over,
+because the new ZIP does not contain them: `config.php` (your database password and the shop's
+secret key), the `storage` folder (the "installed" marker, payment screenshots, sessions) and the
+`uploads` folder (every photo you added in the admin panel). Everything else is code and is
+replaced.
+
+1. File Manager → go **up one level** from `public_html` (you see the `public_html` folder itself).
+2. Right-click `public_html` → **Rename** → `public_html-previous`.
+3. **Upload** the new `skyfragrances-public_html-folder.zip` here → right-click → **Extract**
+   (leave the path as it is) → a fresh `public_html` appears. Delete the ZIP.
+4. Open `public_html-previous`, turn on **Show hidden files**, and select exactly three items:
+   `config.php`, the `storage` folder and the `uploads` folder. Right-click → **Move** →
+   destination `/public_html` → confirm **Replace / Overwrite** if asked.
+5. Open the new `public_html` and check the three items are there. Delete `install.php` if you
+   see it (the shop is already installed; the file refuses to run anyway).
+6. Open `https://skyfragrances.com` — the shop shows your products and you can log in to
+   `/admin` as before. Only then delete `public_html-previous`.
+
+If step 6 shows "Sky Fragrances is not configured yet", `config.php` did not make it across — go
+back to step 4. Never run `install.php` on a shop that already has orders: it offers to replace
+the database.
+
 ## Part 9 — Going public
 
 - **Announce only after** Part 7 Step 3 (payment details) and Step 6 (sample data removed) are
