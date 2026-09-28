@@ -156,15 +156,37 @@ $stickyThumb = $images !== [] ? $images[0]['thumb'] : asset('img/brand/monogram-
 <?php partial('related.php', ['related' => $related, 'sectionId' => 'related']); ?>
 <?php endif; ?>
 <?php if ($hasComposition): ?>
-<section class="section section--divided" id="composition" aria-labelledby="composition-title">
-  <div class="container container--narrow">
+<?php $storyFamily = (string) ($product['scent_family_slug'] ?? $product['scent_family'] ?? ''); ?>
+<?php $storyImage = $images !== [] ? $images[0] : null; ?>
+<?php $storyHueMap = ['midnight-meridian' => ['#5E7FB4', '#8C6FA6', '#B08458'], 'azure-heights' => ['#7FB3D5', '#D8DCC2', '#C4AE8E'], 'golden-hour' => ['#E0A45C', '#C8703A', '#96502E'], 'dawn-chorus' => ['#E8C2B4', '#D9A3A0', '#B98A91'], 'monsoon-veil' => ['#8AA07C', '#6A7554', '#5E3B33']]; ?>
+<?php $storyHues = $storyHueMap[(string) ($collection['slug'] ?? '')] ?? null; ?>
+<section class="section section--divided story<?= $storyImage === null ? ' story--no-figure' : '' ?>" id="composition" aria-labelledby="composition-title" data-motion="story" data-note="top" data-story-family="<?= e($storyFamily) ?>"<?= $storyHues !== null ? ' data-motion-hue-top="' . e($storyHues[0]) . '" data-motion-hue-heart="' . e($storyHues[1]) . '" data-motion-hue-base="' . e($storyHues[2]) . '"' : '' ?>>
+  <div class="story__glow story__glow--a is-on" aria-hidden="true"></div>
+  <div class="story__glow story__glow--b" aria-hidden="true"></div>
+  <div class="container story__container">
     <header class="section-header section-header--center sf-reveal">
       <p class="section-header__eyebrow">Inside the bottle</p>
       <h2 class="section-header__title h2" id="composition-title">The Composition</h2>
     </header>
-    <div class="stack">
-      <?php partial('notes-pyramid.php', ['notes' => $notes]); ?>
-      <?php partial('meters.php', ['meters' => $meters]); ?>
+    <div class="story__layout">
+<?php if ($storyImage !== null): ?>
+      <div class="story__figure" aria-hidden="true">
+        <div class="story__stage">
+          <div class="story__tilt">
+            <div class="story__halo story__halo--a is-on"></div>
+            <div class="story__halo story__halo--b"></div>
+            <picture>
+              <source type="image/webp" srcset="<?= e($storyImage['webp']) ?>">
+              <img class="story__bottle" src="<?= e($storyImage['src']) ?>" alt="" width="600" height="750" loading="lazy" decoding="async">
+            </picture>
+          </div>
+          <div class="story__layers" data-motion-slot="story-layers"></div>
+        </div>
+      </div>
+<?php endif; ?>
+      <div class="story__notes stack">
+        <?php partial('notes-pyramid.php', ['notes' => $notes]); ?>
+        <?php partial('meters.php', ['meters' => $meters]); ?>
 <?php if ($seasons !== [] || $occasions !== []): ?>
       <div class="grid grid--2 sf-reveal">
 <?php if ($seasons !== []): ?>
@@ -189,6 +211,7 @@ $stickyThumb = $images !== [] ? $images[0]['thumb'] : asset('img/brand/monogram-
 <?php endif; ?>
       </div>
 <?php endif; ?>
+      </div>
     </div>
   </div>
 </section>

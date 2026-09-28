@@ -13,11 +13,13 @@ $total = max(1, (int) ($total ?? count($questions)));
 </div>
 <section class="section section--flush-top" aria-labelledby="quiz-title">
   <div class="container container--narrow">
-    <form class="form js-validate js-quiz stack" method="get" action="<?= e((string) $resultUrl) ?>">
+    <form class="form js-validate js-quiz stack" method="get" action="<?= e((string) $resultUrl) ?>" data-motion="quiz">
       <div class="form__summary js-form-summary" role="alert" hidden></div>
+      <p class="u-sr-only js-quiz-live" aria-live="polite"></p>
+      <div class="quiz-deck">
 <?php foreach ($questions as $index => $question): ?>
 <?php $step = $index + 1; $fieldName = 'q' . $step; $percent = (int) round($step * 100 / $total); ?>
-      <fieldset class="form__section stack" id="question-<?= e((string) $step) ?>">
+      <fieldset class="form__section stack" id="question-<?= e((string) $step) ?>" data-motion-step="<?= e((string) $step) ?>">
         <div class="progress" aria-hidden="true">
           <p class="progress__label"><span>Question <?= e((string) $step) ?> of <?= e((string) $total) ?></span><span><?= e((string) $percent) ?>%</span></p>
           <div class="progress__track"><div class="progress__fill" style="--fill:<?= e((string) $percent) ?>%"></div></div>
@@ -55,6 +57,7 @@ $total = max(1, (int) ($total ?? count($questions)));
         </p>
       </fieldset>
 <?php endforeach; ?>
+      </div>
       <div class="form__actions">
         <button class="btn btn--primary btn--block" type="submit"><?php partial('icon.php', ['name' => 'compass', 'size' => 18, 'class' => 'btn__icon']); ?><span class="btn__label">Show my matches</span></button>
       </div>

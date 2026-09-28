@@ -195,7 +195,7 @@ $renderFilters = static function (string $suffix, bool $withSort) use ($facetGro
 <?php endif; ?>
 <?php if ($products !== []): ?>
       <h2 class="u-sr-only">Results</h2>
-      <div class="grid grid--products js-filter-bar-anchor">
+      <div class="grid grid--products js-filter-bar-anchor" data-motion="cards">
 <?php foreach ($products as $index => $product): ?>
         <?php partial('product-card.php', ['product' => $product, 'eager' => $index < 2 && $page === 1]); ?>
 <?php endforeach; ?>

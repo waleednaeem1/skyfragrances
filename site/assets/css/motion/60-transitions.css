@@ -1,0 +1,63 @@
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+@layer motion {
+  :root {
+    --sf-veil-out: 160ms;
+    --sf-veil-in: 200ms;
+    --sf-mist: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(212, 176, 132, 0.14), rgba(212, 176, 132, 0) 70%), #0A0A0A;
+  }
+  ::view-transition {
+    background: var(--sf-mist);
+  }
+  ::view-transition-old(root) {
+    animation: sf-mist-out var(--sf-veil-out) var(--sf-ease-in) both;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-new(root) {
+    animation: sf-mist-in var(--sf-veil-in) var(--sf-ease-out) both;
+    mix-blend-mode: normal;
+  }
+  @keyframes sf-mist-out {
+    to {
+      opacity: 0;
+      transform: scale(1.012);
+    }
+  }
+  @keyframes sf-mist-in {
+    from {
+      opacity: 0;
+    }
+  }
+  .sf-veil {
+    position: fixed;
+    inset: 0;
+    z-index: 590;
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    background: var(--sf-mist);
+    transition: opacity var(--sf-veil) var(--sf-ease-in), visibility 0s linear var(--sf-veil);
+  }
+  html.motion--desktop .sf-veil {
+    display: block;
+  }
+  html.motion--desktop .sf-veil.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--sf-veil) var(--sf-ease-in), visibility 0s;
+    animation: sf-veil-failsafe var(--sf-veil) var(--sf-ease-out) var(--sf-veil-failsafe) forwards;
+  }
+  html.motion--desktop .sf-veil.is-restored {
+    transition: none;
+    animation: none;
+  }
+  @keyframes sf-veil-failsafe {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+}

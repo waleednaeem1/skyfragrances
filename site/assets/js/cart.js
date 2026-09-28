@@ -161,6 +161,11 @@
       request('/api/cart');
     }
   }
+  function thumbOf(form, button) {
+    var scope = form || button;
+    var card = scope && scope.closest ? scope.closest('.product-card, .quiz-card, .split') : null;
+    return (card && card.querySelector('.product-card__img, .gallery__img')) || SF.qs('[data-gallery-main] .gallery__img') || null;
+  }
   function add(sizeId, qty, button, source) {
     if (!sizeId) {
       SF.toast('Choose a size.', { type: 'error' });
@@ -168,12 +173,19 @@
     }
     SF.setLoading(button, true);
     return request('/api/cart/add', { size_id: sizeId, qty: qty || 1 }).then(function (result) {
-      SF.setLoading(button, false);
-      if (result && result.ok) {
-        if (source !== 'undo') {
-          openDrawer(button);
-        }
+      if (result && result.ok && source !== 'undo') {
+        var form = button ? button.form || button.closest('form') : null;
+        doc.dispatchEvent(new CustomEvent('sf:cart-added', { detail: {
+          button: button,
+          form: form,
+          thumb: thumbOf(form, button),
+          target: SF.qs('.js-cart-drawer .js-cart-count') || SF.qs('.site-header__count'),
+          count: parseInt(result.data && result.data.count, 10) || 0,
+          source: source || 'form'
+        } }));
+        openDrawer(button);
       }
+      SF.setLoading(button, false);
       return result;
     });
   }

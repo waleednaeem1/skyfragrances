@@ -1,0 +1,166 @@
+@layer motion {
+  :root {
+    --sf-fan-failsafe: 6000ms;
+    --sf-fan-settle: 900ms;
+    --sf-card-tilt: 6deg;
+    --sf-card-lift: 8px;
+    --sf-card-perspective: 1000px;
+    --sf-card-follow: 160ms;
+    --sf-card-return: 600ms;
+    --sf-rail-thumb: 0.38;
+    --sf-reveal-step: 70ms;
+  }
+  html.motion--desktop [data-motion~="cards"] > * {
+    opacity: 1;
+    transition: none;
+  }
+  html.motion--desktop [data-motion~="cards"]:not([data-cards-state]) > * {
+    transform-origin: 50% 110%;
+    transform: translate3d(var(--sf-fan-x, 0%), calc(var(--sf-fan-ry, 1) * var(--sf-fan-rise)), 0) rotate(calc(var(--sf-fan-r, 0) * var(--sf-fan-rotate)));
+    animation: sf-fan-failsafe var(--sf-fan-settle) var(--sf-ease-out) var(--sf-fan-failsafe) both;
+  }
+  html.motion--desktop [data-motion~="cards"].is-settling > * {
+    transition: transform var(--sf-dur-reveal) var(--sf-ease-out);
+  }
+  html.motion--desktop [data-motion~="cards"].is-fanning > * {
+    will-change: transform;
+  }
+  @keyframes sf-fan-failsafe {
+    to {
+      transform: none;
+    }
+  }
+  html.motion--desktop [data-motion~="cards"]:not(.grid--mosaic) > * {
+    --sf-fan-r: 0;
+    --sf-fan-x: 0%;
+    --sf-fan-ry: 0;
+  }
+  html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(1) {
+    --sf-fan-r: 0;
+    --sf-fan-x: 0%;
+    --sf-fan-ry: 1.5;
+  }
+  html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(2) {
+    --sf-fan-r: -0.35;
+    --sf-fan-x: -18%;
+  }
+  html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(3) {
+    --sf-fan-r: 0.7;
+    --sf-fan-x: -36%;
+  }
+  html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(4) {
+    --sf-fan-r: -0.15;
+    --sf-fan-x: -18%;
+    --sf-fan-ry: 2;
+  }
+  html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(5) {
+    --sf-fan-r: 0.55;
+    --sf-fan-x: -36%;
+    --sf-fan-ry: 2;
+  }
+  html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(n+6) {
+    --sf-fan-r: 0.3;
+    --sf-fan-x: -20%;
+    --sf-fan-ry: 3;
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card],
+  html.motion--desktop [data-cards-state="spread"] .collection-card {
+    --sf-tilt-x: 0deg;
+    --sf-tilt-y: 0deg;
+    --sf-tilt-lift: 0px;
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card].is-tilting,
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card].is-untilting,
+  html.motion--desktop [data-cards-state="spread"] .collection-card.is-tilting,
+  html.motion--desktop [data-cards-state="spread"] .collection-card.is-untilting {
+    z-index: 1;
+    transform: perspective(var(--sf-card-perspective)) rotateX(var(--sf-tilt-x)) rotateY(var(--sf-tilt-y)) translateY(var(--sf-tilt-lift));
+    transition: transform var(--sf-card-return) var(--sf-ease-out);
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card].is-tilting,
+  html.motion--desktop [data-cards-state="spread"] .collection-card.is-tilting {
+    transition-duration: var(--sf-card-follow);
+    transition-timing-function: linear;
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card]:focus-within:not(.is-tilting):not(.is-untilting),
+  html.motion--desktop [data-cards-state="spread"] .collection-card:focus-visible:not(.is-tilting):not(.is-untilting) {
+    transform: translateY(calc(var(--sf-card-lift) * -1));
+    transition: transform var(--sf-card-return) var(--sf-ease-out);
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card] .product-card__media::before,
+  html.motion--desktop [data-cards-state="spread"] .collection-card::after {
+    content: "";
+    position: absolute;
+    inset: -10% -30%;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(242, 230, 210, 0.5) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
+    mix-blend-mode: soft-light;
+    opacity: 0;
+    transform: translate3d(-70%, 0, 0);
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card].is-sweeping .product-card__media::before,
+  html.motion--desktop [data-cards-state="spread"] .collection-card.is-sweeping::after {
+    animation: sf-card-sweep var(--sf-card-sweep) var(--sf-ease-silk) both;
+  }
+  @keyframes sf-card-sweep {
+    0% {
+      opacity: 0;
+      transform: translate3d(-70%, 0, 0);
+    }
+    18% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(70%, 0, 0);
+    }
+  }
+  .sf-rail-progress {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    @supports (animation-timeline: scroll()) {
+      html.motion--mobile .sf-rail-progress,
+      html.motion--low .sf-rail-progress {
+        position: relative;
+        display: block;
+        width: min(9rem, 42%);
+        height: 2px;
+        margin-block-start: var(--sp-5);
+        margin-inline: auto;
+        overflow: hidden;
+        border-radius: 1px;
+        background: rgba(212, 176, 132, 0.18);
+      }
+      html.motion--mobile .rail:has(+ .sf-rail-progress),
+      html.motion--low .rail:has(+ .sf-rail-progress) {
+        scroll-timeline-name: --sf-rail;
+        scroll-timeline-axis: inline;
+      }
+      html.motion--mobile .container:has(> .sf-rail-progress),
+      html.motion--low .container:has(> .sf-rail-progress) {
+        timeline-scope: --sf-rail;
+      }
+      .sf-rail-progress::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 1px;
+        background: linear-gradient(90deg, var(--gold-600), var(--gold-300) 50%, var(--gold-600));
+        transform-origin: 0 50%;
+        transform: scaleX(var(--sf-rail-thumb));
+        animation: sf-rail-track linear both;
+        animation-timeline: --sf-rail;
+      }
+    }
+  }
+  @keyframes sf-rail-track {
+    from {
+      transform: translate3d(0, 0, 0) scaleX(var(--sf-rail-thumb));
+    }
+    to {
+      transform: translate3d(calc((1 - var(--sf-rail-thumb)) * 100%), 0, 0) scaleX(var(--sf-rail-thumb));
+    }
+  }
+}

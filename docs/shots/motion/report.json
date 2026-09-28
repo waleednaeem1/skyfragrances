@@ -1,0 +1,98 @@
+[
+  {
+    "path": "/",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/motion/home--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/motion/shop--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/motion/product_azure_oud--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/scent-finder",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/motion/scent_finder--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/cart",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/motion/cart--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/motion/checkout--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/motion/home--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/motion/shop--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/motion/product_azure_oud--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/scent-finder",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/motion/scent_finder--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/cart",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/motion/cart--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/motion/checkout--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  }
+]

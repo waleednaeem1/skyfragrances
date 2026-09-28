@@ -19,9 +19,12 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php $product = $hero['product']; ?>
 <section class="section section--flush-top" aria-labelledby="match-title">
   <div class="container">
-    <article class="split split--pdp">
+    <article class="split split--pdp" data-motion="quiz">
+      <div class="split__media quiz-card">
+        <div class="quiz-card__inner">
+          <div class="quiz-card__back" aria-hidden="true"><span class="quiz-card__frame"></span><span class="quiz-card__sigil">SF</span></div>
 <?php if ($hero['image_set'] !== null): ?>
-      <a class="product-card__media" href="<?= e($product['url']) ?>" tabindex="-1" aria-hidden="true">
+      <a class="product-card__media quiz-card__front" href="<?= e($product['url']) ?>" tabindex="-1" aria-hidden="true">
         <picture>
 <?php if (product_card_image_srcset($hero['image_set'], 'webp') !== ''): ?>
           <source type="image/webp" srcset="<?= e(product_card_image_srcset($hero['image_set'], 'webp')) ?>" sizes="(min-width: 768px) 50vw, 100vw">
@@ -30,10 +33,14 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
         </picture>
       </a>
 <?php else: ?>
-      <?php partial('placeholder.php', ['label' => (string) $product['name'], 'class' => 'product-card__media']); ?>
+      <?php partial('placeholder.php', ['label' => (string) $product['name'], 'class' => 'product-card__media quiz-card__front']); ?>
 <?php endif; ?>
+        </div>
+        <span class="quiz-card__glow" aria-hidden="true"></span>
+        <span class="quiz-card__mist" aria-hidden="true"></span>
+      </div>
       <div class="split__aside stack">
-        <p class="u-track text-muted">Your top match</p>
+        <p class="u-track text-muted">Your top match<?php if ((int) ($hero['match'] ?? 0) > 0): ?> <span class="quiz-match" data-match="<?= e((string) $hero['match']) ?>"><span class="u-sr-only">· <?= e((string) $hero['match']) ?>% match</span><span aria-hidden="true">· <span class="quiz-match__tick"><?= e((string) $hero['match']) ?></span>% match</span></span><?php endif; ?></p>
         <h2 class="h2" id="match-title"><a class="product-card__link" href="<?= e($product['url']) ?>"><?= e((string) $product['name']) ?></a></h2>
         <p class="text-muted">
 <?php if (trim((string) ($product['collection_name'] ?? '')) !== ''): ?>
@@ -51,7 +58,11 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php endif; ?>
 <?php $pyramidLine = array_filter([implode(', ', $hero['notes']['top']), implode(', ', $hero['notes']['heart']), implode(', ', $hero['notes']['base'])]); ?>
 <?php if ($pyramidLine !== []): ?>
-        <p class="text-small"><span class="u-track text-muted">Notes</span> <?= e(implode(' → ', $pyramidLine)) ?></p>
+        <p class="text-small quiz-notes"><span class="u-track text-muted">Notes</span>
+<?php foreach (array_values($pyramidLine) as $noteIndex => $noteGroup): ?>
+          <span class="quiz-notes__group"><?= $noteIndex > 0 ? '→ ' : '' ?><?= e($noteGroup) ?></span>
+<?php endforeach; ?>
+        </p>
 <?php endif; ?>
         <?php partial('meters.php', ['meters' => $hero['meters']]); ?>
 <?php if ($hero['price_display'] !== ''): ?>

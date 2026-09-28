@@ -1,0 +1,239 @@
+@layer motion {
+  :root {
+    --sf-quiz-flip-out: 380ms;
+    --sf-quiz-flip-in: 520ms;
+    --sf-quiz-undo: 600ms;
+    --sf-quiz-deal: 700ms;
+    --sf-quiz-hold: 450ms;
+    --sf-quiz-turn: 900ms;
+    --sf-quiz-mist: 400ms;
+    --sf-quiz-notes-at: 1250ms;
+    --sf-quiz-notes-step: 60ms;
+    --sf-quiz-settle: 700ms;
+  }
+  :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck {
+    position: relative;
+    perspective: var(--sf-quiz-perspective, 2600px);
+  }
+  :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section {
+    position: relative;
+    padding: var(--sp-6) var(--sp-5);
+    border: var(--border-hair) solid rgba(212, 176, 132, 0.28);
+    background: linear-gradient(180deg, rgba(212, 176, 132, 0.06), rgba(212, 176, 132, 0) 42%), var(--surface-raised);
+    box-shadow: 0 30px 60px -40px rgba(0, 0, 0, 0.9);
+    backface-visibility: hidden;
+  }
+  :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section::before {
+    content: "";
+    position: absolute;
+    inset: 0.5rem;
+    border: var(--border-hair) solid rgba(212, 176, 132, 0.14);
+    pointer-events: none;
+  }
+  :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section.is-leaving {
+    display: grid;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .quiz-deck.is-flipping .form__section {
+    will-change: transform, opacity;
+  }
+  html.motion--desktop .quiz-deck {
+    animation: sf-quiz-deal var(--sf-quiz-deal) var(--sf-ease-out) both;
+  }
+  html.motion--mobile .quiz-deck .form__section.is-leaving {
+    animation: sf-quiz-slide-out var(--sf-quiz-slide) var(--sf-ease-in) both;
+  }
+  html.motion--mobile .quiz-deck .form__section.is-entering {
+    animation: sf-quiz-slide-in var(--sf-quiz-slide) var(--sf-ease-out) both;
+  }
+  html.motion--low .quiz-deck .form__section.is-leaving {
+    animation: sf-quiz-fade-out var(--dur-fast) linear both;
+  }
+  html.motion--low .quiz-deck .form__section.is-entering {
+    animation: sf-quiz-fade-in var(--dur-fast) linear both;
+  }
+  .quiz-deck .form__section.is-entering .progress__fill {
+    transform-origin: left;
+    animation: sf-quiz-fill var(--sf-quiz-flip-in) var(--sf-ease-out) both;
+  }
+  .quiz-deck .form__section.is-armed .choice__input:checked + .choice__card {
+    position: relative;
+    overflow: hidden;
+  }
+  .quiz-deck .form__section.is-armed .choice__input:checked + .choice__card::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: var(--grad-gold-button);
+    transform-origin: left;
+    transform: scaleX(0);
+    animation: sf-quiz-arm var(--sf-quiz-undo) linear forwards;
+  }
+  @keyframes sf-quiz-deal {
+    from { transform: perspective(var(--sf-quiz-perspective, 2600px)) rotateY(-10deg) translateY(10px); }
+    to { transform: none; }
+  }
+  @keyframes sf-quiz-slide-out {
+    to { opacity: 0; transform: translateX(calc(var(--sf-quiz-dir, 1) * -24px)); }
+  }
+  @keyframes sf-quiz-slide-in {
+    from { opacity: 0; transform: translateX(calc(var(--sf-quiz-dir, 1) * 24px)); }
+  }
+  @keyframes sf-quiz-fade-out {
+    to { opacity: 0; }
+  }
+  @keyframes sf-quiz-fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes sf-quiz-fill {
+    from { transform: scaleX(var(--sf-quiz-fill-from, 1)); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes sf-quiz-arm {
+    to { transform: scaleX(1); }
+  }
+  .quiz-card {
+    position: relative;
+  }
+  .quiz-card__inner {
+    position: relative;
+  }
+  .quiz-card__back,
+  .quiz-card__glow,
+  .quiz-card__mist {
+    display: none;
+    pointer-events: none;
+    user-select: none;
+  }
+  .quiz-match__tick {
+    display: inline-block;
+    min-width: 2ch;
+    text-align: right;
+    font-feature-settings: var(--num-tabular);
+    font-variant-numeric: tabular-nums;
+  }
+  html.motion--desktop .quiz-card {
+    perspective: 1400px;
+    isolation: isolate;
+  }
+  html.motion--desktop .quiz-card__inner {
+    transform-style: preserve-3d;
+    animation: sf-quiz-turn var(--sf-quiz-turn) var(--sf-ease-out) var(--sf-quiz-hold) both;
+  }
+  html.motion--desktop .quiz-card__front {
+    backface-visibility: hidden;
+  }
+  html.motion--desktop .quiz-card__back {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    inset: 0;
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+    border: var(--border-hair) solid rgba(212, 176, 132, 0.42);
+    background: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(212, 176, 132, 0.18), rgba(10, 10, 10, 0) 72%), var(--surface-sunken);
+  }
+  html.motion--desktop .quiz-card__frame {
+    position: absolute;
+    inset: 0.75rem;
+    border: var(--border-hair) solid rgba(212, 176, 132, 0.3);
+  }
+  html.motion--desktop .quiz-card__frame::before {
+    content: "";
+    position: absolute;
+    inset: 0.5rem;
+    border: var(--border-hair) solid rgba(212, 176, 132, 0.14);
+  }
+  html.motion--desktop .quiz-card__sigil {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    letter-spacing: 0.22em;
+    line-height: 1;
+    color: var(--gold-400);
+    background-image: var(--grad-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: sf-quiz-breathe var(--sf-quiz-hold) var(--sf-ease-out) both;
+  }
+  html.motion--desktop .quiz-card__glow {
+    display: block;
+    position: absolute;
+    inset: -14%;
+    z-index: -1;
+    background: radial-gradient(ellipse at 50% 50%, rgba(212, 176, 132, 0.55), rgba(212, 176, 132, 0.12) 45%, rgba(10, 10, 10, 0) 70%);
+    opacity: 0;
+    transform: scale(0.9);
+    animation: sf-quiz-glow calc(var(--sf-quiz-turn) + var(--sf-quiz-mist)) var(--sf-ease-out) var(--sf-quiz-hold) both;
+  }
+  html.motion--desktop .quiz-card__mist {
+    display: block;
+    position: absolute;
+    inset: -6%;
+    z-index: 2;
+    background:
+      radial-gradient(circle at 30% 60%, rgba(245, 240, 232, 0.5), rgba(245, 240, 232, 0) 45%),
+      radial-gradient(circle at 70% 35%, rgba(212, 176, 132, 0.45), rgba(212, 176, 132, 0) 50%),
+      radial-gradient(circle at 50% 82%, rgba(245, 240, 232, 0.35), rgba(245, 240, 232, 0) 40%);
+    opacity: 0.85;
+    animation: sf-quiz-mist var(--sf-quiz-mist) var(--sf-ease-out) calc(var(--sf-quiz-hold) + var(--sf-quiz-turn) * 0.5) forwards;
+  }
+  html.motion--desktop .quiz-card.is-waiting :is(.quiz-card__inner, .quiz-card__glow, .quiz-card__mist, .quiz-card__sigil) {
+    animation-play-state: paused;
+  }
+  .quiz-card.is-revealed .quiz-card__back,
+  .quiz-card.is-revealed .quiz-card__mist {
+    display: none;
+  }
+  html.motion--desktop body.quiz-result .page-head__title.text-gold-grad {
+    background-size: 200% 100%;
+    animation: sf-quiz-sweep var(--sf-quiz-turn) var(--sf-ease-out) var(--sf-quiz-hold) both;
+  }
+  html.motion--desktop body.quiz-result .quiz-notes {
+    animation: sf-quiz-rise var(--sf-dur-reveal) var(--sf-ease-out) var(--sf-quiz-notes-at) both;
+  }
+  html.motion--desktop body.quiz-result .quiz-match {
+    display: inline-block;
+    animation: sf-quiz-rise var(--sf-dur-reveal) var(--sf-ease-out) var(--sf-quiz-notes-at) both;
+  }
+  html.motion--desktop body.quiz-result .meter__seg::after {
+    transition-delay: calc(var(--sf-quiz-notes-at) + 3 * var(--sf-quiz-notes-step) + var(--i, 0) * 60ms);
+  }
+  html.motion--mobile body.quiz-result .quiz-card__front .product-card__img {
+    animation: sf-quiz-settle var(--sf-quiz-settle) var(--sf-ease-out) both;
+  }
+  @keyframes sf-quiz-turn {
+    from { transform: rotateY(180deg); }
+    to { transform: rotateY(0deg); }
+  }
+  @keyframes sf-quiz-breathe {
+    from { opacity: 0.4; transform: scale(0.96); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes sf-quiz-glow {
+    0% { opacity: 0; transform: scale(0.9); }
+    45% { opacity: 0.9; transform: scale(1.05); }
+    100% { opacity: 0.18; transform: none; }
+  }
+  @keyframes sf-quiz-mist {
+    to { opacity: 0; transform: scale(1.25) translateY(-4%); }
+  }
+  @keyframes sf-quiz-sweep {
+    from { background-position: 100% 0; }
+    to { background-position: 0 0; }
+  }
+  @keyframes sf-quiz-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes sf-quiz-settle {
+    from { transform: scale(1.06); }
+    to { transform: scale(1.001); }
+  }
+}

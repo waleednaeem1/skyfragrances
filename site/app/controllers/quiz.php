@@ -4,6 +4,7 @@ defined('SKYFR') || exit;
 partial('product-card.php', []);
 
 const QUIZ_RESULT_COUNT = 3;
+const QUIZ_MAX_SCORE = 33;
 const QUIZ_QUESTIONS = [
     ['key' => 'who', 'question' => 'Who is this fragrance for?', 'helper' => 'We will weight the matches towards them.', 'options' => [
         ['For him', 'Grounded, warm, built to last', 'compass'],
@@ -171,6 +172,7 @@ function quiz_hero_card(array $product): array
         'price_display' => $cheapest !== null ? money(money_from_paisa($cheapest['effective'])) : '',
         'was_display' => $pricing['is_sale'] ? money(money_from_paisa($cheapest['list'])) : '',
         'from' => count($pricing['labels']) > 1,
+        'match' => isset($product['score']) ? max(0, min(100, (int) round((int) $product['score'] * 100 / QUIZ_MAX_SCORE))) : 0,
     ];
 }
 

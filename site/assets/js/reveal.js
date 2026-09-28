@@ -2,6 +2,7 @@
   'use strict';
   var doc = document;
   var STEP_MS = 70;
+  var HINT_MS = 1400;
   var reducedQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
   var handshake = window.SFReveal = window.SFReveal || {};
 
@@ -12,6 +13,28 @@
     for (var i = 0; i < nodes.length; i++) {
       nodes[i].classList.add('is-visible');
     }
+  }
+  function reveal(el) {
+    if (el.classList.contains('sf-reveal--stagger') || reduced()) {
+      el.classList.add('is-visible');
+      return;
+    }
+    var settle = function () {
+      clearTimeout(timer);
+      el.removeEventListener('transitionend', onEnd);
+      el.style.willChange = '';
+    };
+    var onEnd = function (event) {
+      if (event.target === el) {
+        settle();
+      }
+    };
+    el.style.willChange = 'transform, opacity';
+    el.addEventListener('transitionend', onEnd);
+    var timer = setTimeout(settle, HINT_MS);
+    window.requestAnimationFrame(function () {
+      el.classList.add('is-visible');
+    });
   }
   function observe(nodes, options, onEnter) {
     var observer = new IntersectionObserver(function (entries) {
@@ -43,7 +66,7 @@
       if (delay > 0 && delay <= 5) {
         el.style.transitionDelay = (delay * STEP_MS) + 'ms';
       }
-      el.classList.add('is-visible');
+      reveal(el);
     }
     function revealPassed() {
       var viewportBottom = window.innerHeight;
@@ -62,12 +85,12 @@
       }
       pending = kept;
     }
-    var observer = observe(nodes, { rootMargin: '0px 0px -12% 0px', threshold: 0 }, function (entry, obs) {
+    observe(nodes, { rootMargin: '0px 0px -12% 0px', threshold: 0 }, function (entry, observer) {
       if (!entry.isIntersecting) {
         return;
       }
       show(entry.target);
-      obs.unobserve(entry.target);
+      observer.unobserve(entry.target);
     });
     var scrollTick = false;
     window.addEventListener('scroll', function () {

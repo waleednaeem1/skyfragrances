@@ -2615,7 +2615,7 @@
   }
   .hero__cue {
     position: absolute;
-    bottom: calc(var(--sp-5) + var(--safe-bottom));
+    bottom: max(calc(var(--sp-5) + var(--safe-bottom)), calc(100% - 100svh + var(--announcement-h) + var(--sp-5) + var(--safe-bottom)));
     left: 50%;
     z-index: 2;
     width: var(--tap);
@@ -5222,12 +5222,10 @@
     opacity: 0;
     transform: translateY(1.125rem);
     transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
-    will-change: transform, opacity;
   }
   html.js .sf-reveal.is-visible {
     opacity: 1;
     transform: none;
-    will-change: auto;
   }
   html.js .sf-reveal--stagger > * {
     opacity: 0;
@@ -5431,7 +5429,11 @@
   html.sf-intro-calm .sf-intro,
   html.sf-intro-quick .sf-intro {
     display: block;
-    animation: sf-intro-failsafe 0.4s ease 2.6s forwards;
+    animation: sf-intro-failsafe 0.4s var(--ease-out) 2s forwards;
+  }
+  html.sf-intro-full .sf-intro,
+  html.sf-intro-calm .sf-intro {
+    pointer-events: auto;
   }
   .sf-intro__mist {
     position: absolute;
@@ -5486,8 +5488,8 @@
     background: linear-gradient(110deg, transparent 38%, rgba(255, 241, 205, 0.8) 50%, transparent 62%);
     background-size: 250% 100%;
     background-position: 120% 0;
-    -webkit-mask: url('../img/brand/monogram-transparent-256.webp') center / contain no-repeat;
-    mask: url('../img/brand/monogram-transparent-256.webp') center / contain no-repeat;
+    -webkit-mask: var(--sf-intro-mark, url('../img/brand/monogram-transparent-256.webp')) center / contain no-repeat;
+    mask: var(--sf-intro-mark, url('../img/brand/monogram-transparent-256.webp')) center / contain no-repeat;
     opacity: 0;
   }
   .sf-intro.is-mark .sf-intro__mark-wrap {
@@ -5520,7 +5522,7 @@
     padding: 0.6rem;
     background: none;
     border: 0;
-    color: rgba(245, 240, 232, 0.45);
+    color: rgba(245, 240, 232, 0.72);
     font: 500 0.68rem/1 var(--font-body);
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -5533,17 +5535,17 @@
   .sf-intro.is-leaving {
     opacity: 0;
     transform: scale(1.03);
-    transition: opacity 0.34s ease, transform 0.34s ease;
+    transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
   }
   .sf-intro.is-leaving .sf-intro__mist {
     transform: scale(1.4);
     opacity: 0;
-    transition: transform 0.5s ease, opacity 0.4s ease;
+    transition: transform 0.5s var(--ease-out), opacity 0.4s var(--ease-out);
   }
   html.sf-intro-calm .sf-intro__mark-wrap { transition-duration: 0.3s; }
   html.sf-intro-calm .sf-intro__mist { display: none; }
-  html.sf-intro-quick .sf-intro { animation: sf-intro-quick 0.32s ease 0.05s forwards; }
-  html.sf-intro-calm .sf-intro { animation: sf-intro-quick 0.3s ease 1.15s forwards; }
+  html.sf-intro-quick .sf-intro { animation: sf-intro-quick 0.32s var(--ease-out) 0.05s forwards; }
+  html.sf-intro-calm .sf-intro { animation: sf-intro-quick 0.3s var(--ease-out) 1.15s forwards; }
   @keyframes sf-intro-quick { to { opacity: 0; visibility: hidden; } }
   @keyframes sf-intro-failsafe { to { opacity: 0; visibility: hidden; } }
   @keyframes sf-intro-mist { from { transform: translate(-6%, -4%) scale(1); } to { transform: translate(6%, 5%) scale(1.15); } }

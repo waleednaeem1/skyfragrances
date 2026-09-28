@@ -28,9 +28,9 @@ $noJsNavLinks = [
 <?php partial('head-meta.php', ['head' => $head]); ?>
 <meta name="csrf-token" content="<?= session_status() === PHP_SESSION_ACTIVE ? e(csrf_token()) : '' ?>">
 </head>
-<body class="<?= e($head['body_class']) ?>" data-base="<?= e(BASE_PATH) ?>">
+<body class="<?= e($head['body_class']) ?>" data-base="<?= e(BASE_PATH) ?>" data-motion="micro">
 <a class="skip-link" href="#main">Skip to content</a>
-<?php partial('intro.php'); ?>
+<?php if ($isHome) { partial('intro.php'); } ?>
 <?php partial('announcement-bar.php'); ?>
 <div class="header-sentinel" aria-hidden="true"></div>
 <?php partial('header.php', ['isHome' => $isHome, 'collections' => $chromeCollections]); ?>
@@ -50,6 +50,7 @@ $noJsNavLinks = [
 <?php partial('cart-drawer.php'); ?>
 <?php partial('whatsapp-button.php'); ?>
 <?php partial('toast-region.php'); ?>
+<?php partial('transition-overlay.php', ['bodyClasses' => $bodyClasses]); ?>
 <script src="<?= e(asset('js/reveal.js')) ?>" defer></script>
 <script src="<?= e(asset('js/ui.js')) ?>" defer></script>
 <script src="<?= e(asset('js/cart.js')) ?>" defer></script>
