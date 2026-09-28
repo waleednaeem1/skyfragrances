@@ -15,16 +15,22 @@ $excludedExact = $manifest['exclude_exact'];
 $excludedPrefixes = $manifest['exclude_prefixes'];
 $excludedBasenames = $manifest['exclude_basenames'];
 $keepInsideExcludedDirs = $manifest['keep_inside_excluded_dirs'];
+$includedPrefixes = $manifest['include_prefixes'] ?? [];
 
 function build_relative(string $root, string $path): string
 {
     return str_replace('\\', '/', substr($path, strlen($root) + 1));
 }
 
-function build_is_excluded(string $rel, array $exact, array $prefixes, array $basenames, array $keep): bool
+function build_is_excluded(string $rel, array $exact, array $prefixes, array $basenames, array $keep, array $include = []): bool
 {
     if (in_array($rel, $exact, true) || in_array(basename($rel), $basenames, true)) {
         return true;
+    }
+    foreach ($include as $prefix) {
+        if (str_starts_with($rel, $prefix) || str_starts_with($prefix, $rel . '/')) {
+            return false;
+        }
     }
     if (str_starts_with($rel, 'dev/') || str_starts_with($rel, '.git')) {
         return true;
@@ -60,7 +66,7 @@ $skipped = [];
 foreach ($iterator as $item) {
     $rel = build_relative($siteRoot, $item->getPathname());
     $relDir = $item->isDir() ? $rel . '/' : $rel;
-    if (build_is_excluded($relDir, $excludedExact, $excludedPrefixes, $excludedBasenames, $keepInsideExcludedDirs)) {
+    if (build_is_excluded($relDir, $excludedExact, $excludedPrefixes, $excludedBasenames, $keepInsideExcludedDirs, $includedPrefixes)) {
         if (!$item->isDir()) {
             $skipped[] = $rel;
         }

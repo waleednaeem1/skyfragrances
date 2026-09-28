@@ -1,0 +1,50 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax-check every PHP file before anything is uploaded
+        run: |
+          set -e
+          find site -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 php -l > /dev/null
+          echo "PHP syntax OK"
+
+      - name: Upload changed files to public_html
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: site/
+          server-dir: ${{ vars.FTP_SERVER_DIR || 'public_html/' }}
+          state-name: .deploy-state.json
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            config.php
+            config.sample.php
+            install.php
+            dev/**
+            storage/**
+            uploads/**
+            **/.DS_Store
+            cj.txt

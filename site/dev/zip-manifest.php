@@ -19,7 +19,7 @@ return [
         'uploads/settings/',
         '.git',
     ],
-    'exclude_basenames' => ['.DS_Store', 'Thumbs.db', '.gitignore', '__MACOSX'],
+    'exclude_basenames' => ['.DS_Store', 'Thumbs.db', '.gitignore', '__MACOSX', 'cj.txt', 'cookies.txt'],
     'keep_inside_excluded_dirs' => ['.gitkeep', 'index.php', '.htaccess'],
     'include_prefixes' => ['uploads/products/sample/', 'uploads/og/sample/'],
     'empty_dirs' => [

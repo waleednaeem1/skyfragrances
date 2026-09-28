@@ -25,3 +25,5 @@ dist/
 .DS_Store
 docs/plan-snapshot-before-integrate/
 *.zip
+site/cj.txt
+site/cookies.txt
