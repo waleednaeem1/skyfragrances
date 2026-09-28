@@ -1,0 +1,185 @@
+{
+  "state": {
+    "jz": "SF-260928-PSZ4",
+    "ep": "SF-260928-PJ2G",
+    "jz2": "SF-260929-FAQQ"
+  },
+  "results": [
+    [
+      "stock.before",
+      "24"
+    ],
+    [
+      "jz.order",
+      "SF-260928-PSZ4"
+    ],
+    [
+      "jz.awaiting",
+      true
+    ],
+    [
+      "stock.after.jz",
+      "23"
+    ],
+    [
+      "admin.login_url",
+      "http://127.0.0.1:8099/admin"
+    ],
+    [
+      "proof.status",
+      "200 image/jpeg 58322 bytes"
+    ],
+    [
+      "proof.thumb",
+      "200 image/jpeg 2917 bytes"
+    ],
+    [
+      "jz.payment_status",
+      "paid"
+    ],
+    [
+      "jz.refund",
+      "Done: Refund recorded. Money movement happens outside this system. ×"
+    ],
+    [
+      "jz.payment_status2",
+      "refunded"
+    ],
+    [
+      "stock.before_cancel",
+      "23"
+    ],
+    [
+      "jz.cancel",
+      "Done: Order cancelled. Stock restored: Azure Oud 50ml +1. ×"
+    ],
+    [
+      "stock.after_cancel",
+      "24"
+    ],
+    [
+      "jz.status",
+      "cancelled\t1"
+    ],
+    [
+      "stock.before.ep",
+      "24"
+    ],
+    [
+      "ep.methods_offered",
+      "cod,bank,jazzcash,easypaisa"
+    ],
+    [
+      "ep.details_shown",
+      ""
+    ],
+    [
+      "ep.url",
+      "http://127.0.0.1:8099/order/SF-260928-PJ2G?t=971eb7cf62d917433c2051fa2f8d799b"
+    ],
+    [
+      "ep.order",
+      "SF-260928-PJ2G"
+    ],
+    [
+      "ep.awaiting",
+      true
+    ],
+    [
+      "stock.after.ep",
+      "23"
+    ],
+    [
+      "admin.login_url",
+      "http://127.0.0.1:8099/admin"
+    ],
+    [
+      "ep.mark_paid",
+      "Done: Payment recorded. The order status is unchanged — confirm it when you are ready. ×"
+    ],
+    [
+      "ep.confirm",
+      "Done: Order marked Confirmed. ×"
+    ],
+    [
+      "stock.before_cancel_ep",
+      "23"
+    ],
+    [
+      "ep.cancel",
+      "Done: Order cancelled. Stock restored: Azure Oud 50ml +1. ×"
+    ],
+    [
+      "stock.after_cancel_ep",
+      "24"
+    ],
+    [
+      "ep.status",
+      "cancelled\tpaid"
+    ],
+    [
+      "stock.before.jz2",
+      "24"
+    ],
+    [
+      "jz2.methods_offered",
+      "cod,bank,jazzcash,easypaisa"
+    ],
+    [
+      "jz2.details_shown",
+      ""
+    ],
+    [
+      "jz2.url",
+      "http://127.0.0.1:8099/order/SF-260929-FAQQ?t=a8c3f6c116d74e1a5887da40f8ff0f72"
+    ],
+    [
+      "jz2.order",
+      "SF-260929-FAQQ"
+    ],
+    [
+      "jz2.awaiting",
+      true
+    ],
+    [
+      "stock.after.jz2",
+      "23"
+    ],
+    [
+      "admin.login_url",
+      "http://127.0.0.1:8099/admin"
+    ],
+    [
+      "cancel_unpaid.page",
+      "200 lists jz2: true other order numbers: none"
+    ],
+    [
+      "stock.before_bulk",
+      "23"
+    ],
+    [
+      "cancel_unpaid.post",
+      "Done: 1 order cancelled and stock restored. ×"
+    ],
+    [
+      "stock.after_bulk",
+      "24"
+    ],
+    [
+      "jz2.status",
+      "cancelled"
+    ],
+    [
+      "cron.status",
+      200
+    ],
+    [
+      "cron.body",
+      "sent=0 retried=0 failed=0 "
+    ],
+    [
+      "cron.badkey",
+      404
+    ]
+  ]
+}

@@ -147,4 +147,4 @@ partial_admin('table.php', [
   </ul>
 <?php endif; ?>
 </div>
-<p class="adm-note">Locked out with no email? Open the “Forgotten admin password” section of your GO-LIVE guide — it resets the password from hPanel → phpMyAdmin in a few steps.</p>
+<p class="adm-note">Locked out with no email? Open the “Forgotten admin password” section of your GO-LIVE guide — it resets the password with the shop's own reset tool from hPanel → File Manager in a few steps.</p>

@@ -16,10 +16,10 @@
     "errors": []
   },
   {
-    "path": "/admin/orders/SF-260928-PPYT",
+    "path": "/admin/orders/SF-260928-PAQ6",
     "viewport": "desktop",
     "status": 200,
-    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders_SF_260928_PPYT--desktop.png",
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders_SF_260928_PAQ6--desktop.png",
     "horizontalOverflow": false,
     "errors": []
   },
@@ -32,10 +32,10 @@
     "errors": []
   },
   {
-    "path": "/admin/products/14",
+    "path": "/admin/products/18",
     "viewport": "desktop",
     "status": 200,
-    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products_14--desktop.png",
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products_18--desktop.png",
     "horizontalOverflow": false,
     "errors": []
   },
@@ -64,10 +64,10 @@
     "errors": []
   },
   {
-    "path": "/admin/orders/SF-260928-PPYT",
+    "path": "/admin/orders/SF-260928-PAQ6",
     "viewport": "mobile",
     "status": 200,
-    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders_SF_260928_PPYT--mobile.png",
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders_SF_260928_PAQ6--mobile.png",
     "horizontalOverflow": false,
     "errors": []
   },
@@ -80,10 +80,10 @@
     "errors": []
   },
   {
-    "path": "/admin/products/14",
+    "path": "/admin/products/18",
     "viewport": "mobile",
     "status": 200,
-    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products_14--mobile.png",
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products_18--mobile.png",
     "horizontalOverflow": false,
     "errors": []
   },

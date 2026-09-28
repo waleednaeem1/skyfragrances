@@ -24,7 +24,7 @@ if (($_SERVER['REDIRECT_STATUS'] ?? '') === '404' && !str_starts_with($path, '/a
     $rawPath = $path = '/__missing__';
 }
 
-if ($rawPath !== $path && $method === 'GET') {
+if ($rawPath !== $path && $method === 'GET' && !preg_match('#^/order/#i', $rawPath)) {
     $query = $_SERVER['QUERY_STRING'] ?? '';
     redirect($path . ($query !== '' ? '?' . $query : ''), 301);
 }

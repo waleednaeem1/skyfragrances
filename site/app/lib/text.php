@@ -59,7 +59,9 @@ function phone_normalize(string $raw): string
     if ($digits === '') {
         return '';
     }
-    if ($digits[0] === '0') {
+    if (str_starts_with($digits, '00')) {
+        $digits = substr($digits, 2);
+    } elseif ($digits[0] === '0') {
         $digits = substr($digits, 1);
     }
     if (str_starts_with($digits, '92') && strlen($digits) > 10) {

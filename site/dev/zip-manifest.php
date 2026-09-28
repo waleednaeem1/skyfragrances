@@ -5,7 +5,9 @@ return [
         'default.php',
         'storage/.installed',
         'storage/.install-key',
+        'storage/.install-probe',
         'storage/MAINTENANCE',
+        'storage/.reset-pending',
         'robots.txt.bak',
     ],
     'exclude_prefixes' => [
@@ -35,11 +37,13 @@ return [
         'app/lib/vendor/PHPMailer/PHPMailer.php', 'app/lib/vendor/PHPMailer/SMTP.php', 'app/lib/vendor/PHPMailer/Exception.php', 'app/lib/vendor/PHPMailer/LICENSE',
         'uploads/products/sample/azure-oud-1-card.webp', 'uploads/og/sample/azure-oud-1-og.jpg', 'uploads/collections/dawn-chorus-card.webp',
         'assets/js/motion/config.js', 'assets/js/intro.js', 'assets/img/brand/monogram-transparent-256.webp',
+        'app/tools/reset-password.php',
     ],
     'required_htaccess_count' => 10,
     'forbidden_patterns' => [
         '#^(dev/|\.git|storage/sessions/[^/]+/sess_|storage/logs/.+\.log$|storage/cache/.+\.(json|xml|php)$|storage/proofs/\d)#',
-        '#(^|/)(config\.php|\.DS_Store|\.installed|\.install-key|MAINTENANCE)$#',
+        '#(^|/)(config\.php|\.DS_Store|\.installed|\.install-key|\.install-probe|\.reset-pending|MAINTENANCE)$#',
+        '#^storage/reset-[0-9a-f]{16}$#',
         '#(^|/)__MACOSX(/|$)#',
     ],
 ];

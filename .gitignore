@@ -11,6 +11,7 @@ site/uploads/og/*
 !site/uploads/index.html
 site/storage/.installed
 site/storage/.install-key
+site/storage/.install-probe
 site/storage/MAINTENANCE
 site/storage/logs/*
 !site/storage/logs/.gitkeep
@@ -27,3 +28,4 @@ docs/plan-snapshot-before-integrate/
 *.zip
 site/cj.txt
 site/cookies.txt
+dev-tools/node_modules/

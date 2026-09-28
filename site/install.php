@@ -12,6 +12,7 @@ const INSTALL_SCHEMA = __DIR__ . '/db/schema.sql';
 const INSTALL_SEED = __DIR__ . '/db/seed.sql';
 const INSTALL_LOCK = __DIR__ . '/storage/.installed';
 const INSTALL_KEY = __DIR__ . '/storage/.install-key';
+const INSTALL_PROBE_TOKEN = __DIR__ . '/storage/.install-probe';
 const INSTALL_CONFIG = __DIR__ . '/config.php';
 const INSTALL_ROBOTS = __DIR__ . '/robots.txt';
 const INSTALL_MIN_PASSWORD = 12;
@@ -165,10 +166,43 @@ function inst_host_points_here(): bool
         return true;
     }
     if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
-        return $host === $serverAddr || in_array($host, ['127.0.0.1', '::1'], true);
+        return $host === $serverAddr || in_array($host, ['127.0.0.1', '::1'], true) || inst_self_probe();
     }
     $resolved = gethostbyname($host);
-    return $resolved === $serverAddr || in_array($resolved, ['127.0.0.1', '::1'], true);
+    return $resolved === $serverAddr || in_array($resolved, ['127.0.0.1', '::1'], true) || inst_self_probe();
+}
+
+function inst_self_probe(): bool
+{
+    static $result = null;
+    if ($result !== null) {
+        return $result;
+    }
+    $result = false;
+    if (PHP_SAPI === 'cli-server' || !function_exists('curl_init') || !is_file(__FILE__)) {
+        return false;
+    }
+    $token = inst_random_hex(16);
+    if (!inst_write_atomic(INSTALL_PROBE_TOKEN, $token . "\n", 0600)) {
+        return false;
+    }
+    $nonce = inst_random_hex(8);
+    $probe = inst_http_probe(inst_request_base_url() . '/install.php?probe=' . $nonce, true);
+    @unlink(INSTALL_PROBE_TOKEN);
+    $result = $probe['status'] === 200 && hash_equals(hash('sha256', $nonce . $token), trim($probe['body']));
+    return $result;
+}
+
+function inst_answer_probe(string $nonce): never
+{
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    $token = is_file(INSTALL_PROBE_TOKEN) ? trim((string) file_get_contents(INSTALL_PROBE_TOKEN)) : '';
+    if ($token === '' || !preg_match('/^[a-f0-9]{16}$/', $nonce)) {
+        http_response_code(404);
+        exit('Not found');
+    }
+    exit(hash('sha256', $nonce . $token));
 }
 
 function inst_ini_bytes(string $value): int
@@ -285,10 +319,12 @@ function inst_phone_normalize(string $raw): string
     if ($digits === '') {
         return '';
     }
-    if (str_starts_with($digits, '0')) {
+    if (str_starts_with($digits, '00')) {
+        $digits = substr($digits, 2);
+    } elseif (str_starts_with($digits, '0')) {
         $digits = substr($digits, 1);
     }
-    if (str_starts_with($digits, '92')) {
+    if (str_starts_with($digits, '92') && strlen($digits) > 10) {
         $digits = substr($digits, 2);
     }
     return '+92' . $digits;
@@ -847,7 +883,7 @@ function inst_page_admin_form(array $state, string $error = '', array $old = [],
         $body .= '<div class="box ' . ($mailTest['ok'] ? 'good' : 'bad') . '"><h2>' . ($mailTest['ok'] ? 'Test email sent' : 'Test email failed') . '</h2><p>' . inst_e($mailTest['detail']) . '</p></div>';
     }
     $body .= '<form method="post" action="install.php?step=3" class="box">' . inst_csrf_field() . '<input type="hidden" name="action" value="install">' . inst_install_key_field();
-    $body .= inst_field('text', 'admin_username', 'Admin username', $v('admin_username', 'admin'), 'Letters, numbers, dots, dashes and underscores. 3 to 64 characters.');
+    $body .= inst_field('text', 'admin_username', 'Admin username', $v('admin_username'), 'Choose your own, for example sky.owner — not "admin", which is the first name an attacker tries. Letters, numbers, dots, dashes and underscores; 3 to 64 characters.');
     $body .= inst_field('email', 'admin_email', 'Your email address', $v('admin_email'), 'Used for order notifications and shown on the contact page.');
     $body .= inst_field('password', 'admin_password', 'Admin password', '', 'At least ' . INSTALL_MIN_PASSWORD . ' characters.');
     $body .= inst_field('password', 'admin_password2', 'Repeat the password');
@@ -870,7 +906,8 @@ function inst_page_finish(array $results, string $notice = '', ?array $checks = 
 {
     $adminUrl = inst_request_base_url() . '/admin/login';
     if ($selfDeleted) {
-        $body = '<div class="box good"><h2>Your shop is installed and install.php has deleted itself</h2><p>Nothing else needs cleaning up. Log in at <a href="' . inst_e($adminUrl) . '" style="color:#d4b084">' . inst_e($adminUrl) . '</a>.</p></div>';
+        $body = '<div class="box good"><h2>Your shop is installed and install.php has deleted itself</h2><p>Nothing else needs cleaning up. Log in at <a href="' . inst_e($adminUrl) . '" style="color:#d4b084">' . inst_e($adminUrl) . '</a>.</p></div>'
+            . '<div class="box danger"><h2>Take screenshots of this page now</h2><p>This page is shown once. The installer has already deleted itself, so reloading or closing it shows the shop\'s "page not found" and the report below cannot be opened again. Scroll down and screenshot the whole page, then send the screenshots to your developer.</p></div>';
     } else {
         $body = '<div class="box danger"><h2>Delete install.php now</h2><p>Your shop is installed, but this file could not delete itself. Anyone who can open it while it exists can see your server details, so it must go.</p>'
             . '<p>Open hPanel → File Manager → public_html and delete this file:</p><code>' . inst_e(__FILE__) . '</code>'
@@ -1045,16 +1082,21 @@ function inst_handle_db_save(array $state): never
     $security = $existing['security'] ?? [];
     $host = strtolower((string) parse_url($baseUrl, PHP_URL_HOST));
     $isLocal = in_array($host, ['localhost', '127.0.0.1', '::1'], true) || str_ends_with($host, '.test') || str_ends_with($host, '.local');
+    $smtpPass = (string) ($_POST['smtp_pass'] ?? '');
+    if ($old['smtp_user'] === '' && $smtpPass === '') {
+        $old['smtp_host'] = '';
+    }
+    $smtpPort = (int) ($old['smtp_port'] === '' ? 587 : $old['smtp_port']);
     $config = [
         'env' => $isLocal ? 'development' : 'production',
         'base_url' => $baseUrl,
         'db' => $db,
         'smtp' => [
             'host' => $old['smtp_host'],
-            'port' => (int) ($old['smtp_port'] === '' ? 587 : $old['smtp_port']),
-            'secure' => 'tls',
+            'port' => $smtpPort,
+            'secure' => $smtpPort === 465 ? 'ssl' : 'tls',
             'user' => $old['smtp_user'],
-            'pass' => (string) ($_POST['smtp_pass'] ?? ''),
+            'pass' => $smtpPass,
             'from_name' => $old['smtp_from_name'] === '' ? 'Sky Fragrances' : $old['smtp_from_name'],
         ],
         'security' => [
@@ -1216,6 +1258,9 @@ function inst_run_security_checks(): array
 set_exception_handler(function (Throwable $e): void {
     inst_page('Something went wrong', '<div class="box bad"><h2>The installer hit an unexpected problem</h2><p>Nothing dangerous happened, but this step did not finish. The server said:</p><pre>' . inst_e(get_class($e) . ': ' . $e->getMessage()) . '</pre><p>Reload the page to try again. If it keeps happening, send the message above to your developer.</p><p><a class="btn" href="install.php">Back to the installer</a></p></div>', 0);
 });
+if (isset($_GET['probe']) && is_string($_GET['probe'])) {
+    inst_answer_probe($_GET['probe']);
+}
 inst_session_start();
 $state = inst_state();
 $method = (string) ($_SERVER['REQUEST_METHOD'] ?? 'GET');

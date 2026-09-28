@@ -4,9 +4,12 @@ Companion to `GO-LIVE-GUIDE.md`. The guide says *how*; this document lists *what
 credential the owner must set, every placeholder shipped in the sample data, where each setting
 lives, what is deliberately not in this version, and what the `motion-wip` branch is.
 
-Build handed over: `dist/skyfragrances-20260928-0917.zip` (14,057,392 bytes, 564 files),
-unpacked twin `dist/public_html/` (16.1 MB on disk). Built from branch `main` with
-`php dev-tools/build-zip.php`.
+Build handed over: `dist/skyfragrances-20260928-1906.zip` (14,062,456 bytes, 565 files),
+unpacked twin `dist/public_html/` (16 MB on disk, the same 565 files). Built from branch `main`
+with `php dev-tools/build-zip.php` on 2026-09-29 00:06 Karachi (the time in the file name is UTC; the
+previous hand-over build `…-1816.zip` is under `dist/old-builds/`; the only difference is the added
+`app/tools/reset-password.php`). Earlier wording kept below where it describes that build: the ZIP was
+written at 23:16 Karachi time). Older builds live in `dist/old-builds/` and must not be uploaded.
 
 ---
 
@@ -26,9 +29,13 @@ unpacked twin `dist/public_html/` (16.1 MB on disk). Built from branch `main` wi
 `config.php` is written once by the installer and set to mode `0400`. Nothing on the site ever
 rewrites it. Changing the mailbox password means editing it by hand (guide, Part 10).
 
-There is **no** password-reset email. Recovery is a phpMyAdmin edit (guide, Part 10 →
-"Forgotten admin password"), which pastes a bcrypt hash of a temporary password printed in the
-guide and then changes it from the panel.
+There is **no** password-reset email. Recovery is `app/tools/reset-password.php` (register C-64):
+the owner copies it to `public_html/` in File Manager, opens it, creates the empty nonce file
+`storage/reset-{16hex}` it names, and sets a new 12+ character password; the tool clears
+`admin_login_attempts` for the account, deletes the nonce, its pending file and itself, and only
+the browser that started the flow can finish it (cookie-bound, one hour). Guide Part 10 →
+"Forgotten admin password" carries the steps; the phpMyAdmin hash paste stays there as the
+fallback. Exercised over HTTP on 2026-09-29 (§8b).
 
 ---
 
@@ -96,10 +103,10 @@ the ZIP.
 
 ## 5. Known limitations and deliberate decisions
 
-1. **No password-recovery script.** The decisions register (C-64) planned
-   `app/tools/reset-password.php`; it was not built. The Tools page and the login page now point
-   at the guide's phpMyAdmin procedure instead (this run changed both texts, which previously
-   named the missing file).
+1. **Password recovery is a File-Manager tool, not an email.** `app/tools/reset-password.php`
+   (C-64) ships in the denied `app/` tree and must be copied to the root to run; it proves
+   File-Manager access with a nonce file before showing the form and removes itself afterwards.
+   The Tools page and the login page point at the guide's "Forgotten admin password" section.
 2. **Home page product rows need ≥ 4 live perfumes.** `app/controllers/home.php` hides best
    sellers / new arrivals / for-whom rows when fewer than four active products exist and shows
    an "empty" hero instead. `/shop` lists everything regardless. The guide tells the owner to add
@@ -154,28 +161,29 @@ manifest (`site/dev/zip-manifest.php`) will need the new asset paths added to `r
 
 ## 7. Fresh-install rehearsal (evidence for this hand-over)
 
-Run on 2026-09-28 from the unpacked ZIP copied to a scratch folder, served by
-`php -S 127.0.0.1:8092` with `dev/router.php` placed **outside** the copy (the ZIP has no `dev/`),
-against a brand-new MySQL 9.3 database `skyfragrances_fresh` (user `skyfr`).
+Run on 2026-09-28 (23:18–23:24 Karachi) from `dist/public_html/` copied to a scratch folder and
+served by `php -S 127.0.0.1:8092` with `dev/router.php` placed **outside** the copy (the ZIP has no
+`dev/`), against a brand-new MySQL 9.3 database `skyfragrances_fresh` (user `skyfr`), driven by a
+headless Chromium exactly as the guide describes. Screenshots and the raw `evidence.json` are in
+`docs/launch/shots-fresh-install/`.
 
 | Step | Result |
 |---|---|
-| ZIP contents vs manifest | 562 files from `site/` + 2 empty-dir `.gitkeep`s = 564; 0 missing, 0 unexpected. 10 `.htaccess`; no `config.php`, `.DS_Store`, `dev/`, `.git`, storage state or owner uploads. `uploads/products/sample/` 252 files, `uploads/og/sample/` 36, `uploads/collections/` 25, PHPMailer, `db/schema.sql` + `seed.sql`, `install.php`, intro loader present. |
-| Lint of the shipped tree | `php -l` on 179 PHP files (vendor excluded): 0 errors. `node --check` on all JS: 0 errors. No reference to `core.js`/`motion.css`. |
-| Installer screen 1 | All rows OK except *Pretty web addresses — could not be checked* (expected on a local host). |
-| Installer screen 2 | "Prove you own this hosting account" box shown; key read from `storage/.install-key`. Wrong DB password → friendly "Could not connect … Access denied". Correct → `config.php` written (0600), 303 to screen 3. Base URL `http://127.0.0.1:8092`, SMTP left empty. |
-| Installer screen 3 | Admin `skyowner`, email, 18-char password, store name, WhatsApp `0300 1234567` (stored `+923001234567`), seed ON → 27 schema statements + 234 seed statements, lock `storage/.installed`, `config.php` 0400, `site_indexable=0` (non-canonical host, as designed), `.install-key` removed. |
-| Installer screen 4 | Red "Delete install.php now" panel (local copy; production self-deletes), installation report, security checks (all *Note — could not verify* from the CLI server, each naming the URL to open). "Run the checks again" worked. |
-| Refusal | New session → "Sky Fragrances is already installed — delete install.php"; `?step=2`, `?step=3` and a forged `db_save` POST all land on the refusal page; admin table unchanged. "Delete install.php for me" removed the file; `/install.php` then 404 (shop's page). |
-| Storefront | `/` 200 with 12 product links; all 80 image URLs on the home page 200 (`image/webp` + `image/jpeg`); `/shop /collections /product/azure-oud /scent-finder /cart /track /faq /about /contact /robots.txt` 200; `/nope` 404; `/app/bootstrap.php /config.php /db/schema.sql /storage/.installed` 403. |
-| COD order | Cart API add (CSRF-checked, a token-less POST was refused) → checkout → `SF-260928-RF2H`, Rs. 8,950, free shipping, receipt 200; stock 24 → 23 on Azure Oud 50ml. |
-| `/track` POST | Right phone → status timeline (Pending); wrong phone → "We couldn't find an order with those details…" and nothing revealed. |
-| Admin | Login 303 → dashboard 200 with the sample-data banner. `Products → New` with two sizes (one on sale) → product 13; PNG and JPG uploads → 14 derivative files + 2 OG images, storefront `/product/fresh-install-oud` 200 with every image 200. Order → **Confirmed** (history row `pending → confirmed`); invoice and packing slip 200. |
-| Tools → Regenerate images | 43 of 43 rebuilt in one batch; 286 files rewritten; activity row logged. |
-| Tools → Remove sample data | POST without `DELETE` refused; with it: 8 reviews, 11 products, 4 collections, 1 coupon deleted; 2 coupons switched off (used); **Azure Oud kept** (sold, hidden); **Midnight Meridian kept** (holds product 13); 284 files deleted; dashboard banner gone; order detail still names Azure Oud; storefront and admin all 200. |
-| MariaDB 10.11 (port 3307) | Database dropped and recreated; ZIP's `schema.sql` then `seed.sql` loaded with `--show-warnings`: zero output, 26 InnoDB/utf8mb4 tables, 12 products / 24 sizes / 5 collections / 3 coupons / 79 settings / 36 images / 0 admins. |
-| Logs | Server: no 4xx/5xx other than the deliberate probes, no PHP warnings from the app. App log: 0 errors; 1 warning from the deliberate token-less cart POST. |
-| Clean-up | Server killed, `skyfragrances_fresh` dropped. Shared `skyfragrances_dev` untouched (13 products / 5 orders / 1 admin before and after). |
+| ZIP contents vs manifest | 562 files from `site/` + 9 `.gitkeep` stubs in the empty runtime folders = 564 files (601 entries with directories); 0 required files missing; 0 forbidden entries; 10 `.htaccess`. An independent filter over `site/` finds the same 555 real files with 0 missing and 0 extra. Present: `uploads/products/sample/` 252, `uploads/og/sample/` 36, `uploads/collections/` 25, PHPMailer (5), `db/schema.sql` + `seed.sql`, `install.php`, `cron.php`, `config.sample.php`, `assets/js/intro.js`. Absent: `config.php`, `dev/`, `.git`, `.DS_Store`, `.gitignore`, storage state, `uploads/settings/` content, owner uploads (`uploads/products/13/` etc. were skipped). No file in the ZIP mentions `core.js` or `motion.css`. |
+| Lint of the shipped tree | `php -l` on 181 PHP files (vendor excluded): 0 errors. `node --check` on every JS file: 0 errors. |
+| Installer screen 1 | Title "Check server". Every row OK except the expected *Pretty web addresses — could not be checked* Note on a local host. Continue → screen 2. |
+| Installer screen 2 | "Prove you own this hosting account" box shown; key read from `storage/.install-key` (32 hex). Wrong DB password → the form comes back with the friendly *Could not connect … Access denied* message, nothing written. Correct details (host `127.0.0.1`, `skyfragrances_fresh`, base URL `http://127.0.0.1:8092`, mailbox address and password left empty) → `config.php` written at mode 0600, 303 to screen 3. |
+| Installer screen 3 | Username box empty (no `admin` pre-fill); no *Send test email* button because no mailbox was given; sample-data box ticked by default. Entered `sky.owner`, `orders@skyfragrances.com`, a 24-character password, store name, WhatsApp `0300 1234567` → Create the shop. |
+| Installer screen 4 | Red *Delete install.php now* panel (local copy; production self-deletes). Report: 27 schema statements, 234 seed statements, lock written, admin created, 11 folders ready, 9 protection files present, client-IP detection OK, `config.php` locked 0400; Notes: indexing off (non-canonical host), HTTPS redirect left 302 (local), 7 security probes *could not verify* from the CLI server, each naming the URL to open. *Run the checks* re-ran and produced the same table. Afterwards: `storage/.installed` present, `storage/.install-key` deleted, `config.php` 0400. |
+| Refusal | A fresh browser session on `/install.php`, `?step=2` and `?step=3` gets *Sky Fragrances is already installed — delete install.php* every time. |
+| Storefront | `/` 200, title "Sky Fragrances — Luxury Perfumes in Pakistan", 24 product links (12 perfumes × 2 rows), all 31 image URLs on the page 200. `/shop /collections /product/azure-oud /scent-finder /cart /track /faq /robots.txt` 200; `/nope-404` 404; `/config.php /app/bootstrap.php /db/schema.sql /storage/.htaccess` 403; `/sitemap.xml` 404 because `site_indexable = 0` on a non-canonical host (§5.4). |
+| COD order | Azure Oud 50ml → cart (Rs. 8,950, free shipping) → checkout as *Fresh Walk Tester*, `0300 1234567`, Karachi, COD → **`SF-260928-PUNF`**. Response chain `303 /checkout → 200 /order/SF-260928-PUNF?t=…` — no 301 hop any more (fixed this run, §8). The lower-cased path answers 200 too. Stock 24 → 23 on Azure Oud 50ml; `order_status_history` holds `NULL → pending`. Customer email written as a preview (`storage/logs/mail-preview/`) because no SMTP was given. A first submission made 1 s after the form loaded was refused as a bot (form time-trap, 3 s) and logged as a warning — a human cannot hit this. |
+| `/track` | Right phone → *Order status — Hello, Fresh. SF-260928-PUNF · Placed 28 Sep 2026* with the timeline; wrong phone → *We couldn't find an order with those details…* and nothing revealed. |
+| Admin | Login as `sky.owner` → 303 → dashboard 200. `Products → New`: name, collection, gender, scent family, descriptions, notes, one size (50ml, Rs. 5,450, stock 7), status Live → product 13 `fresh-install-oud` created with the flash *Add photos below…*; JPG upload through the Photos box → `{"ok":true,"id":37}`, one tile; storefront `/product/fresh-install-oud` 200 with all 30 derivative image URLs 200. `Orders` lists the order; detail → **Mark confirmed** → status Confirmed, history `pending → confirmed`; invoice and packing slip 200. |
+| Delete install.php | On the refusal page, *Delete install.php for me* → *install.php has been deleted*; `GET /install.php` then 404 (the shop's page) and the file is gone. |
+| MariaDB 10.11 (port 3307) | `skyfragrances_maria` dropped and recreated; the ZIP's `schema.sql` then `seed.sql` loaded through the `mariadb` client with `--default-character-set=utf8mb4 --show-warnings`: zero warnings, 26 InnoDB `utf8mb4_unicode_ci` tables, 12 products / 24 sizes / 5 collections / 3 coupons / 79 settings / 36 images / 8 reviews / 0 admins. |
+| Logs | Server log: no 4xx/5xx except the deliberate probes, no PHP warnings from the app (the machine's `imagick already loaded` startup notice is local). App log: 0 errors; 1 warning from the deliberate too-fast checkout. |
+| Clean-up | Server on 8092 killed; `skyfragrances_fresh` dropped. Shared `skyfragrances_dev` untouched (13 products / 5 orders / 1 admin before and after). |
 
 Also proven on the shared dev database by the earlier smoke runs (`docs/launch/`): the full
 storefront route table, cart pricing, bank-transfer checkout with proof, oversell 409, intro
@@ -187,17 +195,42 @@ loader timings, 78 admin checks.
 
 | File | Change |
 |---|---|
-| `site/robots.txt` | `Sitemap:` line pointed at `https://skyfragrances.com/sitemap.xml` instead of a dev address (the installer rewrites it anyway; this protects update re-uploads). |
-| `site/admin/views/tools.php` | "Locked out" note now points at the guide's phpMyAdmin recovery instead of the unbuilt `app/tools/reset-password.php`. |
-| `site/admin/views/login.php` | "Forgot your password?" note now names the guide section instead of "step 9". |
-| `README.md`, `docs/GO-LIVE-GUIDE.md`, `docs/HANDOVER.md` | New. |
+| `site/index.php` | The lower-casing 301 no longer applies to `/order/{number}`: the checkout redirect target now answers 200 directly instead of costing the customer a 301 hop (the router already matches order numbers case-insensitively and the controller upper-cases them). |
+| `docs/GO-LIVE-GUIDE.md` | Points at the new ZIP name and size. |
+| `docs/HANDOVER.md` | Build line, this rehearsal (§7), this list, open items (§9). |
+| `docs/launch/shots-fresh-install/` | New: 12 screenshots and `evidence.json` from the rehearsal. |
+| `dist/` | `skyfragrances-20260928-1816.zip` built; `dist/public_html/` re-unpacked from it; the superseded `skyfragrances-20260928-0957.zip` moved to `dist/old-builds/`. |
 
-Pre-existing uncommitted work in the tree (from the smoke runs) is included in the ZIP:
-`site/admin/controllers/product-form.php` (price changes named in the audit log),
-`site/assets/css/admin.css` (products table overflow fix). `site/cj.txt`, a stray file, was
-deleted from the tree by a concurrent session and is not in the ZIP.
+Uncommitted work already in the tree from the smoke and review sessions is included in the ZIP:
+`site/install.php` (self-addressed reachability probe, `00` phone prefix, empty username box,
+screenshot reminder on screen 4, SMTP port 465 → SSL), `site/app/lib/text.php` (`0092…` phone
+prefix), `site/dev/zip-manifest.php` (`.install-probe` excluded), `.gitignore`.
 
 Nothing has been committed; the owner of the repository decides what to commit.
+
+### 8b. Changes made in the hand-over-gap run (2026-09-29)
+
+| File | Change |
+|---|---|
+| `site/app/tools/reset-password.php` | New (C-64). Standalone, no bootstrap: reads `config.php`, PDO, `password_hash(PASSWORD_DEFAULT)`; nonce file `storage/reset-{16hex}` + pending file `storage/.reset-pending` (nonce, CSRF token, sha256 of a cookie secret, 1 h TTL); refuses when `admin_users` ≠ 1 row; on success updates the hash, sets `is_active = 1`, deletes `admin_login_attempts` for the username, unlinks nonce, pending and itself. Exercised over HTTP on the dev server: 200 instructions → 403 for a second browser → 200 form after the nonce file → 12-char, mismatch and bad-CSRF errors → success page, file gone, next GET 404, login still works. |
+| `site/dev/zip-manifest.php` | `app/tools/reset-password.php` required; `storage/.reset-pending` and `storage/reset-{16hex}` excluded/forbidden. |
+| `site/admin/views/tools.php` | Lock-out note names the reset tool instead of phpMyAdmin. |
+| `docs/GO-LIVE-GUIDE.md` | Pass-3 review: 16 wording/label gaps + new day-one checklist (`docs/launch/guide-review.md`); Part 10 recovery rewritten around the tool with the phpMyAdmin paste as fallback; new ZIP name/size. |
+| `docs/launch/lighthouse.md` | New: first Lighthouse numbers (mobile 76–77 / desktop 98; SEO 69 only because the dev DB is `noindex`). |
+| `docs/launch/shots-commerce/` | New: JazzCash + Easypaisa checkout/confirmation, mark paid, refund, cancel-with-stock-restore, bulk cancel-unpaid; `results.json`. |
+| `docs/COMPLETION-REPORT.md` | Rows 3.2b, 3.5d/e, 5.4, 6.4, 6.5, C-64 and the DONE\* list updated from the recorded run. |
+| `dist/` | `skyfragrances-20260928-1906.zip` built; `dist/public_html/` re-unpacked (565 files, both dot-files present); `…-1816.zip`, `skyfragrances-update-2026-09-28.zip`, `update-pack/`, `admin-ui-fix/` moved to `dist/old-builds/`. |
+
+Verified over HTTP in this run (dev server on the shared database; every row created was deleted
+afterwards and the JazzCash/Easypaisa placeholder settings restored byte-for-byte): price-band
+filter (`/shop` 132 cards → `?price=-5000` 30 → `?price=9000-` 82; junk value 301s to `/shop`);
+JazzCash order `SF-260928-PSZ4` and Easypaisa order `SF-260928-PJ2G` placed through the real
+checkout with a proof upload, both *awaiting verification*; a second transfer from the same IP
+while one is unverified is refused (C-58) — the phone and IP rule both fire; proof viewer full
+(`image/jpeg`, 58 KB) and thumbnail (`?w=320`, 2.9 KB); **Mark as paid**, **Mark refunded** (paid →
+refunded), **Cancel this order** restored stock 23 → 24 with `stock_restored_at` set; **Mark
+confirmed**; bulk **Cancel unpaid** POST (order back-dated 3 days) cancelled 1 and restored stock;
+`cron.php?key=…` 200 `sent=0 retried=0 failed=0`, wrong key 404.
 
 ---
 
@@ -205,13 +238,22 @@ Nothing has been committed; the owner of the repository decides what to commit.
 
 1. **Shared dev database:** the `admin` account's password hash in `skyfragrances_dev` no longer
    matches the documented `<local-dev-admin-password>` (changed 2026-09-26, `admin_activity_log #68/#69`).
-   Resetting it was not permitted from this session. Reset with a cost-12 bcrypt `UPDATE` or the
-   guide's recovery procedure. This does not affect production.
-2. Real hPanel screenshots for the guide (the spec asked for one per step; none were taken here
+   Reset with a cost-12 bcrypt `UPDATE` or the guide's recovery procedure. This does not affect production.
+2. **Driving the dev database from a shell:** the `mysql` CLI on this machine defaults to latin1;
+   a restore on 2026-09-28 wrote `announcement_text` as mojibake (`â€”`) until it was re-saved
+   from the admin form. Pass `--default-character-set=utf8mb4` to every script that writes text.
+3. **Shared-IP side effects of the smoke runs on `skyfragrances_dev`:** the login lock-out probe
+   locks `127.0.0.1` for everyone for up to 15 minutes (its failed rows were deleted at once);
+   review/newsletter `rate_limits` rows keyed by the shared `ip_hash` were left in place;
+   `admin_users.known_devices` holds four device hashes from those sessions (five are kept).
+4. Real hPanel screenshots for the guide (the spec asked for one per step; none were taken here
    because no Hostinger account was available). The guide is written from the current hPanel
    layout and hedges where labels vary.
-3. Decide whether to build the C-64 recovery script or keep the phpMyAdmin procedure.
-4. HSTS after the certificate has been stable (one `.htaccess` line).
-5. Optional cron for the outbox once the owner has the `cron_key`.
-6. Trim future update ZIPs (no `install.php`, `.htaccess`, `robots.txt`, sample uploads) or keep
+5. ~~Decide whether to build the C-64 recovery script~~ — built and exercised 2026-09-29 (§8b); the
+   phpMyAdmin procedure stays in the guide as the fallback.
+6. HSTS after the certificate has been stable (one `.htaccess` line).
+7. Optional cron for the outbox once the owner has the `cron_key`.
+8. Trim future update ZIPs (no `install.php`, `.htaccess`, `robots.txt`, sample uploads) or keep
    the guide's Part 11 checklist.
+9. `build-zip.php` names the ZIP with UTC time (`date()` with PHP's default timezone); harmless,
+   but the name and the file's modification time differ by five hours.

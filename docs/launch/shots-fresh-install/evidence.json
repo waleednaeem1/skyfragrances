@@ -1,0 +1,13 @@
+{
+  "checkout_chain": [
+    "303 /checkout",
+    "200 /order/SF-260928-PUNF?t=3d4c4915a7462a708ede69e6e5852372"
+  ],
+  "order": {
+    "number": "SF-260928-PUNF",
+    "url": "http://127.0.0.1:8092/order/SF-260928-PUNF?t=3d4c4915a7462a708ede69e6e5852372",
+    "confirmed": true
+  },
+  "confirmation_direct_status": 200,
+  "install_after_delete": 404
+}
