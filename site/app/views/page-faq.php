@@ -48,7 +48,7 @@ $whatsappDigits = preg_replace('/\D+/', '', (string) setting('whatsapp', ''));
       <p class="text-muted">Still wondering about something?</p>
       <div class="cluster">
 <?php if ($whatsappDigits !== ''): ?>
-        <a class="btn btn--ghost btn--whatsapp btn--sm" href="https://wa.me/<?= e($whatsappDigits) ?>?text=<?= e(rawurlencode('Assalam-o-Alaikum! I have a question about Sky Fragrances.')) ?>" target="_blank" rel="noopener"><?php partial('icon.php', ['name' => 'whatsapp', 'size' => 18]); ?><span class="btn__label">Ask on WhatsApp</span></a>
+        <a class="btn btn--ghost btn--whatsapp btn--sm" href="https://wa.me/<?= e($whatsappDigits) ?>?text=<?= e(rawurlencode('Assalam-o-Alaikum, I have a question about Sky Fragrances.')) ?>" target="_blank" rel="noopener"><?php partial('icon.php', ['name' => 'whatsapp', 'size' => 18]); ?><span class="btn__label">Ask on WhatsApp</span></a>
 <?php endif; ?>
         <a class="btn btn--text btn--sm" href="<?= e(url('/contact')) ?>"><span class="btn__label">Contact us</span></a>
       </div>

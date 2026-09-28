@@ -68,7 +68,34 @@ function product_present_image(int $productId, string $productName, array $row, 
         'zoom_webp' => product_image_variant($productId, $filename, 'zoom', 'webp'),
         'thumb' => product_image_variant($productId, $filename, 'thumb', 'jpg'),
         'thumb_webp' => product_image_variant($productId, $filename, 'thumb', 'webp'),
+        'og' => product_image_og($filename),
     ];
+}
+
+function product_image_og(string $filename): string
+{
+    $folder = str_contains($filename, '/') ? dirname($filename) . '/' : '';
+    $stem = pathinfo(basename($filename), PATHINFO_FILENAME);
+    $derived = '/uploads/og/' . $folder . $stem . '-og.jpg';
+    return is_file(APP_ROOT . $derived) ? url($derived) : '';
+}
+
+function product_meta_description(array $product, array $sizes): string
+{
+    $own = trim((string) ($product['seo_description'] ?? ''));
+    if ($own !== '') {
+        return $own;
+    }
+    $short = trim(html_entity_decode(strip_tags((string) ($product['short_description'] ?? '')), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    if ($short === '') {
+        return '';
+    }
+    $labels = array_values(array_filter(array_map(static fn (array $size): string => trim((string) $size['label']), $sizes)));
+    $tail = ($labels !== [] ? implode(' and ', $labels) . '. ' : '') . 'Cash on delivery across Pakistan.';
+    if (mb_strlen($short . ' ' . $tail, 'UTF-8') <= 155) {
+        return $short . ' ' . $tail;
+    }
+    return mb_strlen($short, 'UTF-8') <= 155 ? $short : '';
 }
 
 function product_present_size(array $row): array
@@ -452,9 +479,12 @@ function product_jsonld(array $product, array $sizes, ?array $defaultSize, array
             $block['review'][] = $entry;
         }
     }
-    $crumbs = [['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => SITE_URL . '/']];
+    $crumbs = [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => SITE_URL . '/'],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => 'Shop', 'item' => canonical('/shop')],
+    ];
     if ($collection !== []) {
-        $crumbs[] = ['@type' => 'ListItem', 'position' => 2, 'name' => $collection['name'], 'item' => canonical('/collections/' . $collection['slug'])];
+        $crumbs[] = ['@type' => 'ListItem', 'position' => 3, 'name' => $collection['name'], 'item' => canonical('/collections/' . $collection['slug'])];
     }
     $crumbs[] = ['@type' => 'ListItem', 'position' => count($crumbs) + 1, 'name' => (string) $product['name'], 'item' => $productUrl];
     return [$block, ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $crumbs]];
@@ -555,11 +585,14 @@ $sizesJson = [
 $familyLabel = $product['scent_family'] ? $product['scent_family'] . ' perfume' : 'luxury perfume';
 $pageTitle = trim((string) ($product['seo_title'] ?: ($productName . ' — ' . $familyLabel)));
 $head['title'] = str_ends_with(mb_strtolower($pageTitle, 'UTF-8'), 'sky fragrances') ? $pageTitle : $pageTitle . ' | Sky Fragrances';
-$head['meta_description'] = $product['seo_description'] ?: ($product['short_description'] ?: excerpt((string) $product['description'], 155));
+$head['meta_description'] = product_meta_description($product, $sizes);
 $head['canonical'] = canonical('/product/' . $product['slug']);
-$head['og'] = ['type' => 'product', 'title' => $productName . ' | Sky Fragrances'];
-if ($images !== []) {
-    $head['og']['image'] = product_absolute_url($images[0]['src']);
+$head['og'] = ['type' => 'product', 'title' => $productName];
+foreach ($images as $image) {
+    if ($image['og'] !== '') {
+        $head['og']['image'] = product_absolute_url($image['og']);
+        break;
+    }
 }
 $head['jsonld'] = product_jsonld($product, $sizes, $defaultSize, $images, $rating, $reviews, $collection);
 

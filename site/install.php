@@ -743,7 +743,7 @@ function inst_selftest_uploads(): array
 function inst_selftest_denied(): array
 {
     $rows = [];
-    foreach (['app/bootstrap.php', 'db/schema.sql', 'storage/.htaccess', 'storage/.installed', 'config.php', 'admin/controllers/dashboard.php'] as $rel) {
+    foreach (['app/bootstrap.php', 'db/schema.sql', 'storage/.htaccess', 'storage/.installed', 'config.php', '.user.ini', 'admin/controllers/dashboard.php'] as $rel) {
         $status = inst_http_status(inst_request_base_url() . '/' . $rel);
         if ($status === null) {
             $rows[] = ['warn', 'Private file ' . $rel, 'Could not verify — open ' . inst_request_base_url() . '/' . $rel . ' on your phone; it must show an error, never the file.'];
@@ -774,6 +774,9 @@ function inst_page(string $title, string $body, int $step): never
     header('Content-Type: text/html; charset=utf-8');
     header('X-Robots-Tag: noindex, nofollow');
     header('Cache-Control: no-store');
+    header('X-Frame-Options: DENY');
+    header('X-Content-Type-Options: nosniff');
+    header('Referrer-Policy: no-referrer');
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>' . inst_e($title) . ' — Sky Fragrances installer</title><style>'
         . 'body{margin:0;font:16px/1.5 Georgia,serif;background:#0a0a0a;color:#f5f0e8}'
         . 'header{padding:20px 24px;border-bottom:1px solid #2a2520}header b{color:#d4b084;letter-spacing:.2em;font-size:14px}'

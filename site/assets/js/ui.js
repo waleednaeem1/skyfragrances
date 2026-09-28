@@ -367,6 +367,12 @@
       event.preventDefault();
       SF.closeDialog(SF.qs('.js-nav-mobile'));
     });
+    SF.on(doc, 'keydown', 'a[role="button"], a.js-cart-open', function (event, trigger) {
+      if (event.key === ' ' || event.key === 'Spacebar') {
+        event.preventDefault();
+        trigger.click();
+      }
+    });
   }
 
   SF.accordionSet = function (trigger, expanded) {

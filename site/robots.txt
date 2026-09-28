@@ -8,6 +8,7 @@ Disallow: /track
 Disallow: /search
 Disallow: /unsubscribe
 Disallow: /api/
+Disallow: /storage/
 Disallow: /scent-finder/result
 Disallow: /*?sort=
 Disallow: /*?page=

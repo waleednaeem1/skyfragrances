@@ -20,7 +20,7 @@ if ($method === 'GET' && $path === '/__rewrite-probe') {
     exit;
 }
 
-if (($_SERVER['REDIRECT_STATUS'] ?? '') === '404' && !str_starts_with($path, '/api/')) {
+if (in_array((string) ($_SERVER['REDIRECT_STATUS'] ?? ''), ['403', '404'], true) && !str_starts_with($path, '/api/')) {
     $rawPath = $path = '/__missing__';
 }
 

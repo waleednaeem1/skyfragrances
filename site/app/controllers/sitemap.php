@@ -16,12 +16,14 @@ function sitemap_build(): string
 {
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
     $latestProduct = db_fetch_column('SELECT MAX(COALESCE(updated_at, created_at)) FROM products WHERE is_active = 1 AND deleted_at IS NULL');
+    $latestSetting = db_fetch_column('SELECT MAX(updated_at) FROM settings');
+    $latestSite = max((string) $latestProduct, (string) $latestSetting) ?: null;
     foreach (['/', '/shop', '/collections', '/for-him', '/for-her', '/unisex', '/new-arrivals', '/best-sellers', '/sale'] as $path) {
         $xml .= sitemap_entry($path, $latestProduct);
     }
-    $xml .= sitemap_entry('/scent-finder', null);
-    $xml .= sitemap_entry('/track', null);
-    $xml .= sitemap_entry('/contact', null);
+    $xml .= sitemap_entry('/scent-finder', $latestSite);
+    $xml .= sitemap_entry('/track', $latestSite);
+    $xml .= sitemap_entry('/contact', $latestSite);
     foreach (db_fetch_all('SELECT slug, updated_at, created_at FROM content_pages WHERE is_active = 1 ORDER BY sort_order ASC') as $row) {
         $xml .= sitemap_entry('/' . $row['slug'], $row['updated_at'] ?? $row['created_at']);
     }

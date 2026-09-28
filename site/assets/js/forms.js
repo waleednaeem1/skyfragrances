@@ -202,6 +202,7 @@
         panel.innerHTML = html;
         items().forEach(function (item, i) {
           item.id = panel.id + '-opt-' + i;
+          item.setAttribute('aria-selected', 'false');
         });
         panel.classList.add('is-open');
         input.setAttribute('aria-expanded', 'true');
@@ -238,7 +239,10 @@
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
           event.preventDefault();
           active = event.key === 'ArrowDown' ? Math.min(list.length - 1, active + 1) : Math.max(0, active - 1);
-          list.forEach(function (item, i) { item.classList.toggle('is-active', i === active); });
+          list.forEach(function (item, i) {
+            item.classList.toggle('is-active', i === active);
+            item.setAttribute('aria-selected', i === active ? 'true' : 'false');
+          });
           input.setAttribute('aria-activedescendant', list[active].id || '');
         } else if (event.key === 'Enter' && active >= 0) {
           event.preventDefault();

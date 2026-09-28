@@ -1,0 +1,50 @@
+[
+  {
+    "path": "/",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/live/home--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/live/product_azure_oud--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/login",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "docs/shots/live/admin_login--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/live/home--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/live/product_azure_oud--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/login",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "docs/shots/live/admin_login--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  }
+]

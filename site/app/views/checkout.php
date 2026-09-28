@@ -15,7 +15,7 @@ $cities = is_array($cities ?? null) ? $cities : [];
 $manualPaymentNote = trim((string) ($manualPaymentNote ?? ''));
 $deliveryTime = (string) ($deliveryTime ?? '2–4 working days');
 $whatsappDigits = preg_replace('/\D+/', '', (string) ($whatsapp ?? ''));
-$whatsappHref = $whatsappDigits === '' ? '' : 'https://wa.me/' . $whatsappDigits . '?text=' . rawurlencode("Assalam-o-Alaikum! I'd like to place an order with Sky Fragrances.");
+$whatsappHref = $whatsappDigits === '' ? '' : 'https://wa.me/' . $whatsappDigits . '?text=' . rawurlencode("Assalam-o-Alaikum, I would like to place an order with Sky Fragrances.");
 $hasManual = false;
 foreach ($paymentMethods as $method) {
     if (!empty($method['is_manual'])) {

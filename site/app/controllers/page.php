@@ -30,10 +30,33 @@ if ($route['name'] === 'page.faq') {
     }
 }
 
+function page_meta_description(array $page, string $body): string
+{
+    $own = trim((string) ($page['seo_description'] ?? ''));
+    if ($own !== '') {
+        return $own;
+    }
+    $plain = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
+    $built = '';
+    foreach (preg_split('/(?<=[.!?])\s+/u', $plain) ?: [] as $sentence) {
+        $candidate = trim($built . ' ' . $sentence);
+        if ($candidate === '' || mb_strlen($candidate, 'UTF-8') > 155) {
+            break;
+        }
+        $built = $candidate;
+    }
+    return preg_match('/[.!?]$/u', $built) ? $built : '';
+}
+
+$heading = (string) ($page['heading'] ?: $page['title']);
 $title = (string) ($page['seo_title'] ?: $page['title']);
 $head['title'] = str_ends_with($title, 'Sky Fragrances') ? $title : $title . ' | Sky Fragrances';
-$head['meta_description'] = $page['seo_description'] ?? '';
+$head['meta_description'] = page_meta_description($page, $body);
 $head['canonical'] = canonical('/' . $page['slug']);
+$head['jsonld'][] = ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => [
+    ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => SITE_URL . '/'],
+    ['@type' => 'ListItem', 'position' => 2, 'name' => $heading, 'item' => canonical('/' . $page['slug'])],
+]];
 
 if ($faqItems !== []) {
     $head['jsonld'][] = [

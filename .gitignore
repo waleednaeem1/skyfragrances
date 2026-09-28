@@ -29,3 +29,7 @@ docs/plan-snapshot-before-integrate/
 site/cj.txt
 site/cookies.txt
 dev-tools/node_modules/
+
+# Lighthouse raw runs are 400 KB each; only summary.md is kept
+docs/lighthouse/**/*.json
+docs/lighthouse/*.json

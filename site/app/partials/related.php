@@ -6,6 +6,19 @@ if ($related === []) {
 }
 $sectionId = (string) ($sectionId ?? 'related');
 $monogram = asset('img/brand/monogram-transparent-512.png');
+$cardSizes = '(min-width: 1200px) 22vw, (min-width: 768px) 30vw, 62vw';
+$cardSrcset = static function (array $image, string $ext): string {
+    $thumb = (string) ($ext === 'webp' ? ($image['thumb_webp'] ?? '') : ($image['thumb'] ?? ''));
+    $card = (string) ($ext === 'webp' ? ($image['webp'] ?? '') : ($image['src'] ?? ''));
+    $parts = [];
+    if ($thumb !== '' && !str_ends_with($thumb, '.svg')) {
+        $parts[] = $thumb . ' 200w';
+    }
+    if ($card !== '' && !str_ends_with($card, '.svg')) {
+        $parts[] = $card . ' 600w';
+    }
+    return implode(', ', $parts);
+};
 ?>
 <section class="section section--divided" id="<?= e($sectionId) ?>" aria-labelledby="<?= e($sectionId) ?>-title">
   <div class="container">
@@ -19,9 +32,15 @@ $monogram = asset('img/brand/monogram-transparent-512.png');
       <article class="product-card<?= $card['sold_out'] ? ' is-sold-out' : '' ?>">
 <?php if ($card['image'] !== null): ?>
         <a class="product-card__media" href="<?= e($card['url']) ?>" tabindex="-1" aria-hidden="true">
-          <img class="product-card__img" src="<?= e($card['image']['src']) ?>" srcset="<?= e($card['image']['srcset']) ?>" sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 62vw" alt="<?= e($card['image']['alt']) ?>" width="600" height="750" loading="lazy" decoding="async">
+<?php $webpSrcset = $cardSrcset($card['image'], 'webp'); $jpgSrcset = $cardSrcset($card['image'], 'jpg'); ?>
+          <picture>
+<?php if ($webpSrcset !== ''): ?>
+            <source type="image/webp" srcset="<?= e($webpSrcset) ?>" sizes="<?= e($cardSizes) ?>">
+<?php endif; ?>
+            <img class="product-card__img" src="<?= e($card['image']['src']) ?>"<?= $jpgSrcset !== '' ? ' srcset="' . e($jpgSrcset) . '" sizes="' . e($cardSizes) . '"' : '' ?> alt="<?= e($card['image']['alt']) ?>" width="600" height="750" loading="lazy" decoding="async">
+          </picture>
 <?php if ($card['hover'] !== null): ?>
-          <img class="product-card__img product-card__img--alt" src="<?= e($card['hover']['src']) ?>" srcset="<?= e($card['hover']['srcset']) ?>" sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 62vw" alt="" width="600" height="750" loading="lazy" decoding="async">
+          <img class="product-card__img product-card__img--alt" src="<?= e($card['hover']['src']) ?>" alt="" width="600" height="750" loading="lazy" decoding="async">
 <?php endif; ?>
 <?php if ($card['badges'] !== []): ?>
           <div class="badge-stack"><?php foreach ($card['badges'] as $badge): ?><span class="badge <?= e($badge['class']) ?>"><?= e($badge['text']) ?></span><?php endforeach; ?></div>

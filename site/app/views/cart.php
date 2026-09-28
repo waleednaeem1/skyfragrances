@@ -17,7 +17,7 @@ $cartTrustItems = [
     ['banknote', 'Cash on Delivery', 'Pay the courier when your parcel arrives, anywhere in Pakistan.'],
     ['truck', 'Fast Delivery', 'Dispatched within a working day; delivered in ' . $deliveryTime . '.'],
     ['whatsapp', 'WhatsApp Support', 'A real person answers before and after your order.'],
-    ['refresh', 'Easy Exchange', 'Damaged or wrong item? Tell us within 48 hours and we replace it.'],
+    ['refresh', 'Easy Exchange', 'Sealed bottles are exchanged within seven days; damaged or wrong items are replaced.'],
 ];
 ?>
 <section class="section section--tight">

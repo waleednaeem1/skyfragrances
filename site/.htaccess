@@ -48,11 +48,13 @@ ExpiresDefault                          "access plus 1 hour"
 ExpiresByType text/html                 "access plus 0 seconds"
 ExpiresByType text/css                  "access plus 1 year"
 ExpiresByType application/javascript    "access plus 1 year"
+ExpiresByType text/javascript           "access plus 1 year"
 ExpiresByType image/jpeg                "access plus 1 year"
 ExpiresByType image/png                 "access plus 1 year"
 ExpiresByType image/webp                "access plus 1 year"
 ExpiresByType image/svg+xml             "access plus 1 year"
 ExpiresByType image/x-icon              "access plus 1 year"
+ExpiresByType image/vnd.microsoft.icon  "access plus 1 year"
 ExpiresByType font/woff2                "access plus 1 year"
 ExpiresByType application/xml           "access plus 1 hour"
 </IfModule>
@@ -66,6 +68,9 @@ ExpiresByType application/xml           "access plus 1 hour"
   Header always set X-Content-Type-Options "nosniff"
   Header always set Cross-Origin-Resource-Policy "same-origin"
 </FilesMatch>
+<FilesMatch "\.(css|js|svg|xml|txt)$">
+  Header append Vary "Accept-Encoding"
+</FilesMatch>
 Header unset X-Powered-By
 Header always unset X-Powered-By
 </IfModule>
@@ -73,9 +78,11 @@ Header always unset X-Powered-By
 AddType image/webp .webp
 AddType font/woff2 .woff2
 AddType image/svg+xml .svg
+AddType application/javascript .js
+AddType text/css .css
 
 <IfModule mod_deflate.c>
 AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
-AddOutputFilterByType DEFLATE application/javascript application/json
+AddOutputFilterByType DEFLATE application/javascript text/javascript application/json
 AddOutputFilterByType DEFLATE application/xml image/svg+xml
 </IfModule>

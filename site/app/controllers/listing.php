@@ -579,8 +579,8 @@ if ($activeGroups > 1 || $multiValue) {
 }
 $canonicalState['sort'] = '';
 $canonicalState['price'] = '';
-$canonicalQueryString = listing_state_query($route['name'] === 'search' ? $state : $canonicalState);
-$canonicalPath = canonical($basePath . ($canonicalQueryString === '' ? '' : '?' . $canonicalQueryString));
+$canonicalQueryString = listing_state_query($canonicalState);
+$canonicalPath = $route['name'] === 'search' ? canonical('/search') : canonical($basePath . ($canonicalQueryString === '' ? '' : '?' . $canonicalQueryString));
 
 $prevUrl = $page > 1 ? listing_url($basePath, $state, ['page' => $page - 1]) : '';
 $nextUrl = $page < $pages ? listing_url($basePath, $state, ['page' => $page + 1]) : '';
@@ -629,7 +629,7 @@ switch ($landingKind) {
         $genderKey = match ((string) $preset['gender']) { 'him' => 'men', 'her' => 'women', default => 'unisex' };
         $heroFile = (string) setting('gender_hero_' . $preset['gender'], (string) setting('gender_tile_' . $genderKey . '_image', ''));
         $heroImage = $heroFile !== '' ? collection_card_image_sources($heroFile, 'zoom') : null;
-        $title = $heading . ' | ' . $storeName;
+        $title = match ((string) $preset['gender']) { 'him' => 'Perfumes For Him', 'her' => 'Perfumes For Her', default => 'Unisex Perfumes' } . ' | ' . $storeName;
         $metaDescription = $intro;
         $breadcrumbs[] = [$heading, url($basePath)];
         break;
@@ -654,6 +654,11 @@ switch ($landingKind) {
         $intro = (string) setting('shop_intro', '');
         $metaDescription = 'Every ' . $storeName . ' eau de parfum in one place — for him, for her and unisex. Cash on delivery nationwide.';
 }
+if ($chips !== [] && !$noindex) {
+    $filterLabel = implode(', ', array_column($chips, 'label'));
+    $title = str_replace(' | ' . $storeName, ' — ' . $filterLabel . ' | ' . $storeName, $title);
+    $metaDescription = $total . ($total === 1 ? ' perfume' : ' perfumes') . ' in ' . $heading . ' — ' . $filterLabel . '. ' . $metaDescription;
+}
 if ($page > 1) {
     $title = str_replace(' | ' . $storeName, ' — Page ' . $page . ' | ' . $storeName, $title);
     $metaDescription = rtrim($metaDescription, '. ') . ' — Page ' . $page;
@@ -677,9 +682,6 @@ $head['meta_description'] = $metaDescription;
 $head['robots'] = $noindex ? 'noindex,follow' : 'index,follow';
 $head['canonical'] = $canonicalPath;
 $head['jsonld'] = $jsonld;
-if ($heroImage !== null) {
-    $head['og'] = ['image' => SITE_URL . substr($heroImage['src'], strlen(BASE_PATH))];
-}
 
 render($route['view'], [
     'heading' => $heading,

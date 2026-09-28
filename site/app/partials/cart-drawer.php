@@ -13,7 +13,7 @@ $cartCount = function_exists('cart_count') ? (int) cart_count() : 0;
   <div class="drawer__body js-cart-body" data-count="<?= e((string) $cartCount) ?>"<?= $cartCount > 0 ? ' aria-busy="true"' : '' ?>>
 <?php if ($cartCount === 0): ?>
     <p class="drawer__empty">Your cart is empty.</p>
-    <p class="drawer__empty-copy">Twelve compositions, made for Pakistan. Start with the ones people keep coming back to.</p>
+    <p class="drawer__empty-copy">Made for Pakistan, delivered nationwide. Start with the ones people keep coming back to.</p>
     <div class="drawer__empty-action"><a class="btn btn--ghost" href="<?= e(url('/shop')) ?>"><span class="btn__label">Shop All Fragrances</span></a></div>
 <?php else: ?>
 <?php for ($skeleton = 0; $skeleton < min(3, $cartCount); $skeleton++): ?>

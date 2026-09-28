@@ -122,20 +122,17 @@ function auth_window_start(): string
 
 function auth_recent_failures(string $column, string $value, ?string $ipHash = null): array
 {
-    $allowed = ['username' => 'username', 'ip_hash' => 'ip_hash'];
-    $col = $allowed[$column];
+    $sql = match ($column) {
+        'username' => 'SELECT COUNT(*) AS fails, MIN(attempted_at) AS oldest FROM admin_login_attempts WHERE username = :value AND was_success = 0 AND attempted_at > :since',
+        'ip_hash' => 'SELECT COUNT(*) AS fails, MIN(attempted_at) AS oldest FROM admin_login_attempts WHERE ip_hash = :value AND was_success = 0 AND attempted_at > :since',
+        default => throw new InvalidArgumentException('Unknown login-attempt column'),
+    };
     $params = ['value' => $value, 'since' => auth_window_start()];
-    $pairClause = '';
     if ($ipHash !== null) {
-        $pairClause = ' AND ip_hash = :ip_hash';
+        $sql .= ' AND ip_hash = :ip_hash';
         $params['ip_hash'] = $ipHash;
     }
-    $row = db_fetch(
-        "SELECT COUNT(*) AS fails, MIN(attempted_at) AS oldest
-         FROM admin_login_attempts
-         WHERE {$col} = :value{$pairClause} AND was_success = 0 AND attempted_at > :since",
-        $params
-    );
+    $row = db_fetch($sql, $params);
     return ['fails' => (int) ($row['fails'] ?? 0), 'oldest' => $row['oldest'] ?? null];
 }
 
@@ -403,7 +400,7 @@ function auth_recent_logins(string $username, int $limit = 10): array
 {
     return db_fetch_all(
         'SELECT attempted_at, was_success FROM admin_login_attempts
-         WHERE username = :username ORDER BY attempted_at DESC LIMIT ' . max(1, min(50, $limit)),
-        ['username' => mb_strtolower($username)]
+         WHERE username = :username ORDER BY attempted_at DESC LIMIT :limit',
+        ['username' => mb_strtolower($username), 'limit' => max(1, min(50, $limit))]
     );
 }

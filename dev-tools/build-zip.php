@@ -91,6 +91,66 @@ $names = [];
 for ($i = 0; $i < $verify->numFiles; $i++) {
     $names[] = (string) $verify->getNameIndex($i);
 }
+
+function build_abort(ZipArchive $zip, string $zipPath, string $message): never
+{
+    $zip->close();
+    unlink($zipPath);
+    exit($message . "\nAborted.\n");
+}
+
+$installSource = (string) $verify->getFromName('install.php');
+$literalMap = [
+    'INSTALL_DENY_HTACCESS' => ['app/.htaccess', 'db/.htaccess', 'admin/controllers/.htaccess', 'admin/views/.htaccess', 'admin/partials/.htaccess'],
+    'INSTALL_STORAGE_HTACCESS' => ['storage/.htaccess'],
+    'INSTALL_UPLOADS_HTACCESS' => ['uploads/.htaccess'],
+    'INSTALL_ASSETS_HTACCESS' => ['assets/.htaccess'],
+    'INSTALL_ADMIN_HTACCESS' => ['admin/.htaccess'],
+];
+foreach ($literalMap as $constant => $paths) {
+    if (!preg_match("/const {$constant} = <<<'HTACCESS'\n(.*?)\nHTACCESS;/s", $installSource, $literal)) {
+        build_abort($verify, $zipPath, "install.php no longer defines $constant.");
+    }
+    foreach ($paths as $rel) {
+        if ((string) $verify->getFromName($rel) !== $literal[1]) {
+            build_abort($verify, $zipPath, "$rel differs from the $constant literal in install.php.");
+        }
+    }
+}
+
+$headMeta = (string) $verify->getFromName('app/partials/head-meta.php');
+$responseLib = (string) $verify->getFromName('app/lib/response.php');
+preg_match_all('#<script>(.*?)</script>#s', $headMeta, $inlineScripts);
+if (count($inlineScripts[1]) !== 1) {
+    build_abort($verify, $zipPath, 'head-meta.php must carry exactly one inline <script> (the hashed bootstrap).');
+}
+$bootstrapHash = 'sha256-' . base64_encode(hash('sha256', $inlineScripts[1][0], true));
+if (!str_contains($responseLib, "'" . $bootstrapHash . "'")) {
+    build_abort($verify, $zipPath, "CSP_BOOTSTRAP_SCRIPT_HASH in response.php is not $bootstrapHash; the inline bootstrap changed.");
+}
+
+$inlineScriptPattern = '#<script(?![^>]*\bsrc=)(?![^>]*type="application/(?:ld\+json|json)")[^>]*>#i';
+$guardPattern = "#defined\\('SKYFR'\\) \\|\\| exit;#";
+$forbiddenExtension = '#(\.(md|log|bak|orig|tmp|swp|old|dist)|~)$#i';
+foreach ($names as $name) {
+    if (str_ends_with($name, '/')) {
+        continue;
+    }
+    if (preg_match($forbiddenExtension, $name) || str_contains($name, 'sess_') || (str_starts_with($name, 'uploads/') && preg_match('#\.(php|phtml|phar|inc|cgi|pl|py|sh|shtml)#i', $name)) || (str_ends_with($name, '.sql') && !str_starts_with($name, 'db/'))) {
+        build_abort($verify, $zipPath, "ZIP contains a file that must never ship: $name");
+    }
+    if (!str_ends_with($name, '.php') || str_starts_with($name, 'app/lib/vendor/') || str_starts_with($name, 'app/tools/')) {
+        continue;
+    }
+    $content = (string) $verify->getFromName($name);
+    if (preg_match('#^(app/(views|partials)/|admin/(views|partials)/)#', $name) && $name !== 'app/partials/head-meta.php' && preg_match($inlineScriptPattern, $content)) {
+        build_abort($verify, $zipPath, "$name carries an inline <script> the CSP would block.");
+    }
+    $guarded = preg_match('#^(app/|admin/(controllers|views|partials)/|db/sample-manifest\.php$)#', $name) === 1;
+    if ($guarded && basename($name) !== 'index.php' && !preg_match($guardPattern, substr($content, 0, 160))) {
+        build_abort($verify, $zipPath, "$name is missing the SKYFR guard in its first lines.");
+    }
+}
 $verify->close();
 $forbidden = array_filter($names, static function (string $name) use ($excludedExact, $manifest): bool {
     if (in_array($name, $excludedExact, true)) {
