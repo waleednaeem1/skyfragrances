@@ -11,11 +11,11 @@ adding your perfumes.
 
 - Your Hostinger login (hpanel.hostinger.com).
 - **Upload the ZIP, not the folder.** The developer's folder `dist/public_html` and the file
-  `dist/skyfragrances-20260928-1906.zip` (14,062,456 bytes) contain exactly the same 565 files.
+  `dist/skyfragrances-public_html-folder.zip` (14,062,456 bytes) contain exactly the same 565 files.
   The ZIP is the one to upload: hPanel unpacks it on the server in seconds and it keeps the two
   hidden files (`.htaccess`, `.user.ini`) that your Mac hides from you. Use **only** that ZIP.
   Ignore anything in `dist/old-builds` and any other ZIP or folder. In particular do not upload
-  `skyfragrances-update-2026-09-28.zip`, any `skyfragrances-20260928-1816.zip`, or the folders
+  `skyfragrances-update-2026-09-28.zip`, any `skyfragrances-public_html-folder.zip`, or the folders
   `update-pack` and `admin-ui-fix` (all now parked in `dist/old-builds`): everything in them is
   already inside the 1906 ZIP. They are developer leftovers, not an update
   for you. Do **not** make your own ZIP
@@ -30,7 +30,7 @@ adding your perfumes.
 in the part named.
 
 - BEFORE: Hostinger login ready; notes app open.
-- BEFORE: The ONE file to upload is `skyfragrances-20260928-1906.zip` (14,062,456 bytes) — not the
+- BEFORE: The ONE file to upload is `skyfragrances-public_html-folder.zip` (14,062,456 bytes) — not the
   folder, not `skyfragrances-update-2026-09-28.zip`, not the older `…-1816.zip`, not anything in
   `old-builds` / `update-pack` / `admin-ui-fix`, not a ZIP you compressed yourself; not unzipped on the computer.
 - BEFORE: Bank, JazzCash, Easypaisa details; WhatsApp number as `0300 1234567`; logo PNG; perfume
@@ -258,23 +258,28 @@ Inside `public_html` you will probably find a file called `default.php` (Hosting
 coming soon" page), sometimes a `.htaccess` too. Select everything already inside `public_html`
 and delete it (right-click → **Delete**). The folder should be empty.
 
-### Step 3. Upload the ZIP
+### Step 3. Upload the ZIP — one level above public_html
 
-1. With `public_html` open, press the **Upload** icon (an arrow pointing up, top-right).
-2. Choose **File**, pick the `skyfragrances-….zip` from your computer and wait for the progress
-   bar to finish (14 MB takes a minute or so).
-3. The ZIP now appears inside `public_html`.
+Use the file named **`skyfragrances-public_html-folder.zip`**. It contains a folder called
+`public_html` with the whole shop inside it. This matters: hPanel's extractor silently skips
+hidden files (`.htaccess`, `.user.ini`) that sit at the top of a ZIP, but keeps them when they
+are inside a folder — so the shop is packed one folder deep on purpose.
 
-### Step 4. Extract it — into public_html itself
+1. In File Manager go **up one level** from `public_html` (click the folder path at the top, or
+   the `..` entry). You should now see the `public_html` folder itself in the list.
+2. Right-click `public_html` → **Rename** → `public_html-old`. (Nothing is lost; you delete it
+   once the shop works.)
+3. Press the **Upload** icon (arrow pointing up, top-right) → **File** → pick
+   `skyfragrances-public_html-folder.zip` and wait for the progress bar (13 MB, about a minute).
+
+### Step 4. Extract it — here, one level above
 
 1. Right-click the ZIP → **Extract**.
-2. A small box appears with one text field, pre-filled with the folder you are in. It must
-   read exactly `/public_html` (or `public_html`) — nothing after it. If the field shows
-   `/public_html/skyfragrances-20260928-1906`, delete everything after `public_html`. Do **not**
-   add a sub-folder and do not type `skyfragrances`. Press **Extract**. Extraction takes 10–30
-   seconds; the file list refreshes by itself.
-3. When it finishes, right-click the ZIP file and **Delete** it. If a folder called `__MACOSX`
-   appeared, delete that too.
+2. The small box shows the folder you are in (the one that contains `public_html-old`). Leave it
+   as it is — do **not** type `public_html` into it. Press **Extract**. A fresh `public_html`
+   folder appears next to `public_html-old` after 10–30 seconds.
+3. Right-click the ZIP → **Delete**. If a folder called `__MACOSX` appeared, delete that too.
+4. Double-click the new `public_html` to open it and continue with Step 5.
 
 ### Step 5. What public_html must look like now
 
@@ -311,8 +316,10 @@ the nested folder in File Manager and fix it there. Do not wait for an error fro
 at that moment the installer cannot be reached.
 
 **If `.htaccess` or `.user.ini` are missing**, hidden files are probably still switched off
-(Step 1). If they really are missing, the installer's first screen will say so and can rewrite
-the protective ones; tell the developer, because it means a ZIP tool dropped hidden files.
+(Step 1). If they really are missing, the installer's first screen will say so: upload the two
+files `htaccess.txt` and `user.ini` from the developer's `dist/htaccess-upload` folder into
+`public_html`, then right-click each → **Rename** to `.htaccess` and `.user.ini` (with the
+leading dot) and reload the installer.
 
 **If you uploaded the folder instead of the ZIP.** Open `public_html` in File Manager with
 hidden files showing. If `.htaccess` and `.user.ini` are missing: upload the two files

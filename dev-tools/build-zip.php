@@ -126,3 +126,24 @@ foreach (array_slice($skipped, 0, 12) as $rel) {
 if (count($skipped) > 12) {
     echo '  … and ' . (count($skipped) - 12) . " more\n";
 }
+
+$flatCopy = $distDir . '/skyfragrances-public_html.zip';
+copy($zipPath, $flatCopy);
+$wrappedPath = $distDir . '/skyfragrances-public_html-folder.zip';
+$src = new ZipArchive();
+$dst = new ZipArchive();
+if ($src->open($zipPath) === true && $dst->open($wrappedPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+    for ($i = 0; $i < $src->numFiles; $i++) {
+        $entry = (string) $src->getNameIndex($i);
+        if (str_ends_with($entry, '/')) {
+            $dst->addEmptyDir('public_html/' . $entry);
+        } else {
+            $dst->addFromString('public_html/' . $entry, (string) $src->getFromIndex($i));
+        }
+    }
+    $dst->close();
+    $src->close();
+    echo "Wrote $flatCopy and $wrappedPath (folder-wrapped for hPanel)\n";
+} else {
+    exit("Could not write the folder-wrapped ZIP.\n");
+}
