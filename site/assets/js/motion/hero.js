@@ -21,33 +21,53 @@ export default function init(root, SF) {
   if (!glow) {
     return null;
   }
-  const status = { state: 'plates', reason: '', frame: null, triangles: 0, fallbackPlateB: false };
+  const status = { state: 'plates', reason: '', frame: null, triangles: 0, plates: [] };
   m.hero = status;
   let visible = 1;
   let scene = null;
   let destroyed = false;
 
-  function addPlateB(desktop) {
-    const src = glow.getAttribute(desktop ? 'data-plate-b-desktop' : 'data-plate-b');
-    if (!src || glow.querySelector('.hero__plate--b')) {
+  function addPlate(letter, desktop) {
+    const src = glow.getAttribute('data-plate-' + letter + (desktop ? '-desktop' : ''));
+    if (!src || status.plates.indexOf(letter) !== -1) {
       return;
     }
-    const img = document.createElement('img');
-    img.className = 'hero__plate hero__plate--b sf-plate';
-    img.alt = '';
+    status.plates.push(letter);
+    const img = new Image();
     img.decoding = 'async';
-    img.loading = 'lazy';
+    const place = () => {
+      if (destroyed || !img.naturalWidth || glow.querySelector('.hero__plate--' + letter)) {
+        return;
+      }
+      const plate = document.createElement('canvas');
+      plate.className = 'hero__plate hero__plate--' + letter + ' sf-plate';
+      plate.width = img.naturalWidth;
+      plate.height = img.naturalHeight;
+      const ctx = plate.getContext('2d');
+      if (!ctx) {
+        return;
+      }
+      ctx.drawImage(img, 0, 0);
+      glow.appendChild(plate);
+      requestAnimationFrame(() => requestAnimationFrame(() => plate.classList.add('is-ready')));
+    };
+    img.onload = () => {
+      if (typeof img.decode === 'function') {
+        img.decode().then(place, place);
+      } else {
+        place();
+      }
+    };
     img.src = src;
-    glow.appendChild(img);
-    status.fallbackPlateB = true;
   }
 
   function fallback(reason) {
     status.state = 'plates';
     status.reason = reason;
     root.classList.remove('is-gl', 'is-gl-settled');
-    if (m.device === 'desktop') {
-      addPlateB(true);
+    if (m.device === 'desktop' && reason !== 'destroy' && reason !== 'pagehide') {
+      addPlate('a', true);
+      addPlate('b', true);
     }
     m.emit('hero', { state: 'plates', reason });
   }
@@ -63,15 +83,18 @@ export default function init(root, SF) {
   }, { threshold: [0, cfg.pauseBelow || 0.05, plates.pauseBelow || 0.1, cfg.inViewStart || 0.5] });
   io.observe(root);
 
-  if (m.device === 'mobile' && plates.mobileHigh) {
-    if (m.mobileHigh) {
-      addPlateB(false);
-    } else {
-      m.on('device', (snap) => {
-        if (snap.mobileHigh && snap.device === 'mobile') {
-          addPlateB(false);
-        }
-      });
+  if (m.device === 'mobile') {
+    addPlate('a', false);
+    if (plates.mobileHigh) {
+      if (m.mobileHigh) {
+        addPlate('b', false);
+      } else {
+        m.on('device', (snap) => {
+          if (snap.mobileHigh && snap.device === 'mobile' && !destroyed) {
+            addPlate('b', false);
+          }
+        });
+      }
     }
   }
 

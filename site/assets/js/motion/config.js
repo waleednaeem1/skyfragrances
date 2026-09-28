@@ -17,12 +17,13 @@ window.SF_MOTION = {
     'reveal-y': '18px',
     'hero-clip': '1100ms',
     'hero-sweep': '900ms',
+    'hero-sweep-delay': '300ms',
     'hero-actions': '400ms',
     'hero-delay-mobile': '300ms',
     'hero-delay-desktop': '600ms',
     'plate-drift': '14s',
     'plate-fade': '12s',
-    'plate-cycles': '6',
+    'plate-cycles': '2',
     'hero-gl-fade': '900ms',
     'fan-rotate': '16deg',
     'fan-rise': '24px',
@@ -70,7 +71,6 @@ window.SF_MOTION = {
   flags: {
     reveal: 'desktop',
     hero: true,
-    loader: true,
     fan: 'desktop',
     story: true,
     layers: 'desktop',
@@ -84,11 +84,6 @@ window.SF_MOTION = {
     transitions: 'desktop'
   },
   device: {
-    desktopMin: 1024,
-    lowMemory: 2,
-    lowCores: 2,
-    slowTypes: ['slow-2g', '2g', '3g'],
-    desktopGpu: { minMemory: 4, minCores: 4 },
     mobileHigh: { minMemory: 6, minCores: 8, frames: 60, p95Ratio: 1.3, settleMs: 600 },
     frameKill: { frames: 120, meanMs: 20, strikes: 2 }
   },
@@ -149,10 +144,10 @@ window.SF_MOTION = {
     scroll: { rotX: 0.15, y: 0.6 },
     title: { clipMs: 1100, sweepMs: 900, sweepDelayNoLoader: 300, actionsMs: 400 },
     delay: { mobile: 300, desktop: 600, productAlone: 600 },
-    plates: { driftMs: 14000, crossfadeMs: 12000, cycles: 3, pauseBelow: 0.1, mobileHigh: true, maxAnimating: 2, settleMs: 400 }
+    plates: { driftMs: 14000, crossfadeMs: 12000, cycles: 2, pauseBelow: 0.1, mobileHigh: true, maxAnimating: 2, settleMs: 400 }
   },
   cards: {
-    fan: { rotate: 16, rise: 24, scrub: 0.6, start: 'top 85%', end: 'top 35%', replay: false, origin: '50% 110%', settleMs: 1100, staggerMs: 60, failsafeMs: 6000, failsafeSettleMs: 900, singleGroupRows: 2 },
+    fan: { rotate: 16, rise: 24, scrub: 0.6, start: 'top 85%', end: 'top 35%', replay: false, origin: '50% 110%', settleMs: 1100, minSettleMs: 260, staggerMs: 60, failsafeMs: 6000, failsafeSettleMs: 900, singleGroupRows: 2 },
     hover: { tilt: 6, lift: 8, sweepMs: 700, ease: 'power3.out', followMs: 160, returnMs: 600 },
     rail: { thumb: 0.38 },
     perspective: 1000
@@ -173,7 +168,7 @@ window.SF_MOTION = {
     notes: { y: 16, ms: 700, staggerMs: 60, ease: 'expo.out' },
     triggers: { start: 'top 62%', end: 'bottom 62%' },
     perspective: 1200,
-    mobile: { rootMargin: '-38% 0px -42% 0px', threshold: 0 },
+    mobile: { rootMargin: '-48% 0px -50% 0px', threshold: 0 },
     bottle: { widths: [480, 640] },
     hues: {
       families: {
@@ -194,9 +189,9 @@ window.SF_MOTION = {
     }
   },
   micro: {
-    magnetic: { maxPx: 6, radius: 1.6, duration: 0.45, ease: 'power3.out', targets: '.btn--ghost, .btn--text, .section-header__link', never: '.btn--primary, .js-add-to-cart, .sticky-bar, .drawer, .modal, [href*="/checkout"], [href*="/cart"]' },
+    magnetic: { maxPx: 6, radius: 1.6, duration: 0.45, ease: 'power3.out', targets: '.btn--ghost, .btn--text, .section-header__link', never: '.btn--primary, .js-add-to-cart, .sticky-bar, .drawer, .modal, .js-quiz, form, [href*="/checkout"], [href*="/cart"]' },
     cursor: { size: 22, grow: 3, fillOpacity: 0.3, follow: 0.18, targets: '.product-card, .collection-card, .gallery__open', nativeInside: '.drawer, .modal, .nav-mobile, input, select, textarea, button, .btn, .product-card__action' },
-    burst: { desktop: 14, mobile: 8, ms: 420, ease: 'power3.out' },
+    burst: { desktop: 14, mobile: 8, low: 0, ms: 420, ease: 'power3.out' },
     flight: { size: 28, ms: 400, ease: 'power3.in' },
     tick: { ms: 900, ease: 'expo.out', targets: '.collection-card__count, .stars__count, [data-tick], [data-countup]', never: '.price__now, [data-price-now], [data-sticky-price], .quiz-match, [role="status"], [aria-live]', settleMs: 4000 },
     burstSpread: { minPx: 26, maxPx: 68, arcDeg: 150, delayMaxMs: 90, sizeMinPx: 4, sizeMaxPx: 8 },
@@ -217,11 +212,10 @@ window.SF_MOTION = {
     veil: { ms: 200, failsafeMs: 900 },
     skip: 'a[target], a[download], a[href^="#"], a[href^="mailto:"], a[href^="tel:"], a[href^="javascript:"], .skip-link, [role="button"], [aria-controls], .js-cart-open, [data-dialog-open], .drawer a, .sticky-bar a, [href*="/checkout"], [href*="/cart"], [href*="/track"], [href*="/admin"], [href*="/api/"], [href*="wa.me"], [href*="instagram.com"]',
     skipPaths: ['/cart', '/checkout', '/track', '/admin', '/api/', '/order/'],
-    anchors: { skip: '.skip-link, [role="button"], [aria-controls], [data-dialog-open], .js-cart-open, form a', focus: true, pushState: true },
-    restore: { hashRealign: true, settleMs: 80 }
+    anchors: { skip: '.skip-link, [role="button"], [aria-controls], [data-dialog-open], .js-cart-open, form a', focus: true, pushState: true, ms: 900, ease: 'power3.out' },
+    restore: { hashRealign: true, settleMs: 80, windowMs: 2500 }
   },
   intro: {
-    enabled: true,
     particles: { desktop: 680, mobile: 260 },
     convergeMs: 1250,
     markInAt: 1000,
@@ -229,42 +223,16 @@ window.SF_MOTION = {
     tagAt: 1280,
     dissolveAt: 1780,
     dissolveMs: 340,
+    passThroughAt: 0.8,
     mobileScale: 0.86,
     calm: { markInMs: 300, holdMs: 520, fadeMs: 300 },
-    quickFadeMs: 320,
-    failsafeMs: 2600
+    failsafeMs: 2600,
+    guardMs: 800
   }
 };
-(function (cfg) {
-  var root = document.documentElement;
-  var rules = cfg.device;
-  function matches(query) {
-    return !!(window.matchMedia && window.matchMedia(query).matches);
-  }
-  cfg.classify = function () {
-    var nav = navigator;
-    var conn = nav.connection || {};
-    var reduced = matches('(prefers-reduced-motion: reduce)');
-    var fine = matches('(hover: hover) and (pointer: fine)');
-    var wide = matches('(min-width: ' + rules.desktopMin + 'px)');
-    var slow = !!conn.saveData || rules.slowTypes.indexOf(String(conn.effectiveType || '')) !== -1;
-    var weak = (nav.deviceMemory > 0 && nav.deviceMemory <= rules.lowMemory) || (nav.hardwareConcurrency > 0 && nav.hardwareConcurrency <= rules.lowCores);
-    var desktop = wide && fine;
-    var gpuWeak = (nav.deviceMemory > 0 && nav.deviceMemory < rules.desktopGpu.minMemory) || (nav.hardwareConcurrency > 0 && nav.hardwareConcurrency < rules.desktopGpu.minCores);
-    return {
-      device: reduced ? 'reduced' : desktop ? 'desktop' : (slow || weak) ? 'low' : 'mobile',
-      reduced: reduced,
-      touch: !fine,
-      slow: slow,
-      gpu: gpuWeak ? 'weak' : 'ok'
-    };
-  };
-  cfg.applyClass = function (info) {
-    root.classList.remove('sf-reduce', 'motion--desktop', 'motion--mobile', 'motion--low');
-    root.classList.add(info.reduced ? 'sf-reduce' : 'motion--' + info.device);
-    if (info.device !== 'mobile') {
-      root.classList.remove('motion--mobile-high');
-    }
-  };
-  cfg.applyClass(cfg.classify());
-})(window.SF_MOTION);
+(function (cfg, gate) {
+  cfg.flags = Object.assign(cfg.flags, gate.flags || {});
+  cfg.device = Object.assign(cfg.device, gate.rules || {});
+  cfg.classify = gate.classify;
+  cfg.applyClass = gate.applyClass;
+})(window.SF_MOTION, window.SF_GATE || {});

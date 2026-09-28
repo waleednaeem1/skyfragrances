@@ -3,6 +3,15 @@
     --hero-object: clamp(5rem, 22vw, 7rem);
     contain: paint;
   }
+  html.motion--mobile .hero,
+  html.motion--low .hero {
+    --sf-plate-x: 10;
+    --sf-plate-y: 5;
+  }
+  .hero__title {
+    padding-block: 0.06em 0.16em;
+    margin-block: -0.06em -0.16em;
+  }
   .hero__object {
     position: relative;
     width: var(--hero-object);
@@ -25,20 +34,33 @@
     pointer-events: none;
     user-select: none;
   }
+  .hero__glow::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--hero-object) * var(--sf-plate-x, 13.33));
+    height: calc(var(--hero-object) * var(--sf-plate-y, 6.67));
+    translate: -50% -50%;
+    background: radial-gradient(circle closest-side, rgba(215, 164, 102, 0.5) 0%, rgba(213, 162, 102, 0.24) 24%, rgba(209, 159, 101, 0.08) 50%, rgba(209, 159, 101, 0) 82%);
+    transition: opacity var(--sf-hero-gl-fade, 900ms) var(--sf-ease-out);
+  }
+  .hero.is-gl .hero__glow::before {
+    opacity: 0;
+  }
   .hero__plate {
     position: absolute;
     left: 0;
     top: 0;
-    height: calc(var(--hero-object) * 6.67);
-    width: auto;
-    aspect-ratio: 2 / 1;
+    width: calc(var(--hero-object) * var(--sf-plate-x, 13.33));
+    height: calc(var(--hero-object) * var(--sf-plate-y, 6.67));
     max-width: none;
     translate: -50% -50%;
-    opacity: 1;
+    opacity: 0;
     transition: opacity var(--sf-hero-gl-fade, 900ms) var(--sf-ease-out);
   }
-  .hero__plate--b {
-    opacity: 0;
+  .hero__plate--a.is-ready {
+    opacity: 1;
   }
   html.motion--desktop .hero__plate--a,
   html.motion--mobile .hero__plate--a {
@@ -52,7 +74,6 @@
     display: none;
   }
   .hero.is-offscreen .hero__plate,
-  .hero.is-rested .hero__plate,
   .hero.is-gl-settled .hero__plate {
     animation-play-state: paused;
   }
@@ -86,13 +107,10 @@
     background-size: 250% 100%, 100% 100%;
     background-position: 120% 0, 0 0;
     background-repeat: no-repeat;
-    animation: sf-hero-clip var(--sf-hero-clip, 1100ms) var(--sf-ease-out) both, sf-hero-sweep var(--sf-hero-sweep, 900ms) var(--sf-ease-silk) 300ms both;
+    animation: sf-hero-clip var(--sf-hero-clip, 1100ms) var(--sf-ease-out) both, sf-hero-sweep var(--sf-hero-sweep, 900ms) var(--sf-ease-silk) var(--sf-hero-sweep-delay, 300ms) both;
   }
   html.motion--desktop.sf-intro-full .hero__title {
-    animation-name: sf-hero-clip;
-  }
-  html.motion--desktop.sf-intro-done .hero__title {
-    animation-delay: 0ms, 0ms;
+    animation-play-state: running, paused;
   }
   html.motion--desktop .hero__actions,
   html.motion--mobile .hero__actions,
@@ -102,17 +120,33 @@
   html.motion--low .hero__trust {
     animation: sf-hero-settle var(--sf-hero-actions, 400ms) var(--sf-ease-out) both;
   }
+  .hero__enter {
+    opacity: 0;
+    transform: translateY(1.5rem);
+    animation: sf-hero-enter var(--dur-slow) var(--ease-out) forwards;
+    animation-delay: calc(var(--i, 0) * 120ms);
+  }
   html.motion--desktop .hero__enter {
     animation-delay: calc(var(--sf-hero-delay-desktop, 600ms) - 240ms + var(--i, 0) * 120ms);
+  }
+  html.motion--mobile .hero__enter,
+  html.motion--low .hero__enter {
+    animation-delay: calc(var(--sf-hero-delay-mobile, 300ms) - 240ms + var(--i, 0) * 120ms);
   }
   html.motion--desktop.sf-intro-full .hero__enter,
   html.motion--desktop.sf-intro-full .hero__actions,
   html.motion--desktop.sf-intro-full .hero__trust {
     animation-play-state: paused;
   }
+  @keyframes sf-hero-enter {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
   @keyframes sf-hero-clip {
-    from { clip-path: inset(0 0 100% 0); }
-    to { clip-path: inset(0 0 0 0); }
+    from { clip-path: inset(-0.1em 0 100% 0); }
+    to { clip-path: inset(-0.1em 0 -0.2em 0); }
   }
   @keyframes sf-hero-sweep {
     from { background-position: 120% 0, 0 0; }
@@ -126,14 +160,9 @@
     .hero__object { margin-block-end: calc(var(--sp-3) * -1); }
   }
   @media (prefers-reduced-motion: reduce) {
-    html.sf-reduce .hero__plate,
-    html.sf-reduce .hero__plate--a,
-    html.sf-reduce .hero__plate--b {
-      animation: none;
-      opacity: 1;
-    }
-    html.sf-reduce .hero__plate--b { display: none; }
+    html.sf-reduce .hero__plate { display: none; }
     html.sf-reduce .hero__title { clip-path: none; animation: none; }
     html.sf-reduce .hero__actions, html.sf-reduce .hero__trust { animation: none; opacity: 1; }
+    html.sf-reduce .hero__enter { animation: none; opacity: 1; transform: none; }
   }
 }

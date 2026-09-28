@@ -30,10 +30,14 @@ function tween(gsap, ms, ease, onUpdate, onComplete) {
   }
   const fn = easings[ease] || easings['expo.out'];
   let start = 0;
+  let paint = true;
   let frame = requestAnimationFrame(function step(now) {
     start = start || now;
     const t = Math.min(1, (now - start) / ms);
-    onUpdate(fn(t));
+    if (paint || t >= 1) {
+      onUpdate(fn(t));
+    }
+    paint = !paint;
     if (t < 1) {
       frame = requestAnimationFrame(step);
     } else if (onComplete) {
@@ -185,8 +189,11 @@ function spray(origin, count, micro) {
 }
 
 function thumbFor(detail) {
-  if (detail.thumb) {
+  if (typeof detail.thumb === 'string') {
     return detail.thumb;
+  }
+  if (detail.thumb && detail.thumb.nodeType === 1) {
+    return detail.thumb.currentSrc || detail.thumb.src || '';
   }
   const scope = detail.form || detail.button;
   const card = scope && scope.closest ? scope.closest('.product-card, .quiz-card, .split') : null;
@@ -258,8 +265,9 @@ function initCartAdded(micro, motion, SF, styled) {
     }
     const desktop = motion.device === 'desktop';
     const origin = centerOf(button);
-    if (styled) {
-      spray(origin, desktop || motion.mobileHigh ? micro.burst.desktop : micro.burst.mobile, micro);
+    const sprayCount = motion.device === 'low' ? micro.burst.low || 0 : desktop || motion.mobileHigh ? micro.burst.desktop : micro.burst.mobile;
+    if (styled && sprayCount > 0) {
+      spray(origin, sprayCount, micro);
     }
     if (desktop && styled && motion.allows(motion.flags.cartFly)) {
       fly(origin, detail, micro, motion, SF);

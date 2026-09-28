@@ -30,16 +30,22 @@
       transform: none;
     }
   }
+  html.motion--desktop [data-motion~="cards"]:not(.grid--mosaic) > * {
+    --sf-fan-r: 0;
+    --sf-fan-x: 0%;
+    --sf-fan-ry: 0;
+  }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(1) {
-    --sf-fan-r: -0.5;
-    --sf-fan-x: 12%;
+    --sf-fan-r: 0;
+    --sf-fan-x: 0%;
+    --sf-fan-ry: 1.5;
   }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(2) {
     --sf-fan-r: -0.35;
     --sf-fan-x: -18%;
   }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(3) {
-    --sf-fan-r: 0.9;
+    --sf-fan-r: 0.7;
     --sf-fan-x: -36%;
   }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(4) {
@@ -56,43 +62,6 @@
     --sf-fan-r: 0.3;
     --sf-fan-x: -20%;
     --sf-fan-ry: 3;
-  }
-  html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(3n+1),
-  html.motion--desktop .grid--products[data-motion~="cards"] > :nth-child(3n+1) {
-    --sf-fan-r: -1;
-    --sf-fan-x: 30%;
-  }
-  html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(3n+2),
-  html.motion--desktop .grid--products[data-motion~="cards"] > :nth-child(3n+2) {
-    --sf-fan-r: 0;
-    --sf-fan-x: 0%;
-  }
-  html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(3n+3),
-  html.motion--desktop .grid--products[data-motion~="cards"] > :nth-child(3n+3) {
-    --sf-fan-r: 1;
-    --sf-fan-x: -30%;
-  }
-  @media (min-width: 1200px) {
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+1),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+1) {
-      --sf-fan-r: -1;
-      --sf-fan-x: 34%;
-    }
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+2),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+2) {
-      --sf-fan-r: -0.35;
-      --sf-fan-x: 12%;
-    }
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+3),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+3) {
-      --sf-fan-r: 0.35;
-      --sf-fan-x: -12%;
-    }
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+4),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+4) {
-      --sf-fan-r: 1;
-      --sf-fan-x: -34%;
-    }
   }
   html.motion--desktop [data-cards-state="spread"] [data-motion-card],
   html.motion--desktop [data-cards-state="spread"] .collection-card {
@@ -125,7 +94,8 @@
     inset: -10% -30%;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(212, 176, 132, 0.30) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
+    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(242, 230, 210, 0.5) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
+    mix-blend-mode: soft-light;
     opacity: 0;
     transform: translate3d(-70%, 0, 0);
   }
@@ -163,13 +133,13 @@
         border-radius: 1px;
         background: rgba(212, 176, 132, 0.18);
       }
-      html.motion--mobile .rail[data-motion~="cards"],
-      html.motion--low .rail[data-motion~="cards"] {
+      html.motion--mobile .rail:has(+ .sf-rail-progress),
+      html.motion--low .rail:has(+ .sf-rail-progress) {
         scroll-timeline-name: --sf-rail;
         scroll-timeline-axis: inline;
       }
-      html.motion--mobile .container:has(> .rail[data-motion~="cards"]),
-      html.motion--low .container:has(> .rail[data-motion~="cards"]) {
+      html.motion--mobile .container:has(> .sf-rail-progress),
+      html.motion--low .container:has(> .sf-rail-progress) {
         timeline-scope: --sf-rail;
       }
       .sf-rail-progress::before {

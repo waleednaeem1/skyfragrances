@@ -219,7 +219,7 @@ function spread(range, i, n) {
 
 export default function createRibbons(canvas, cfg, options) {
   const opts = options || {};
-  const gl = canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: 'high-performance', preserveDrawingBuffer: !!opts.preserve });
+  const gl = canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: 'low-power', preserveDrawingBuffer: !!opts.preserve });
   if (!gl) {
     return null;
   }

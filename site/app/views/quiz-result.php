@@ -60,7 +60,7 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php if ($pyramidLine !== []): ?>
         <p class="text-small quiz-notes"><span class="u-track text-muted">Notes</span>
 <?php foreach (array_values($pyramidLine) as $noteIndex => $noteGroup): ?>
-          <span class="quiz-notes__group" style="--i:<?= e((string) $noteIndex) ?>"><?= $noteIndex > 0 ? '→ ' : '' ?><?= e($noteGroup) ?></span>
+          <span class="quiz-notes__group"><?= $noteIndex > 0 ? '→ ' : '' ?><?= e($noteGroup) ?></span>
 <?php endforeach; ?>
         </p>
 <?php endif; ?>

@@ -8,7 +8,7 @@ export default function init(root, SF) {
   }
   const raw = motion.config.cards || {};
   const cfg = {
-    fan: Object.assign({ rotate: 16, rise: 24, scrub: 0.6, start: 'top 85%', end: 'top 35%', replay: false, origin: '50% 110%', settleMs: 1100, staggerMs: 60, failsafeMs: 6000, failsafeSettleMs: 900, singleGroupRows: 2 }, raw.fan || {}),
+    fan: Object.assign({ rotate: 16, rise: 24, scrub: 0.6, start: 'top 85%', end: 'top 35%', replay: false, origin: '50% 110%', settleMs: 1100, minSettleMs: 260, staggerMs: 60, failsafeMs: 6000, failsafeSettleMs: 900, singleGroupRows: 2 }, raw.fan || {}),
     hover: Object.assign({ tilt: 6, lift: 8, sweepMs: 700, followMs: 160, returnMs: 600 }, raw.hover || {})
   };
   const state = { root, motion, cfg, cleanups: [], hover: null, tweens: [] };
@@ -89,10 +89,7 @@ function startDesktop(state) {
     gsap.set(el, { xPercent: poses[index].x, y: poses[index].ry * fan.rise, rotation: poses[index].r * fan.rotate, transformOrigin: fan.origin });
   });
   let remaining = groups.length;
-  const finish = (els, tween) => {
-    if (tween.scrollTrigger && !fan.replay) {
-      tween.scrollTrigger.kill();
-    }
+  const finish = (els) => {
     gsap.set(els, { clearProps: 'transform,transformOrigin' });
     remaining -= 1;
     if (remaining === 0) {
@@ -104,21 +101,65 @@ function startDesktop(state) {
   groups.forEach((els) => {
     const trigger = groups.length === 1 ? root : els[0];
     const target = { xPercent: 0, y: 0, rotation: 0, overwrite: 'auto' };
-    const tween = fan.scrub
-      ? gsap.to(els, Object.assign(target, {
-        ease: eases.scrub || 'none',
-        scrollTrigger: { trigger, start: fan.start, end: fan.end, scrub: fan.scrub, invalidateOnRefresh: false },
-        onComplete() { finish(els, tween); }
-      }))
-      : gsap.to(els, Object.assign(target, {
+    if (!fan.scrub) {
+      const tween = gsap.to(els, Object.assign(target, {
         duration: fan.settleMs / 1000,
         ease: eases.out || 'expo.out',
         stagger: fan.staggerMs / 1000,
         scrollTrigger: { trigger, start: fan.start, once: true },
-        onComplete() { finish(els, tween); }
+        onComplete() { finish(els); }
       }));
+      state.tweens.push(tween);
+      return;
+    }
+    let settling = false;
+    const settle = (tween) => {
+      if (settling) {
+        return;
+      }
+      settling = true;
+      releaseTrigger(tween);
+      const settler = gsap.to(tween, {
+        progress: 1,
+        duration: Math.max(fan.minSettleMs, (1 - tween.progress()) * fan.settleMs) / 1000,
+        ease: eases.out || 'expo.out',
+        onComplete() {
+          tween.kill();
+          finish(els);
+        }
+      });
+      state.tweens.push(settler);
+    };
+    const tween = gsap.to(els, Object.assign(target, {
+      ease: eases.scrub || 'none',
+      scrollTrigger: {
+        trigger,
+        start: fan.start,
+        end: fan.end,
+        scrub: fan.scrub,
+        invalidateOnRefresh: false,
+        onLeave(self) { settle(self.animation); },
+        onUpdate(self) { if (self.progress >= 1) { settle(self.animation); } },
+        onRefresh(self) { if (self.progress >= 1) { settle(self.animation); } }
+      }
+    }));
     state.tweens.push(tween);
+    if (tween.scrollTrigger && tween.scrollTrigger.progress > 0) {
+      settle(tween);
+    }
   });
+}
+
+function releaseTrigger(tween) {
+  const trigger = tween.scrollTrigger;
+  if (!trigger) {
+    return;
+  }
+  const scrub = typeof trigger.getTween === 'function' ? trigger.getTween() : null;
+  if (scrub) {
+    scrub.kill();
+  }
+  trigger.kill(false, true);
 }
 
 function enableHover(state) {

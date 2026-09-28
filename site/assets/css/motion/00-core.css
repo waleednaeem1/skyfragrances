@@ -7,6 +7,7 @@
     --sf-reveal-y: 18px;
     --sf-hero-clip: 1100ms;
     --sf-hero-sweep: 900ms;
+    --sf-hero-sweep-delay: 300ms;
     --sf-hero-actions: 400ms;
     --sf-hero-delay-mobile: 300ms;
     --sf-hero-delay-desktop: 600ms;
@@ -34,6 +35,13 @@
   .sf-spray {
     pointer-events: none;
     user-select: none;
+  }
+  html.sf-intro-calm .sf-intro {
+    background: transparent;
+    pointer-events: none;
+  }
+  html.sf-intro-calm .sf-intro__skip {
+    display: none;
   }
   html.lenis,
   html.lenis body {

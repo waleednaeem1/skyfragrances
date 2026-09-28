@@ -11,8 +11,11 @@ function readConfig(SF) {
     anchorSkip: (cfg.anchors && cfg.anchors.skip) || '.skip-link, [role="button"], [aria-controls]',
     anchorFocus: !cfg.anchors || cfg.anchors.focus !== false,
     anchorPush: !cfg.anchors || cfg.anchors.pushState !== false,
+    anchorMs: (cfg.anchors && cfg.anchors.ms) || 900,
+    anchorEase: (cfg.anchors && cfg.anchors.ease) || 'power3.out',
     hashRealign: !cfg.restore || cfg.restore.hashRealign !== false,
-    settleMs: (cfg.restore && cfg.restore.settleMs) || 80
+    settleMs: (cfg.restore && cfg.restore.settleMs) || 80,
+    realignWindowMs: (cfg.restore && cfg.restore.windowMs) || 2500
   };
 }
 
@@ -71,6 +74,85 @@ function scrollOffset(target) {
   return Number.isFinite(margin) ? -margin : 0;
 }
 
+function documentTop(target) {
+  return target === doc.body ? 0 : target.getBoundingClientRect().top + window.scrollY;
+}
+
+function restingTop(target) {
+  const max = Math.max(0, root.scrollHeight - window.innerHeight);
+  return Math.max(0, Math.min(max, documentTop(target) + scrollOffset(target)));
+}
+
+function createScroller(motion, cfg) {
+  let tween = null;
+  let seq = 0;
+  const release = () => {
+    root.style.removeProperty('scroll-behavior');
+    tween = null;
+  };
+  const stop = () => {
+    seq += 1;
+    if (tween) {
+      tween.kill();
+      release();
+    }
+  };
+  const settle = (target, lenis) => {
+    const top = restingTop(target);
+    if (Math.abs(top - window.scrollY) <= 1) {
+      return;
+    }
+    if (lenis) {
+      lenis.scrollTo(top, { immediate: true });
+    } else {
+      window.scrollTo({ top, left: 0, behavior: 'instant' });
+    }
+  };
+  const go = (target, immediate) => {
+    stop();
+    const id = seq;
+    const lenis = motion.lenis;
+    if (lenis && !lenis.isStopped) {
+      lenis.scrollTo(restingTop(target), {
+        immediate: !!immediate,
+        onComplete: () => {
+          requestAnimationFrame(() => {
+            if (id === seq) {
+              settle(target, lenis);
+            }
+          });
+        }
+      });
+      return;
+    }
+    if (immediate) {
+      window.scrollTo({ top: restingTop(target), left: 0, behavior: 'instant' });
+      return;
+    }
+    if (!motion.gsap) {
+      motion.scrollTo(target, { offset: scrollOffset(target), block: 'start' });
+      return;
+    }
+    const startY = window.scrollY;
+    const state = { p: 0 };
+    root.style.scrollBehavior = 'auto';
+    tween = motion.gsap.to(state, {
+      p: 1,
+      duration: cfg.anchorMs / 1000,
+      ease: cfg.anchorEase,
+      overwrite: true,
+      onUpdate: () => {
+        window.scrollTo({ top: startY + (restingTop(target) - startY) * state.p, left: 0, behavior: 'instant' });
+      },
+      onComplete: () => {
+        settle(target, null);
+        release();
+      }
+    });
+  };
+  return { go, stop };
+}
+
 function focusTarget(target) {
   if (!target || target === doc.body) {
     return;
@@ -89,7 +171,7 @@ function focusTarget(target) {
   }
 }
 
-function createVeilLeave(veil, cfg) {
+function createVeilLeave(veil, cfg, motion) {
   let leaving = false;
   let timers = [];
   const reset = (restored) => {
@@ -113,6 +195,7 @@ function createVeilLeave(veil, cfg) {
     if (veil) {
       veil.classList.add('is-active');
     }
+    motion.emit('leave', { href, veil: !!veil });
     timers.push(setTimeout(() => { location.href = href; }, veil ? cfg.veilMs : 0));
     timers.push(setTimeout(() => reset(false), cfg.failsafeMs));
     return true;
@@ -174,7 +257,8 @@ export default function init(rootEl, SF) {
   const cfg = readConfig(SF);
   const veil = rootEl && rootEl.classList && rootEl.classList.contains('sf-veil') ? rootEl : (rootEl && rootEl.querySelector ? rootEl.querySelector('.sf-veil') : null) || doc.querySelector('.sf-veil');
   const native = supportsCrossDocumentTransitions();
-  const exit = createVeilLeave(veil, cfg);
+  const exit = createVeilLeave(veil, cfg, motion);
+  const scroller = createScroller(motion, cfg);
   const cleanups = [];
   let skipNative = false;
   let userScrolled = false;
@@ -183,7 +267,7 @@ export default function init(rootEl, SF) {
     cleanups.push(() => target.removeEventListener(name, handler, options));
   };
   const scrollToTarget = (target, immediate) => {
-    motion.scrollTo(target, { offset: scrollOffset(target), immediate: !!immediate, block: 'start' });
+    scroller.go(target, !!immediate);
   };
   root.classList.add(native ? 'sf-transitions-native' : 'sf-transitions-veil');
   listen(doc, 'click', (event) => {
@@ -200,7 +284,7 @@ export default function init(rootEl, SF) {
     if (cfg.anchorFocus) {
       focusTarget(anchor.target);
     }
-  });
+  }, true);
   if (!native) {
     listen(doc, 'click', (event) => {
       const url = eligibleLink(event, cfg);
@@ -230,17 +314,35 @@ export default function init(rootEl, SF) {
     }
   });
   listen(window, 'popstate', () => exit.reset(true));
-  const markScrolled = () => { userScrolled = true; };
-  ['wheel', 'touchstart', 'keydown'].forEach((name) => listen(window, name, markScrolled, { passive: true, once: true }));
-  if (cfg.hashRealign && location.hash && doc.readyState !== 'complete') {
-    listen(window, 'load', () => {
-      setTimeout(() => {
-        const target = hashTarget(location.hash);
-        if (target && !userScrolled) {
-          scrollToTarget(target, true);
-        }
-      }, cfg.settleMs);
-    }, { once: true });
+  const userTookOver = () => {
+    userScrolled = true;
+    scroller.stop();
+  };
+  ['wheel', 'touchstart', 'keydown'].forEach((name) => listen(window, name, userTookOver, { passive: true }));
+  const realignNow = () => {
+    const target = hashTarget(location.hash);
+    if (target && !userScrolled) {
+      scrollToTarget(target, true);
+    }
+  };
+  const realignHash = () => {
+    setTimeout(realignNow, cfg.settleMs);
+    const until = performance.now() + cfg.realignWindowMs;
+    const offRefresh = motion.on('refresh', () => {
+      if (performance.now() > until) {
+        offRefresh();
+        return;
+      }
+      realignNow();
+    });
+    cleanups.push(offRefresh);
+  };
+  if (cfg.hashRealign && location.hash) {
+    if (doc.readyState === 'complete') {
+      realignHash();
+    } else {
+      listen(window, 'load', realignHash, { once: true });
+    }
   }
   const offDevice = motion.on('device', (info) => {
     if (info.device !== 'desktop') {
@@ -250,6 +352,7 @@ export default function init(rootEl, SF) {
   function destroy() {
     offDevice();
     cleanups.splice(0).forEach((fn) => fn());
+    scroller.stop();
     exit.reset(true);
     root.classList.remove('sf-transitions-native', 'sf-transitions-veil');
   }

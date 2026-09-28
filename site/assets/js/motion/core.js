@@ -113,6 +113,7 @@ const motion = {
   slow: info.slow,
   gpu: info.gpu,
   mobileHigh: false,
+  refreshGuard: false,
   commercePage,
   version,
   config: cfg,
@@ -131,6 +132,22 @@ const motion = {
 
 let gsapPromise = null;
 
+function guardRefreshScrollBehavior(ScrollTrigger) {
+  if (motion.refreshGuard) {
+    return;
+  }
+  motion.refreshGuard = true;
+  ScrollTrigger.addEventListener('refreshInit', () => {
+    root.style.scrollBehavior = 'auto';
+    void getComputedStyle(root).scrollBehavior;
+  });
+  ScrollTrigger.addEventListener('refresh', () => {
+    if (!root.classList.contains('lenis')) {
+      root.style.removeProperty('scroll-behavior');
+    }
+  });
+}
+
 function ensureGsap() {
   if (gsapPromise) {
     return gsapPromise;
@@ -147,6 +164,7 @@ function ensureGsap() {
     }
     gsap.registerPlugin(ScrollTrigger);
     ScrollTrigger.config({ ignoreMobileResize: true });
+    guardRefreshScrollBehavior(ScrollTrigger);
     gsap.defaults({ ease: (cfg.ease && cfg.ease.gsap && cfg.ease.gsap.silk) || 'power3.out' });
     motion.gsap = gsap;
     motion.ScrollTrigger = ScrollTrigger;
@@ -224,11 +242,11 @@ function scrollTo(target, options) {
     return;
   }
   if (el) {
-    el.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: opts.block || 'start' });
+    el.scrollIntoView({ behavior: instant ? 'instant' : 'smooth', block: opts.block || 'start' });
     return;
   }
   if (typeof target === 'number') {
-    window.scrollTo({ top: target + (opts.offset || 0), left: 0, behavior: instant ? 'auto' : 'smooth' });
+    window.scrollTo({ top: target + (opts.offset || 0), left: 0, behavior: instant ? 'instant' : 'smooth' });
   }
 }
 
@@ -371,23 +389,33 @@ function loadSection(name, roots) {
   return motion.sections[name];
 }
 
+function observeSection(name, roots) {
+  if (typeof window.IntersectionObserver === 'undefined') {
+    loadSection(name, roots);
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      io.disconnect();
+      loadSection(name, roots);
+    }
+  }, { rootMargin: loaderCfg.rootMargin || '60% 0px' });
+  roots.forEach((el) => io.observe(el));
+}
+
 function scheduleSections() {
   if (commercePage || motion.reduced) {
     return;
   }
-  collectRoots().forEach((roots, name) => {
-    if (name === 'hero' || typeof window.IntersectionObserver === 'undefined') {
-      afterLoadIdle(() => loadSection(name, roots));
-      return;
-    }
-    const io = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        io.disconnect();
-        loadSection(name, roots);
-      }
-    }, { rootMargin: loaderCfg.rootMargin || '60% 0px' });
-    roots.forEach((el) => io.observe(el));
-  });
+  const sections = collectRoots();
+  if (motion.device === 'low') {
+    (loaderCfg.skipOnLow || ['hero', 'micro']).forEach((name) => sections.delete(name));
+  }
+  if (motion.device === 'desktop') {
+    sections.forEach((roots, name) => (name === 'hero' ? afterLoadIdle(() => loadSection(name, roots)) : observeSection(name, roots)));
+    return;
+  }
+  afterLoadIdle(() => sections.forEach((roots, name) => (name === 'hero' ? loadSection(name, roots) : observeSection(name, roots))));
 }
 
 function frameBudget(frames) {
@@ -415,8 +443,12 @@ function frameBudget(frames) {
   });
 }
 
+function introPending() {
+  return root.classList.contains('sf-intro-full') || root.classList.contains('sf-intro-calm');
+}
+
 function whenIntroGone(fn) {
-  if (!doc.getElementById('sf-intro') || root.classList.contains('sf-intro-done')) {
+  if (!introPending()) {
     fn();
     return;
   }
@@ -429,12 +461,31 @@ function whenIntroGone(fn) {
     }
   };
   const observer = new MutationObserver(() => {
-    if (!doc.getElementById('sf-intro')) {
+    if (!introPending()) {
       finish();
     }
   });
-  observer.observe(doc.body, { childList: true });
+  observer.observe(root, { attributes: true, attributeFilter: ['class'] });
   setTimeout(finish, 4000);
+}
+
+function guardIntro() {
+  if (!introPending()) {
+    return;
+  }
+  const introCfg = cfg.intro || {};
+  setTimeout(() => {
+    if (!introPending()) {
+      return;
+    }
+    const veil = doc.getElementById('sf-intro');
+    if (veil) {
+      veil.remove();
+    }
+    root.classList.remove('sf-intro-full', 'sf-intro-calm');
+    root.classList.add('sf-intro-done');
+    emit('intro-guard');
+  }, (introCfg.failsafeMs || 2600) + (introCfg.guardMs || 800));
 }
 
 function checkMobileHigh() {
@@ -498,6 +549,7 @@ function boot() {
     initReveal();
   }
   bindRefresh();
+  guardIntro();
   scheduleSections();
   afterLoadIdle(() => {
     if (motion.device === 'desktop' && !commercePage) {

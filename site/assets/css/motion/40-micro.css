@@ -85,22 +85,18 @@
     will-change: transform, opacity;
   }
 
-  html.motion--desktop.sf-cursor-on .product-card,
-  html.motion--desktop.sf-cursor-on .product-card a,
-  html.motion--desktop.sf-cursor-on .collection-card,
+  html.motion--desktop.sf-cursor-on .product-card__media,
+  html.motion--desktop.sf-cursor-on .product-card__link,
+  html.motion--desktop.sf-cursor-on .collection-card__media,
   html.motion--desktop.sf-cursor-on .gallery__open {
     cursor: none;
-  }
-  html.motion--desktop.sf-cursor-on .product-card .btn,
-  html.motion--desktop.sf-cursor-on .product-card .product-card__action a,
-  html.motion--desktop.sf-cursor-on .collection-card .btn {
-    cursor: pointer;
   }
   .sf-cursor {
     position: fixed;
     top: 0;
     left: 0;
     z-index: var(--z-toast);
+    pointer-events: none;
     width: var(--sf-cursor-size);
     height: var(--sf-cursor-size);
     margin: calc(var(--sf-cursor-size) / -2) 0 0 calc(var(--sf-cursor-size) / -2);
@@ -108,7 +104,7 @@
     transition: opacity var(--dur-base) var(--ease-out);
     will-change: transform;
   }
-  .sf-cursor.is-visible { opacity: 1; }
+  .sf-cursor.is-visible.is-grown:not(.is-hidden):not(.is-native) { opacity: 1; }
   .sf-cursor.is-hidden,
   .sf-cursor.is-native { opacity: 0; }
   .sf-cursor__ring {

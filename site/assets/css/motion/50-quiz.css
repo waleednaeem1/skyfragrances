@@ -13,7 +13,7 @@
   }
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck {
     position: relative;
-    perspective: 1400px;
+    perspective: var(--sf-quiz-perspective, 2600px);
   }
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section {
     position: relative;
@@ -75,7 +75,7 @@
     animation: sf-quiz-arm var(--sf-quiz-undo) linear forwards;
   }
   @keyframes sf-quiz-deal {
-    from { transform: perspective(1400px) rotateY(-10deg) translateY(10px); }
+    from { transform: perspective(var(--sf-quiz-perspective, 2600px)) rotateY(-10deg) translateY(10px); }
     to { transform: none; }
   }
   @keyframes sf-quiz-slide-out {
@@ -195,9 +195,8 @@
     background-size: 200% 100%;
     animation: sf-quiz-sweep var(--sf-quiz-turn) var(--sf-ease-out) var(--sf-quiz-hold) both;
   }
-  html.motion--desktop body.quiz-result .quiz-notes__group {
-    display: inline-block;
-    animation: sf-quiz-rise var(--sf-dur-reveal) var(--sf-ease-out) calc(var(--sf-quiz-notes-at) + var(--i, 0) * var(--sf-quiz-notes-step)) both;
+  html.motion--desktop body.quiz-result .quiz-notes {
+    animation: sf-quiz-rise var(--sf-dur-reveal) var(--sf-ease-out) var(--sf-quiz-notes-at) both;
   }
   html.motion--desktop body.quiz-result .quiz-match {
     display: inline-block;

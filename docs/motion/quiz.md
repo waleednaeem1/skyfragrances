@@ -18,8 +18,9 @@ keyboard `change`).
 - Advance: Next control, or a pointer click on a `.choice--answer` (detected by a `pointerup` on
   the same label within `quiz.pointerWindowMs`, so Space/arrow keys never trigger it) after
   `quiz.undoMs` (600 ms) — the step gets `.is-armed` and a gold line fills under the chosen card
-  for the whole window; any keydown, a pointerdown outside a choice, or a different choice cancels
-  or restarts it. The last step never auto-submits.
+  for the whole window; any keydown, a pointerdown outside a choice (listened on `document`, so a
+  click anywhere on the page cancels, not only inside the form), or a different choice cancels or
+  restarts it. The last step never auto-submits.
 - Desktop (GSAP): leaving card `rotationY 0→∓90` + `autoAlpha` in `flipOut` (380 ms `power3.in`),
   entering card `±90→0` in `flipIn` (520 ms `expo.out`), `transformPerspective 1400`; the leaving
   fieldset is `position:absolute` under `.is-leaving` so the deck takes the entering card's height;
@@ -54,7 +55,7 @@ keyboard `change`).
 - Mobile: no back, no mist, no opacity on the LCP image — the image settles `scale 1.06→1` only;
   match ticks if the module is there by `mobileAtMs`. Low / reduced / no-JS: static page as before.
 
-## Verified (Playwright, 2026-09-26)
+## Verified (Playwright, 2026-09-26; re-run 2026-09-28 after the document-level cancel fix)
 
 Desktop 1440×900: GSAP flip, undo window, unanswered Next blocked with the existing error, arrow
 keys never advance, back flip, keyboard Next, submit → `?a=1-2-3-2-1`; result price/CTA opacity 1

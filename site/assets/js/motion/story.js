@@ -46,21 +46,8 @@ function switchLayers(on, off) {
   off.forEach((node) => node.classList.remove('is-on'));
 }
 
-function guardRefresh(motion) {
-  if (motion.refreshGuard) {
-    return;
-  }
-  motion.refreshGuard = true;
-  motion.ScrollTrigger.addEventListener('refreshInit', () => {
-    const el = document.documentElement;
-    el.style.scrollBehavior = 'auto';
-    void getComputedStyle(el).scrollBehavior;
-  });
-}
-
 function desktop(root, tiers, hues, cfg, motion) {
   const { gsap, ScrollTrigger } = motion;
-  guardRefresh(motion);
   const pyramid = root.querySelector('.pyramid');
   const tilt = root.querySelector('.story__tilt');
   const layersA = Array.from(root.querySelectorAll(A_LAYERS));
@@ -189,12 +176,19 @@ function lite(root, tiers, hues, cfg, motion) {
     }, cfg.hueMobileMs);
   }
 
+  const inBand = new Set();
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        swap(tierKey(entry.target));
+        inBand.add(entry.target);
+      } else {
+        inBand.delete(entry.target);
       }
     });
+    const topmost = tiers.find((tier) => inBand.has(tier));
+    if (topmost) {
+      swap(tierKey(topmost));
+    }
   }, { rootMargin: cfg.mobile.rootMargin, threshold: cfg.mobile.threshold });
   tiers.forEach((tier) => io.observe(tier));
   return {

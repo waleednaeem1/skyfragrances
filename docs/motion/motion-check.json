@@ -1,0 +1,740 @@
+{
+  "rows": [
+    {
+      "profile": "desktop-1440",
+      "path": "/",
+      "status": 200,
+      "errors": 0,
+      "buy": "hero CTA:ok(veil)@12ms",
+      "scroll": {
+        "fps": 94,
+        "p95": 18.2,
+        "long": 5,
+        "max": 100,
+        "frames": 270
+      },
+      "hover": {
+        "fps": 106,
+        "p95": 10,
+        "long": 3,
+        "max": 167,
+        "frames": 324
+      },
+      "overlay": true,
+      "device": "desktop",
+      "heroState": "gl",
+      "heavy": "gsap.min.js,ScrollTrigger.min.js",
+      "sections": "micro,cards,transitions,hero",
+      "cart": ""
+    },
+    {
+      "profile": "desktop-1440",
+      "path": "/shop",
+      "status": 200,
+      "errors": 0,
+      "buy": "card price:ok@5ms card link:ok@5ms",
+      "scroll": {
+        "fps": 120,
+        "p95": 9.7,
+        "long": 0,
+        "max": 10,
+        "frames": 360
+      },
+      "hover": {
+        "fps": 81,
+        "p95": 24.5,
+        "long": 8,
+        "max": 75,
+        "frames": 252
+      },
+      "overlay": true,
+      "device": "desktop",
+      "heroState": "",
+      "heavy": "gsap.min.js,ScrollTrigger.min.js",
+      "sections": "cards,transitions,micro",
+      "cart": ""
+    },
+    {
+      "profile": "desktop-1440",
+      "path": "/product/azure-oud",
+      "status": 200,
+      "errors": 0,
+      "buy": "price:ok@5ms Add to Cart:ok@5ms COD trust row:ok@5ms",
+      "scroll": {
+        "fps": 71,
+        "p95": 29.5,
+        "long": 4,
+        "max": 134,
+        "frames": 213
+      },
+      "hover": {
+        "fps": 119,
+        "p95": 15.9,
+        "long": 0,
+        "max": 29,
+        "frames": 360
+      },
+      "overlay": true,
+      "device": "desktop",
+      "heroState": "",
+      "heavy": "gsap.min.js,ScrollTrigger.min.js",
+      "sections": "story,micro,transitions",
+      "cart": "ok 0->1"
+    },
+    {
+      "profile": "desktop-1440",
+      "path": "/scent-finder",
+      "status": 200,
+      "errors": 0,
+      "buy": "quiz answer:ok@1ms quiz next:ok@2ms",
+      "scroll": {
+        "fps": 127,
+        "p95": 9.3,
+        "long": 0,
+        "max": 10,
+        "frames": 380
+      },
+      "hover": {
+        "fps": 134,
+        "p95": 8.8,
+        "long": 0,
+        "max": 15,
+        "frames": 408
+      },
+      "overlay": true,
+      "device": "desktop",
+      "heroState": "",
+      "heavy": "gsap.min.js,ScrollTrigger.min.js",
+      "sections": "transitions,quiz,micro",
+      "cart": ""
+    },
+    {
+      "profile": "desktop-1440",
+      "path": "/cart",
+      "status": 200,
+      "errors": 0,
+      "buy": "cart price:ok@2ms checkout button:ok@2ms",
+      "scroll": {
+        "fps": 122,
+        "p95": 9.7,
+        "long": 0,
+        "max": 10,
+        "frames": 366
+      },
+      "hover": {
+        "fps": 128,
+        "p95": 9.3,
+        "long": 0,
+        "max": 16,
+        "frames": 384
+      },
+      "overlay": true,
+      "device": "desktop",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "lines:1"
+    },
+    {
+      "profile": "desktop-1440",
+      "path": "/checkout",
+      "status": 200,
+      "errors": 0,
+      "buy": "checkout form:ok@3ms COD option:ok@3ms place order:ok@3ms",
+      "scroll": {
+        "fps": 122,
+        "p95": 10,
+        "long": 0,
+        "max": 10,
+        "frames": 366
+      },
+      "hover": {
+        "fps": 129,
+        "p95": 9.5,
+        "long": 0,
+        "max": 10,
+        "frames": 396
+      },
+      "overlay": true,
+      "device": "desktop",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "lines:1"
+    },
+    {
+      "profile": "mobile-360",
+      "path": "/",
+      "status": 200,
+      "errors": 0,
+      "buy": "hero CTA:ok@6ms",
+      "scroll": {
+        "fps": 117,
+        "p95": 9.9,
+        "long": 1,
+        "max": 136,
+        "frames": 352
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "mobile",
+      "heroState": "plates",
+      "heavy": "",
+      "sections": "hero,micro",
+      "cart": ""
+    },
+    {
+      "profile": "mobile-360",
+      "path": "/shop",
+      "status": 200,
+      "errors": 0,
+      "buy": "card price:ok@4ms card link:ok@5ms",
+      "scroll": {
+        "fps": 121,
+        "p95": 10.1,
+        "long": 0,
+        "max": 14,
+        "frames": 364
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "mobile",
+      "heroState": "",
+      "heavy": "",
+      "sections": "micro",
+      "cart": ""
+    },
+    {
+      "profile": "mobile-360",
+      "path": "/product/azure-oud",
+      "status": 200,
+      "errors": 0,
+      "buy": "price:ok@6ms Add to Cart:ok@6ms COD trust row:ok@6ms",
+      "scroll": {
+        "fps": 124,
+        "p95": 9.5,
+        "long": 2,
+        "max": 107,
+        "frames": 372
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "mobile",
+      "heroState": "",
+      "heavy": "",
+      "sections": "micro",
+      "cart": "ok 0->1"
+    },
+    {
+      "profile": "mobile-360",
+      "path": "/scent-finder",
+      "status": 200,
+      "errors": 0,
+      "buy": "quiz answer:ok@2ms quiz next:ok@2ms",
+      "scroll": {
+        "fps": 120,
+        "p95": 10.2,
+        "long": 0,
+        "max": 12,
+        "frames": 362
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "mobile",
+      "heroState": "",
+      "heavy": "",
+      "sections": "micro,quiz",
+      "cart": ""
+    },
+    {
+      "profile": "mobile-360",
+      "path": "/cart",
+      "status": 200,
+      "errors": 0,
+      "buy": "cart price:ok@2ms checkout button:ok@2ms",
+      "scroll": {
+        "fps": 127,
+        "p95": 8.8,
+        "long": 1,
+        "max": 126,
+        "frames": 382
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "mobile",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "lines:1"
+    },
+    {
+      "profile": "mobile-360",
+      "path": "/checkout",
+      "status": 200,
+      "errors": 0,
+      "buy": "checkout form:ok@2ms COD option:ok@3ms place order:ok@3ms",
+      "scroll": {
+        "fps": 125,
+        "p95": 9.6,
+        "long": 0,
+        "max": 10,
+        "frames": 375
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "mobile",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "lines:1"
+    },
+    {
+      "profile": "reduced-1440",
+      "path": "/",
+      "status": 200,
+      "errors": 0,
+      "buy": "hero CTA:ok@5ms",
+      "scroll": {
+        "fps": 122,
+        "p95": 10,
+        "long": 0,
+        "max": 11,
+        "frames": 368
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "reduced",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": ""
+    },
+    {
+      "profile": "reduced-1440",
+      "path": "/shop",
+      "status": 200,
+      "errors": 0,
+      "buy": "card price:ok@6ms card link:ok@6ms",
+      "scroll": {
+        "fps": 124,
+        "p95": 9.7,
+        "long": 0,
+        "max": 14,
+        "frames": 371
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "reduced",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": ""
+    },
+    {
+      "profile": "reduced-1440",
+      "path": "/product/azure-oud",
+      "status": 200,
+      "errors": 0,
+      "buy": "price:ok@4ms Add to Cart:ok@4ms COD trust row:ok@4ms",
+      "scroll": {
+        "fps": 109,
+        "p95": 14.3,
+        "long": 3,
+        "max": 117,
+        "frames": 328
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "reduced",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "ok 0->1"
+    },
+    {
+      "profile": "reduced-1440",
+      "path": "/scent-finder",
+      "status": 200,
+      "errors": 0,
+      "buy": "quiz answer:ok@3ms quiz next:ok@3ms",
+      "scroll": {
+        "fps": 121,
+        "p95": 10.1,
+        "long": 0,
+        "max": 16,
+        "frames": 365
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "reduced",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": ""
+    },
+    {
+      "profile": "reduced-1440",
+      "path": "/cart",
+      "status": 200,
+      "errors": 0,
+      "buy": "cart price:ok@3ms checkout button:ok@3ms",
+      "scroll": {
+        "fps": 121,
+        "p95": 10.1,
+        "long": 0,
+        "max": 10,
+        "frames": 364
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "reduced",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "lines:1"
+    },
+    {
+      "profile": "reduced-1440",
+      "path": "/checkout",
+      "status": 200,
+      "errors": 0,
+      "buy": "checkout form:ok@3ms COD option:ok@3ms place order:ok@3ms",
+      "scroll": {
+        "fps": 125,
+        "p95": 9.3,
+        "long": 0,
+        "max": 13,
+        "frames": 375
+      },
+      "hover": null,
+      "overlay": true,
+      "device": "reduced",
+      "heroState": "",
+      "heavy": "",
+      "sections": "",
+      "cart": "lines:1"
+    }
+  ],
+  "extra": {
+    "desktop-1440": {
+      "intro": {
+        "mode": "full",
+        "done": true,
+        "veilShown": true,
+        "h1": {
+          "opacity": "1",
+          "visibility": "visible"
+        },
+        "ctaAfter": true,
+        "errors": []
+      },
+      "quiz": {
+        "ok": true,
+        "steps": [
+          {
+            "step": 1,
+            "auto": true,
+            "advanced": true
+          },
+          {
+            "step": 2,
+            "auto": true,
+            "advanced": true
+          },
+          {
+            "step": 3,
+            "auto": true,
+            "advanced": true
+          },
+          {
+            "step": 4,
+            "auto": true,
+            "advanced": true
+          }
+        ],
+        "url": "/scent-finder/result?a=1-1-1-1-1",
+        "price": true,
+        "cta": true,
+        "veil": false
+      },
+      "nav": [
+        {
+          "label": "home",
+          "url": "/",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--desktop js sf-transitions-native sf-cursor-on"
+        },
+        {
+          "label": "shop",
+          "url": "/shop",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--desktop js sf-transitions-native sf-cursor-on"
+        },
+        {
+          "label": "product",
+          "url": "/product/azure-oud",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--desktop js sf-transitions-native sf-cursor-on"
+        },
+        {
+          "label": "cart",
+          "url": "/cart",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--desktop js"
+        },
+        {
+          "label": "checkout",
+          "url": "/checkout",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--desktop js"
+        },
+        {
+          "label": "back",
+          "url": "/cart",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--desktop js"
+        }
+      ]
+    },
+    "mobile-360": {
+      "intro": {
+        "mode": "none",
+        "done": false,
+        "veilShown": false,
+        "h1": {
+          "opacity": "1",
+          "visibility": "visible"
+        },
+        "ctaAfter": true,
+        "errors": []
+      },
+      "quiz": {
+        "ok": true,
+        "steps": [
+          {
+            "step": 1,
+            "auto": true,
+            "advanced": true
+          },
+          {
+            "step": 2,
+            "auto": true,
+            "advanced": true
+          },
+          {
+            "step": 3,
+            "auto": true,
+            "advanced": true
+          },
+          {
+            "step": 4,
+            "auto": true,
+            "advanced": true
+          }
+        ],
+        "url": "/scent-finder/result?a=1-1-1-1-1",
+        "price": true,
+        "cta": true,
+        "veil": false
+      },
+      "nav": [
+        {
+          "label": "home",
+          "url": "/",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--mobile js"
+        },
+        {
+          "label": "shop",
+          "url": "/shop",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--mobile js"
+        },
+        {
+          "label": "product",
+          "url": "/product/azure-oud",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--mobile js"
+        },
+        {
+          "label": "cart",
+          "url": "/cart",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--mobile js"
+        },
+        {
+          "label": "checkout",
+          "url": "/checkout",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--mobile js"
+        },
+        {
+          "label": "back",
+          "url": "/cart",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "motion--mobile js"
+        }
+      ]
+    },
+    "reduced-1440": {
+      "quiz": {
+        "ok": true,
+        "steps": [
+          {
+            "step": 1,
+            "auto": false,
+            "advanced": true
+          },
+          {
+            "step": 2,
+            "auto": false,
+            "advanced": true
+          },
+          {
+            "step": 3,
+            "auto": false,
+            "advanced": true
+          },
+          {
+            "step": 4,
+            "auto": false,
+            "advanced": true
+          }
+        ],
+        "url": "/scent-finder/result?a=1-1-1-1-1",
+        "price": true,
+        "cta": true,
+        "veil": false
+      },
+      "nav": [
+        {
+          "label": "home",
+          "url": "/",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "sf-reduce js"
+        },
+        {
+          "label": "shop",
+          "url": "/shop",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "sf-reduce js"
+        },
+        {
+          "label": "product",
+          "url": "/product/azure-oud",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "sf-reduce js"
+        },
+        {
+          "label": "cart",
+          "url": "/cart",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "sf-reduce js"
+        },
+        {
+          "label": "checkout",
+          "url": "/checkout",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "sf-reduce js"
+        },
+        {
+          "label": "back",
+          "url": "/cart",
+          "ok": true,
+          "veilStuck": false,
+          "introStuck": false,
+          "drawerOpen": false,
+          "locked": false,
+          "covered": false,
+          "html": "sf-reduce js"
+        }
+      ]
+    }
+  },
+  "failures": []
+}

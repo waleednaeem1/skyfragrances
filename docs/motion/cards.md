@@ -29,8 +29,21 @@ critique's M1 (CSS rest pose) and L3 (no mobile tilt) applied.
    values, sets `data-cards-state="live"` (CSS pose drops in the same frame, no jump) and scrubs
    to `transform: none` with ScrollTrigger (`start`/`end`/`scrub` from config). Rows are grouped by
    `offsetTop`; ≤ `singleGroupRows` rows = one hand, more = one trigger per row (listing).
-   On completion the trigger is killed (`replay: false`), inline styles cleared, the root becomes
-   `spread`. `scrub: 0` in config = kill-switch: one-shot `expo.out` stagger on enter.
+   Completion never relies on the tween's `onComplete`: `ScrollTrigger.refresh()` (core fires it on
+   every lazy image `load`) sets a scrubbed tween to its progress with events suppressed, so that
+   callback can silently never fire. Instead the trigger's own `onLeave` / `onUpdate` / `onRefresh`
+   (progress ≥ 1) call `settle`: the trigger is killed (`replay: false`), its scrub tween dropped, and
+   the fan tween is eased to progress 1 in `max(minSettleMs, remaining × settleMs)` `expo.out`, then
+   inline styles are cleared and the root becomes `spread`. A row whose trigger is already past
+   `start` at init (the first shop row, a hash landing) settles the same way on arrival instead of
+   sitting half-fanned until the shopper scrolls. `scrub: 0` in config = kill-switch: one-shot
+   `expo.out` stagger on enter.
+   `site.css` keeps `html{scroll-behavior:smooth}`; ScrollTrigger 3.13 sets an inline `auto` before
+   its scroll-to-0 measurement but Chromium's `window.scrollTo` still reads the stale computed
+   `smooth`, so every refresh made at `scrollY > 0` shifted all trigger positions by `scrollY`
+   (Best Sellers spread while still 700 px below the fold). `guardRefreshScroll` installs the same
+   `refreshInit` guard as `story.js` (inline `auto` + a forced `getComputedStyle` read), once per
+   page under `motion.refreshGuard`, whichever module loads first.
 3. Hover: `pointermove` (rAF-throttled) writes `--sf-tilt-x/-y/-lift` on the card; CSS applies
    `perspective() rotateX() rotateY() translateY()` only while `.is-tilting` / `.is-untilting`
    (no permanent 3D layers). `.is-sweeping` runs the `sf-card-sweep` keyframe once on
@@ -52,10 +65,17 @@ critique's M1 (CSS rest pose) and L3 (no mobile tilt) applied.
 - Low: same as mobile. Reduced: no `motion--*` class, no rule applies, grid pose from first paint.
 - No JS: no `html.motion--*` class → grid pose, all cards, prices and buttons painted, no indicator.
 
-## Verified 2026-09-26 (Playwright, Chromium 1208, `php -S 127.0.0.1:8091`)
+## Verified 2026-09-28 (Playwright, Chromium 1208, `php -S 127.0.0.1:8091`, 47/47 checks)
 
 1440×900 `/` and `/shop`, 360×780 touch `/` and `/shop`, reduced motion, JS off, GSAP blocked,
-`core.js` blocked, `saveData` (low), 1440→800→1440 flip: fan at first paint, scrub to grid with
-no inline styles left, `is-visible` handshake, tilt + sweep on hover, price and Choose Size /
-Add to Cart hit-testable while tilted, indicator hidden on desktop and moving on mobile, no console
-or page errors from these files. Cost: `cards.js` 2.5 KB gz (desktop only), `20-cards.css` 1.5 KB gz.
+`core.js` blocked, 1440→800 flip: fan at first paint (`DOMContentLoaded` probe), fanned cards clear
+of the site header, the section header and the sticky filter column (3-col listing pose gathered
+to `±0.7 × 16°` / `±40%` so the swung corner stays inside the grid), scrub to grid with no inline
+styles left and `data-cards-state="spread"` on every root, trigger positions correct after a
+refresh at `scrollY` 973 (4/4 loads; 6/6 wrong before the guard), first shop row settled at load,
+tilt + lift + sweep on hover, price / name / Choose Size hit-testable and at full opacity while
+tilted, card back to rest after leave, indicator hidden on desktop and moving with the rail on
+mobile, next card peeking at the edge, new arrivals and the shop grid 2-col on 360, 0 B of
+`cards.js`/GSAP on mobile, no console or page errors. Cost: `cards.js` 2.9 KB gz (desktop only),
+`20-cards.css` 1.5 KB gz. Harness: `scratchpad/verify-cards.mjs` (serves the concatenated
+`motion/*.css` in place of the assembled `motion.css`, so the integrator's file was not touched).

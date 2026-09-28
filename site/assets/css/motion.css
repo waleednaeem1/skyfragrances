@@ -7,6 +7,7 @@
     --sf-reveal-y: 18px;
     --sf-hero-clip: 1100ms;
     --sf-hero-sweep: 900ms;
+    --sf-hero-sweep-delay: 300ms;
     --sf-hero-actions: 400ms;
     --sf-hero-delay-mobile: 300ms;
     --sf-hero-delay-desktop: 600ms;
@@ -34,6 +35,13 @@
   .sf-spray {
     pointer-events: none;
     user-select: none;
+  }
+  html.sf-intro-calm .sf-intro {
+    background: transparent;
+    pointer-events: none;
+  }
+  html.sf-intro-calm .sf-intro__skip {
+    display: none;
   }
   html.lenis,
   html.lenis body {
@@ -66,6 +74,15 @@
     --hero-object: clamp(5rem, 22vw, 7rem);
     contain: paint;
   }
+  html.motion--mobile .hero,
+  html.motion--low .hero {
+    --sf-plate-x: 10;
+    --sf-plate-y: 5;
+  }
+  .hero__title {
+    padding-block: 0.06em 0.16em;
+    margin-block: -0.06em -0.16em;
+  }
   .hero__object {
     position: relative;
     width: var(--hero-object);
@@ -88,20 +105,33 @@
     pointer-events: none;
     user-select: none;
   }
+  .hero__glow::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: calc(var(--hero-object) * var(--sf-plate-x, 13.33));
+    height: calc(var(--hero-object) * var(--sf-plate-y, 6.67));
+    translate: -50% -50%;
+    background: radial-gradient(circle closest-side, rgba(215, 164, 102, 0.5) 0%, rgba(213, 162, 102, 0.24) 24%, rgba(209, 159, 101, 0.08) 50%, rgba(209, 159, 101, 0) 82%);
+    transition: opacity var(--sf-hero-gl-fade, 900ms) var(--sf-ease-out);
+  }
+  .hero.is-gl .hero__glow::before {
+    opacity: 0;
+  }
   .hero__plate {
     position: absolute;
     left: 0;
     top: 0;
-    height: calc(var(--hero-object) * 6.67);
-    width: auto;
-    aspect-ratio: 2 / 1;
+    width: calc(var(--hero-object) * var(--sf-plate-x, 13.33));
+    height: calc(var(--hero-object) * var(--sf-plate-y, 6.67));
     max-width: none;
     translate: -50% -50%;
-    opacity: 1;
+    opacity: 0;
     transition: opacity var(--sf-hero-gl-fade, 900ms) var(--sf-ease-out);
   }
-  .hero__plate--b {
-    opacity: 0;
+  .hero__plate--a.is-ready {
+    opacity: 1;
   }
   html.motion--desktop .hero__plate--a,
   html.motion--mobile .hero__plate--a {
@@ -115,7 +145,6 @@
     display: none;
   }
   .hero.is-offscreen .hero__plate,
-  .hero.is-rested .hero__plate,
   .hero.is-gl-settled .hero__plate {
     animation-play-state: paused;
   }
@@ -149,13 +178,10 @@
     background-size: 250% 100%, 100% 100%;
     background-position: 120% 0, 0 0;
     background-repeat: no-repeat;
-    animation: sf-hero-clip var(--sf-hero-clip, 1100ms) var(--sf-ease-out) both, sf-hero-sweep var(--sf-hero-sweep, 900ms) var(--sf-ease-silk) 300ms both;
+    animation: sf-hero-clip var(--sf-hero-clip, 1100ms) var(--sf-ease-out) both, sf-hero-sweep var(--sf-hero-sweep, 900ms) var(--sf-ease-silk) var(--sf-hero-sweep-delay, 300ms) both;
   }
   html.motion--desktop.sf-intro-full .hero__title {
-    animation-name: sf-hero-clip;
-  }
-  html.motion--desktop.sf-intro-done .hero__title {
-    animation-delay: 0ms, 0ms;
+    animation-play-state: running, paused;
   }
   html.motion--desktop .hero__actions,
   html.motion--mobile .hero__actions,
@@ -165,17 +191,33 @@
   html.motion--low .hero__trust {
     animation: sf-hero-settle var(--sf-hero-actions, 400ms) var(--sf-ease-out) both;
   }
+  .hero__enter {
+    opacity: 0;
+    transform: translateY(1.5rem);
+    animation: sf-hero-enter var(--dur-slow) var(--ease-out) forwards;
+    animation-delay: calc(var(--i, 0) * 120ms);
+  }
   html.motion--desktop .hero__enter {
     animation-delay: calc(var(--sf-hero-delay-desktop, 600ms) - 240ms + var(--i, 0) * 120ms);
+  }
+  html.motion--mobile .hero__enter,
+  html.motion--low .hero__enter {
+    animation-delay: calc(var(--sf-hero-delay-mobile, 300ms) - 240ms + var(--i, 0) * 120ms);
   }
   html.motion--desktop.sf-intro-full .hero__enter,
   html.motion--desktop.sf-intro-full .hero__actions,
   html.motion--desktop.sf-intro-full .hero__trust {
     animation-play-state: paused;
   }
+  @keyframes sf-hero-enter {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
   @keyframes sf-hero-clip {
-    from { clip-path: inset(0 0 100% 0); }
-    to { clip-path: inset(0 0 0 0); }
+    from { clip-path: inset(-0.1em 0 100% 0); }
+    to { clip-path: inset(-0.1em 0 -0.2em 0); }
   }
   @keyframes sf-hero-sweep {
     from { background-position: 120% 0, 0 0; }
@@ -189,15 +231,10 @@
     .hero__object { margin-block-end: calc(var(--sp-3) * -1); }
   }
   @media (prefers-reduced-motion: reduce) {
-    html.sf-reduce .hero__plate,
-    html.sf-reduce .hero__plate--a,
-    html.sf-reduce .hero__plate--b {
-      animation: none;
-      opacity: 1;
-    }
-    html.sf-reduce .hero__plate--b { display: none; }
+    html.sf-reduce .hero__plate { display: none; }
     html.sf-reduce .hero__title { clip-path: none; animation: none; }
     html.sf-reduce .hero__actions, html.sf-reduce .hero__trust { animation: none; opacity: 1; }
+    html.sf-reduce .hero__enter { animation: none; opacity: 1; transform: none; }
   }
 }
 @layer motion {
@@ -232,16 +269,22 @@
       transform: none;
     }
   }
+  html.motion--desktop [data-motion~="cards"]:not(.grid--mosaic) > * {
+    --sf-fan-r: 0;
+    --sf-fan-x: 0%;
+    --sf-fan-ry: 0;
+  }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(1) {
-    --sf-fan-r: -0.5;
-    --sf-fan-x: 12%;
+    --sf-fan-r: 0;
+    --sf-fan-x: 0%;
+    --sf-fan-ry: 1.5;
   }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(2) {
     --sf-fan-r: -0.35;
     --sf-fan-x: -18%;
   }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(3) {
-    --sf-fan-r: 0.9;
+    --sf-fan-r: 0.7;
     --sf-fan-x: -36%;
   }
   html.motion--desktop .grid--mosaic[data-motion~="cards"] > :nth-child(4) {
@@ -258,43 +301,6 @@
     --sf-fan-r: 0.3;
     --sf-fan-x: -20%;
     --sf-fan-ry: 3;
-  }
-  html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(3n+1),
-  html.motion--desktop .grid--products[data-motion~="cards"] > :nth-child(3n+1) {
-    --sf-fan-r: -1;
-    --sf-fan-x: 30%;
-  }
-  html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(3n+2),
-  html.motion--desktop .grid--products[data-motion~="cards"] > :nth-child(3n+2) {
-    --sf-fan-r: 0;
-    --sf-fan-x: 0%;
-  }
-  html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(3n+3),
-  html.motion--desktop .grid--products[data-motion~="cards"] > :nth-child(3n+3) {
-    --sf-fan-r: 1;
-    --sf-fan-x: -30%;
-  }
-  @media (min-width: 1200px) {
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+1),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+1) {
-      --sf-fan-r: -1;
-      --sf-fan-x: 34%;
-    }
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+2),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+2) {
-      --sf-fan-r: -0.35;
-      --sf-fan-x: 12%;
-    }
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+3),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+3) {
-      --sf-fan-r: 0.35;
-      --sf-fan-x: -12%;
-    }
-    html.motion--desktop .rail--cards[data-motion~="cards"] > :nth-child(4n+4),
-    html.motion--desktop body.home .grid--products[data-motion~="cards"] > :nth-child(4n+4) {
-      --sf-fan-r: 1;
-      --sf-fan-x: -34%;
-    }
   }
   html.motion--desktop [data-cards-state="spread"] [data-motion-card],
   html.motion--desktop [data-cards-state="spread"] .collection-card {
@@ -327,7 +333,8 @@
     inset: -10% -30%;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(212, 176, 132, 0.30) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
+    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(242, 230, 210, 0.5) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
+    mix-blend-mode: soft-light;
     opacity: 0;
     transform: translate3d(-70%, 0, 0);
   }
@@ -365,13 +372,13 @@
         border-radius: 1px;
         background: rgba(212, 176, 132, 0.18);
       }
-      html.motion--mobile .rail[data-motion~="cards"],
-      html.motion--low .rail[data-motion~="cards"] {
+      html.motion--mobile .rail:has(+ .sf-rail-progress),
+      html.motion--low .rail:has(+ .sf-rail-progress) {
         scroll-timeline-name: --sf-rail;
         scroll-timeline-axis: inline;
       }
-      html.motion--mobile .container:has(> .rail[data-motion~="cards"]),
-      html.motion--low .container:has(> .rail[data-motion~="cards"]) {
+      html.motion--mobile .container:has(> .sf-rail-progress),
+      html.motion--low .container:has(> .sf-rail-progress) {
         timeline-scope: --sf-rail;
       }
       .sf-rail-progress::before {
@@ -479,7 +486,8 @@
       z-index: 0;
       pointer-events: none;
       opacity: 0;
-      background: radial-gradient(ellipse 52% 46% at 50% 50%, rgb(var(--sf-story-rgb) / 0.30) 0%, rgb(var(--sf-story-rgb) / 0.08) 45%, rgb(var(--sf-story-rgb) / 0) 72%);
+      background: radial-gradient(ellipse 52% 46% at 50% 50%, rgb(var(--sf-story-rgb) / 0.42) 0%, rgb(var(--sf-story-rgb) / 0.08) 45%, rgb(var(--sf-story-rgb) / 0) 72%);
+      mix-blend-mode: screen;
       transition: opacity var(--sf-story-hue) var(--sf-ease-silk);
     }
     .story__halo.is-on { opacity: 1; }
@@ -490,8 +498,8 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      -webkit-mask-image: radial-gradient(ellipse 62% 72% at 50% 50%, #000 52%, rgb(0 0 0 / 0) 98%);
-      mask-image: radial-gradient(ellipse 62% 72% at 50% 50%, #000 52%, rgb(0 0 0 / 0) 98%);
+      -webkit-mask-image: radial-gradient(ellipse 46% 60% at 50% 50%, #000 34%, rgb(0 0 0 / 0) 82%);
+      mask-image: radial-gradient(ellipse 46% 60% at 50% 50%, #000 34%, rgb(0 0 0 / 0) 82%);
     }
     .story .pyramid { gap: 0; }
     .story .pyramid__tier {
@@ -619,9 +627,9 @@
     will-change: transform, opacity;
   }
 
-  html.motion--desktop.sf-cursor-on .product-card,
-  html.motion--desktop.sf-cursor-on .product-card a,
-  html.motion--desktop.sf-cursor-on .collection-card,
+  html.motion--desktop.sf-cursor-on .product-card__media,
+  html.motion--desktop.sf-cursor-on .product-card__link,
+  html.motion--desktop.sf-cursor-on .collection-card__media,
   html.motion--desktop.sf-cursor-on .gallery__open {
     cursor: none;
   }
@@ -630,6 +638,7 @@
     top: 0;
     left: 0;
     z-index: var(--z-toast);
+    pointer-events: none;
     width: var(--sf-cursor-size);
     height: var(--sf-cursor-size);
     margin: calc(var(--sf-cursor-size) / -2) 0 0 calc(var(--sf-cursor-size) / -2);
@@ -637,7 +646,7 @@
     transition: opacity var(--dur-base) var(--ease-out);
     will-change: transform;
   }
-  .sf-cursor.is-visible { opacity: 1; }
+  .sf-cursor.is-visible.is-grown:not(.is-hidden):not(.is-native) { opacity: 1; }
   .sf-cursor.is-hidden,
   .sf-cursor.is-native { opacity: 0; }
   .sf-cursor__ring {
@@ -686,7 +695,7 @@
   }
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck {
     position: relative;
-    perspective: 1400px;
+    perspective: var(--sf-quiz-perspective, 2600px);
   }
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section {
     position: relative;
@@ -748,7 +757,7 @@
     animation: sf-quiz-arm var(--sf-quiz-undo) linear forwards;
   }
   @keyframes sf-quiz-deal {
-    from { transform: perspective(1400px) rotateY(-10deg) translateY(10px); }
+    from { transform: perspective(var(--sf-quiz-perspective, 2600px)) rotateY(-10deg) translateY(10px); }
     to { transform: none; }
   }
   @keyframes sf-quiz-slide-out {
@@ -868,9 +877,8 @@
     background-size: 200% 100%;
     animation: sf-quiz-sweep var(--sf-quiz-turn) var(--sf-ease-out) var(--sf-quiz-hold) both;
   }
-  html.motion--desktop body.quiz-result .quiz-notes__group {
-    display: inline-block;
-    animation: sf-quiz-rise var(--sf-dur-reveal) var(--sf-ease-out) calc(var(--sf-quiz-notes-at) + var(--i, 0) * var(--sf-quiz-notes-step)) both;
+  html.motion--desktop body.quiz-result .quiz-notes {
+    animation: sf-quiz-rise var(--sf-dur-reveal) var(--sf-ease-out) var(--sf-quiz-notes-at) both;
   }
   html.motion--desktop body.quiz-result .quiz-match {
     display: inline-block;

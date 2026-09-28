@@ -158,7 +158,9 @@ $stickyThumb = $images !== [] ? $images[0]['thumb'] : asset('img/brand/monogram-
 <?php if ($hasComposition): ?>
 <?php $storyFamily = (string) ($product['scent_family_slug'] ?? $product['scent_family'] ?? ''); ?>
 <?php $storyImage = $images !== [] ? $images[0] : null; ?>
-<section class="section section--divided story<?= $storyImage === null ? ' story--no-figure' : '' ?>" id="composition" aria-labelledby="composition-title" data-motion="story" data-note="top" data-story-family="<?= e($storyFamily) ?>">
+<?php $storyHueMap = ['midnight-meridian' => ['#5E7FB4', '#8C6FA6', '#B08458'], 'azure-heights' => ['#7FB3D5', '#D8DCC2', '#C4AE8E'], 'golden-hour' => ['#E0A45C', '#C8703A', '#96502E'], 'dawn-chorus' => ['#E8C2B4', '#D9A3A0', '#B98A91'], 'monsoon-veil' => ['#8AA07C', '#6A7554', '#5E3B33']]; ?>
+<?php $storyHues = $storyHueMap[(string) ($collection['slug'] ?? '')] ?? null; ?>
+<section class="section section--divided story<?= $storyImage === null ? ' story--no-figure' : '' ?>" id="composition" aria-labelledby="composition-title" data-motion="story" data-note="top" data-story-family="<?= e($storyFamily) ?>"<?= $storyHues !== null ? ' data-motion-hue-top="' . e($storyHues[0]) . '" data-motion-hue-heart="' . e($storyHues[1]) . '" data-motion-hue-base="' . e($storyHues[2]) . '"' : '' ?>>
   <div class="story__glow story__glow--a is-on" aria-hidden="true"></div>
   <div class="story__glow story__glow--b" aria-hidden="true"></div>
   <div class="container story__container">

@@ -30,7 +30,7 @@ $noJsNavLinks = [
 </head>
 <body class="<?= e($head['body_class']) ?>" data-base="<?= e(BASE_PATH) ?>" data-motion="micro">
 <a class="skip-link" href="#main">Skip to content</a>
-<?php partial('intro.php'); ?>
+<?php if ($isHome) { partial('intro.php'); } ?>
 <?php partial('announcement-bar.php'); ?>
 <div class="header-sentinel" aria-hidden="true"></div>
 <?php partial('header.php', ['isHome' => $isHome, 'collections' => $chromeCollections]); ?>

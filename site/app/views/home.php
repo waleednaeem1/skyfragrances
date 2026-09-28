@@ -61,16 +61,7 @@ $trustItems = [
 <?php if ($heroTrust !== ''): ?>
     <p class="hero__trust"><?= e($heroTrust) ?></p>
 <?php endif; ?>
-    <div class="hero__glow" aria-hidden="true" data-plate-b="<?= e(asset('img/motion/ribbons-b-540.webp')) ?>" data-plate-b-desktop="<?= e(asset('img/motion/ribbons-b-960.webp')) ?>">
-      <picture>
-        <source media="(min-width: 1024px)" srcset="<?= e(asset('img/motion/ribbons-glow-960.webp')) ?>">
-        <img class="hero__plate hero__plate--glow sf-plate" src="<?= e(asset('img/motion/ribbons-glow-540.webp')) ?>" alt="" width="540" height="270" loading="lazy" fetchpriority="low" decoding="async">
-      </picture>
-      <picture>
-        <source media="(min-width: 1024px)" srcset="<?= e(asset('img/motion/ribbons-a-960.webp')) ?>">
-        <img class="hero__plate hero__plate--a sf-plate" src="<?= e(asset('img/motion/ribbons-a-540.webp')) ?>" alt="" width="540" height="270" loading="lazy" fetchpriority="low" decoding="async">
-      </picture>
-    </div>
+    <div class="hero__glow" aria-hidden="true" data-plate-a="<?= e(asset('img/motion/ribbons-a-540.webp')) ?>" data-plate-a-desktop="<?= e(asset('img/motion/ribbons-a-960.webp')) ?>" data-plate-b="<?= e(asset('img/motion/ribbons-b-540.webp')) ?>" data-plate-b-desktop="<?= e(asset('img/motion/ribbons-b-960.webp')) ?>"></div>
   </div>
   <a class="hero__cue js-hero-cue" href="#<?= e($firstSectionId) ?>" aria-label="Scroll to the collections"><?php partial('icon.php', ['name' => 'chevron-down', 'size' => 22]); ?></a>
 </section>
@@ -91,7 +82,7 @@ $trustItems = [
 <section class="section section--divided" id="best-sellers" aria-labelledby="best-sellers-title">
   <div class="container">
     <?php partial('section-header.php', ['eyebrow' => 'Loved most', 'title' => 'Best Sellers', 'titleId' => 'best-sellers-title', 'sub' => 'The bottles our customers finish, then order again.', 'linkHref' => url('/best-sellers'), 'linkLabel' => 'View all']); ?>
-    <div class="rail rail--cards sf-reveal sf-reveal--stagger" data-motion="cards">
+    <div class="rail rail--cards sf-reveal sf-reveal--stagger">
 <?php foreach ($bestSellers as $index => $product): ?>
       <?php partial('product-card.php', ['product' => $product, 'eager' => $index < 2]); ?>
 <?php endforeach; ?>
@@ -104,7 +95,7 @@ $trustItems = [
 <section class="section section--divided" id="new-arrivals" aria-labelledby="new-arrivals-title">
   <div class="container">
     <?php partial('section-header.php', ['eyebrow' => 'Just landed', 'title' => 'New Arrivals', 'titleId' => 'new-arrivals-title', 'sub' => 'The latest compositions to leave the studio.', 'linkHref' => url('/new-arrivals'), 'linkLabel' => 'View all']); ?>
-    <div class="grid grid--products sf-reveal sf-reveal--stagger" data-motion="cards">
+    <div class="grid grid--products sf-reveal sf-reveal--stagger">
 <?php foreach ($newArrivals as $index => $product): ?>
 <?php if ($index >= 4): ?>
       <div class="u-hide-md-down"><?php partial('product-card.php', ['product' => $product]); ?></div>

@@ -7,8 +7,9 @@ quiz, transitions) build on. Anything not listed here is private to `assets/js/m
 
 | File | Role |
 |---|---|
-| `assets/js/motion/config.js` | `window.SF_MOTION` — the **one** config: tokens, flags, every section's timings, plus the first-paint device gate (`SF_MOTION.classify()` / `applyClass()`). Sync in `<head>` before `site.css`, so `html.motion--*` exists at first paint and CSS can key on it. |
-| `assets/js/intro.js`, `app/partials/intro.php` | Client-approved loader, untouched; reads `SF_MOTION.intro`. |
+| `assets/js/motion/gate.js` | The only sync script in `<head>` (~1 KB gz, before `site.css`). Classifies the device (`window.SF_GATE.classify()` / `applyClass()`, thresholds in `SF_GATE.rules`), sets `html.motion--*` or `html.sf-reduce` at first paint, and — only when `head-meta.php` prints `data-page="home"` on its tag — decides the intro mode (`html.sf-intro-full` desktop / `sf-intro-calm`, never under reduced motion, never when `sessionStorage.sfIntro` is set or throws). `SF_GATE.flags.loader` is kill-switch #5 (`'desktop'` shipped; `false` = no intro; `localStorage.sfMotionFlags.loader` overrides it for QA). |
+| `assets/js/motion/config.js` | `window.SF_MOTION` — the **one** data config: tokens, flags, every section's timings. `defer` (after `site.css`, before `core.js`); it re-exports the gate's `classify`/`applyClass`/`rules` as `SF_MOTION.classify`, `applyClass`, `device` so core reads one object. |
+| `assets/js/intro.js`, `app/partials/intro.php` | Client-approved loader. Not linked by PHP: the gate injects it (`data-intro` on the gate tag, home only) **only when it set a mode class**, so a phone, a return visit or a reduced-motion visitor never downloads it. It reads the `sf-intro-*` class (no class → exits), reads `SF_MOTION.intro` at `DOMContentLoaded` (after the deferred `config.js`), plays the timeline and removes the class. The monogram `<img>` and the shimmer mask (`--sf-intro-mark`, printed inline by `intro.php`) use the same versioned URL as the header logo, so the intro adds no image bytes on any page. The skip `pointerdown` is bound to the veil itself so a skip tap never reaches the hero; `site.css` gives the veil `pointer-events:auto` while a mode class is present; `intro.js` releases it (`pointer-events:none`) at `intro.passThroughAt` (80 %) of the dissolve, once the veil is under ~0.2 opacity, so the skip tap's own `click` lands on the veil and never on the CTA beneath. `core.js` `guardIntro()` clears a mode class that is still present `intro.failsafeMs + intro.guardMs` after boot (hero keyframes are paused under `.sf-intro-full`). |
 | `assets/js/motion/core.js` | ES module (`<script type="module" defer data-motion-v>` in `head-meta.php`, executes before `reveal.js` in the deferred list). Device state, event bus, GSAP/ScrollTrigger bootstrap, Lenis bridge, the reveal system, the section loader. |
 | `assets/js/reveal.js` | Unchanged behaviour, plus the `window.SFReveal` handshake (`claimed`, `started`, `start()`, `showAll()`); still runs alone when core is absent. |
 | `assets/js/vendor/` | GSAP 3.13.0, ScrollTrigger 3.13.0, Lenis 1.3.26 (`vendoring.md`). |
@@ -20,7 +21,7 @@ CSS assembly order: `00-core`, `10-hero`, `20-cards`, `30-story`, `40-micro`, `5
 
 ## Device classes
 
-Set on `<html>` by `config.js` at first paint and re-evaluated by `core.js` on media-query change:
+Set on `<html>` by `gate.js` at first paint and re-evaluated by `core.js` on media-query change:
 
 | Class | Meaning | `SF.motion.device` |
 |---|---|---|
@@ -98,10 +99,13 @@ quiz | transitions` (`SF_MOTION.loader.sections`). The loader finds every elemen
 checks the section's flag (`hero→flags.hero`, `cards→flags.fan`, `story→flags.story`,
 `micro→flags.micro`, `quiz→flags.quiz`, `transitions→flags.transitions`), then imports the module
 when the root nears the viewport (`rootMargin: 60%`) — `hero` instead after `load` + idle
-(`requestIdleCallback`, 2 s timeout). On desktop `ensureGsap()` resolves first, so `SF.motion.gsap`
-is set when `init` runs; on mobile/low it is `null` and the module must use CSS classes and
-IntersectionObserver only (PLAN.md §2: 0 B of library on phones). Nothing loads on commerce pages
-or under reduced motion.
+(`requestIdleCallback`, 2 s timeout). On `mobile` and `low` the observers themselves are only
+created after `load` + idle, so no module request competes with the LCP image (PLAN.md §5.2);
+on `low`, `hero` and `micro` are never imported (`SF_MOTION.loader.skipOnLow`, default
+`['hero', 'micro']` — a low device gets no plate and a zero-span burst anyway). On desktop
+`ensureGsap()` resolves first, so `SF.motion.gsap` is set when `init` runs; on mobile/low it is
+`null` and the module must use CSS classes and IntersectionObserver only (PLAN.md §2: 0 B of
+library on phones). Nothing loads on commerce pages or under reduced motion.
 
 ```js
 export default function init(root, SF) {

@@ -2,30 +2,22 @@
   'use strict';
   var doc = document;
   var root = doc.documentElement;
-  var motion = window.SF_MOTION || {};
-  var cfg = motion.intro || {};
-  if (cfg.enabled === false) {
+  var cfg = {};
+  var mode = root.classList.contains('sf-intro-full') ? 'full' : root.classList.contains('sf-intro-calm') ? 'calm' : '';
+  if (!mode) {
     return;
   }
-  var seen = false;
-  try {
-    seen = !!sessionStorage.getItem('sfIntro');
-  } catch (e) {}
-  var reduced = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
-  var nav = navigator;
-  var conn = nav.connection || {};
-  var lowPower = (nav.deviceMemory && nav.deviceMemory <= 2) || (nav.hardwareConcurrency && nav.hardwareConcurrency <= 2) || !!conn.saveData || /2g/.test(conn.effectiveType || '');
-  var mode = seen ? 'quick' : ((reduced || lowPower) ? 'calm' : 'full');
-  root.classList.add('sf-intro-' + mode);
-  try {
-    sessionStorage.setItem('sfIntro', '1');
-  } catch (e) {}
 
-  var mobile = window.innerWidth <= ((motion.breakpoints && motion.breakpoints.mobile) || 767);
-  var scale = mobile ? (cfg.mobileScale || 0.86) : 1;
+  var mobile = root.classList.contains('motion--mobile') || root.classList.contains('motion--low');
+  var scale = 1;
   var timers = [];
   var stopParticles = null;
   var finished = false;
+
+  function clearMode() {
+    root.classList.remove('sf-intro-full', 'sf-intro-calm');
+    root.classList.add('sf-intro-done');
+  }
 
   function later(fn, ms) {
     timers.push(setTimeout(fn, Math.round(ms * scale)));
@@ -43,13 +35,16 @@
       stopParticles();
     }
     el.classList.add('is-leaving');
+    var dissolve = cfg.dissolveMs || 340;
+    setTimeout(function () {
+      el.style.pointerEvents = 'none';
+    }, Math.round(dissolve * (cfg.passThroughAt || 0.8)));
     setTimeout(function () {
       if (el.parentNode) {
         el.parentNode.removeChild(el);
       }
-      root.classList.remove('sf-intro-full', 'sf-intro-calm', 'sf-intro-quick');
-      root.classList.add('sf-intro-done');
-    }, (mode === 'quick' ? (cfg.quickFadeMs || 320) : (cfg.dissolveMs || 340)) + 60);
+      clearMode();
+    }, dissolve + 60);
   }
 
   function armSkip(el) {
@@ -57,7 +52,7 @@
       finish(el);
     };
     var opts = { once: true, passive: true };
-    window.addEventListener('pointerdown', skip, opts);
+    el.addEventListener('pointerdown', skip, opts);
     window.addEventListener('keydown', skip, opts);
     var btn = el.querySelector('[data-intro-skip]');
     if (btn) {
@@ -187,15 +182,14 @@
   }
 
   function run() {
+    cfg = (window.SF_MOTION || {}).intro || {};
+    scale = mobile ? (cfg.mobileScale || 0.86) : 1;
     var el = doc.getElementById('sf-intro');
     if (!el) {
+      clearMode();
       return;
     }
     armSkip(el);
-    if (mode === 'quick') {
-      finish(el);
-      return;
-    }
     if (mode === 'calm') {
       var calm = cfg.calm || {};
       el.classList.add('is-mark', 'is-tag');

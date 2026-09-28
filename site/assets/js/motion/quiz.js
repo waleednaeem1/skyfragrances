@@ -30,6 +30,36 @@ function initSteps(form, motion, cfg) {
   const current = () => steps.findIndex((step) => step.classList.contains('is-active'));
   const answered = (step) => !!step.querySelector('input[type="radio"]:checked');
   const useGsap = () => motion.device === 'desktop' && !!motion.gsap && !motion.reduced;
+  const position = (index) => 'Question ' + (index + 1) + ' of ' + steps.length;
+  const announce = (text) => {
+    if (live) {
+      live.textContent = text;
+    }
+  };
+
+  function describeFlow() {
+    const hint = doc.createElement('p');
+    hint.className = 'u-sr-only';
+    hint.id = form.id ? form.id + '-flow-hint' : 'sf-quiz-flow-hint';
+    hint.textContent = 'Choosing an answer moves to the next question.';
+    form.prepend(hint);
+    steps.forEach((step, index) => {
+      const group = step.querySelector('[role="radiogroup"]');
+      if (group) {
+        const described = (group.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+        described.push(hint.id);
+        group.setAttribute('aria-describedby', described.join(' '));
+      }
+      const legend = step.querySelector('legend');
+      if (legend && !legend.querySelector('.js-quiz-position')) {
+        const label = doc.createElement('span');
+        label.className = 'u-sr-only js-quiz-position';
+        label.textContent = position(index) + '. ';
+        legend.prepend(label);
+      }
+    });
+    announce(position(Math.max(0, current())));
+  }
 
   function disarm() {
     clearTimeout(armTimer);
@@ -53,9 +83,7 @@ function initSteps(form, motion, cfg) {
       legend.setAttribute('tabindex', '-1');
       legend.focus({ preventScroll: true });
     }
-    if (live) {
-      live.textContent = 'Question ' + (index + 1) + ' of ' + steps.length;
-    }
+    announce(position(index));
     motion.refresh();
   }
 
@@ -119,6 +147,7 @@ function initSteps(form, motion, cfg) {
     disarm();
     armed = step;
     step.classList.add('is-armed');
+    announce('Answer saved. Next question in a moment; press any key to stay.');
     armTimer = setTimeout(() => {
       step.classList.remove('is-armed');
       armed = null;
@@ -171,18 +200,19 @@ function initSteps(form, motion, cfg) {
     arm(step, index);
   }
 
+  describeFlow();
   form.addEventListener('click', onAnchor, true);
   form.addEventListener('pointerup', onPointerUp, true);
-  form.addEventListener('pointerdown', onPointerDown, true);
-  form.addEventListener('keydown', disarm, true);
+  doc.addEventListener('pointerdown', onPointerDown, true);
+  doc.addEventListener('keydown', disarm, true);
   form.addEventListener('click', onChoiceClick);
   return {
     destroy() {
       disarm();
       form.removeEventListener('click', onAnchor, true);
       form.removeEventListener('pointerup', onPointerUp, true);
-      form.removeEventListener('pointerdown', onPointerDown, true);
-      form.removeEventListener('keydown', disarm, true);
+      doc.removeEventListener('pointerdown', onPointerDown, true);
+      doc.removeEventListener('keydown', disarm, true);
       form.removeEventListener('click', onChoiceClick);
     }
   };
