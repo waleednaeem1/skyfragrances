@@ -37,6 +37,9 @@ $navData = ['isActive' => $isActive, 'currentPath' => $currentPath, 'badges' => 
 <meta name="theme-color" content="#0A0A0A">
 <title><?= e($pageTitle) ?></title>
 <link rel="icon" href="<?= e(url('/favicon.ico')) ?>">
+<?php if (is_file(APP_ROOT . '/assets/css/critical.css')): ?>
+<link rel="stylesheet" href="<?= e(asset('css/critical.css')) ?>">
+<?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 </head>
