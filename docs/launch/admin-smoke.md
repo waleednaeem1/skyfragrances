@@ -6,7 +6,7 @@ Run: 2026-09-28 13:04–13:48 PKT · branch `main` · dev server `php -S 127.0.0
 
 ## 0. Precondition that was not true
 
-The `admin_users` row's hash **does not verify `Admin#Sky2026!`** — `admin_activity_log #68/#69` show an earlier run (2026-09-26 02:35:44) doing `password.fail` → `password.change` → `login.ok` and never restoring it. Resetting the shared admin's hash was not permitted in this session, so the smoke ran as a **temporary second account `smoke_admin`** (inserted directly, `admin_users #2`, deleted at the end). Every check below is identical for the real account. **Needs an owner action:** reset the `admin` password (recovery procedure in 05a §2.8 / C-64, or `UPDATE admin_users SET password_hash=…` with a cost-12 bcrypt) before hand-over; the dev DB currently has an unknown admin password.
+The `admin_users` row's hash **does not verify `<local-dev-admin-password>`** — `admin_activity_log #68/#69` show an earlier run (2026-09-26 02:35:44) doing `password.fail` → `password.change` → `login.ok` and never restoring it. Resetting the shared admin's hash was not permitted in this session, so the smoke ran as a **temporary second account `smoke_admin`** (inserted directly, `admin_users #2`, deleted at the end). Every check below is identical for the real account. **Needs an owner action:** reset the `admin` password (recovery procedure in 05a §2.8 / C-64, or `UPDATE admin_users SET password_hash=…` with a cost-12 bcrypt) before hand-over; the dev DB currently has an unknown admin password.
 
 ## 1. Login, lockout, dashboard
 

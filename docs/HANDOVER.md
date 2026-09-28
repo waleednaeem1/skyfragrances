@@ -204,7 +204,7 @@ Nothing has been committed; the owner of the repository decides what to commit.
 ## 9. Open items for the owner / developer
 
 1. **Shared dev database:** the `admin` account's password hash in `skyfragrances_dev` no longer
-   matches the documented `Admin#Sky2026!` (changed 2026-09-26, `admin_activity_log #68/#69`).
+   matches the documented `<local-dev-admin-password>` (changed 2026-09-26, `admin_activity_log #68/#69`).
    Resetting it was not permitted from this session. Reset with a cost-12 bcrypt `UPDATE` or the
    guide's recovery procedure. This does not affect production.
 2. Real hPanel screenshots for the guide (the spec asked for one per step; none were taken here
