@@ -42,8 +42,8 @@ void main() {
   float head = fract(uTime * uPulse.x + uIdx * 0.25);
   float d = vUv.x - head;
   float pulse = exp(-d * d * uPulse.y);
-  col = mix(col, mix(uGold, uAmber, uPulse.z), pulse * 0.5) * (1.0 + pulse * uPulse.w);
-  float a = smoothstep(0.0, 0.15, vUv.x) * smoothstep(1.0, 0.85, vUv.x) * sin(vUv.y * 3.14159265);
+  col = min(mix(col, mix(uGold, uAmber, uPulse.z), pulse * 0.5) * (1.0 + pulse * uPulse.w), uAmber * 1.15);
+  float a = smoothstep(0.0, 0.15, vUv.x) * smoothstep(1.0, 0.85, vUv.x) * pow(sin(vUv.y * 3.14159265), 1.8);
   a *= uFade * mix(1.0, uHaloAlpha, uHalo) * uGain;
   outColor = vec4(col * a, a);
 }`;
@@ -219,7 +219,7 @@ function spread(range, i, n) {
 
 export default function createRibbons(canvas, cfg, options) {
   const opts = options || {};
-  const gl = canvas.getContext('webgl2', { alpha: true, antialias: false, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: 'low-power', preserveDrawingBuffer: !!opts.preserve });
+  const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: 'low-power', preserveDrawingBuffer: !!opts.preserve });
   if (!gl) {
     return null;
   }

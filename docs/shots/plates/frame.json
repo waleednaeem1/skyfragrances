@@ -1,0 +1,31 @@
+{
+  "frame": {
+    "unit": 124.44444444444444,
+    "cx": 960,
+    "cy": 351.484375,
+    "heroTop": 29,
+    "heroH": 1036
+  },
+  "info": [
+    {
+      "letter": "a",
+      "clip": {
+        "x": 400,
+        "y": 71,
+        "width": 1120,
+        "height": 560
+      },
+      "file": "docs/shots/plates/plate-a-raw.png"
+    },
+    {
+      "letter": "b",
+      "clip": {
+        "x": 400,
+        "y": 71,
+        "width": 1120,
+        "height": 560
+      },
+      "file": "docs/shots/plates/plate-b-raw.png"
+    }
+  ]
+}

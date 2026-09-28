@@ -5429,7 +5429,7 @@
   html.sf-intro-calm .sf-intro,
   html.sf-intro-quick .sf-intro {
     display: block;
-    animation: sf-intro-failsafe 0.4s ease 2.6s forwards;
+    animation: sf-intro-failsafe 0.4s var(--ease-out) 2s forwards;
   }
   html.sf-intro-full .sf-intro,
   html.sf-intro-calm .sf-intro {
@@ -5535,17 +5535,17 @@
   .sf-intro.is-leaving {
     opacity: 0;
     transform: scale(1.03);
-    transition: opacity 0.34s ease, transform 0.34s ease;
+    transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
   }
   .sf-intro.is-leaving .sf-intro__mist {
     transform: scale(1.4);
     opacity: 0;
-    transition: transform 0.5s ease, opacity 0.4s ease;
+    transition: transform 0.5s var(--ease-out), opacity 0.4s var(--ease-out);
   }
   html.sf-intro-calm .sf-intro__mark-wrap { transition-duration: 0.3s; }
   html.sf-intro-calm .sf-intro__mist { display: none; }
-  html.sf-intro-quick .sf-intro { animation: sf-intro-quick 0.32s ease 0.05s forwards; }
-  html.sf-intro-calm .sf-intro { animation: sf-intro-quick 0.3s ease 1.15s forwards; }
+  html.sf-intro-quick .sf-intro { animation: sf-intro-quick 0.32s var(--ease-out) 0.05s forwards; }
+  html.sf-intro-calm .sf-intro { animation: sf-intro-quick 0.3s var(--ease-out) 1.15s forwards; }
   @keyframes sf-intro-quick { to { opacity: 0; visibility: hidden; } }
   @keyframes sf-intro-failsafe { to { opacity: 0; visibility: hidden; } }
   @keyframes sf-intro-mist { from { transform: translate(-6%, -4%) scale(1); } to { transform: translate(6%, 5%) scale(1.15); } }

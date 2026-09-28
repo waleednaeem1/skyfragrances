@@ -168,7 +168,7 @@ function bumpDrawerCount(SF, delayMs) {
 }
 
 function spray(origin, count, micro) {
-  const spread = micro.burstSpread || { minPx: 26, maxPx: 68, arcDeg: 150, delayMaxMs: 90, sizeMinPx: 4, sizeMaxPx: 8 };
+  const spread = micro.burstSpread || { minPx: 26, maxPx: 68, arcDeg: 100, delayMaxMs: 90, sizeMinPx: 4, sizeMaxPx: 8 };
   const layer = make('div', 'sf-burst');
   layer.setAttribute('aria-hidden', 'true');
   layer.style.left = origin.x + 'px';
@@ -267,7 +267,14 @@ function initCartAdded(micro, motion, SF, styled) {
     const origin = centerOf(button);
     const sprayCount = motion.device === 'low' ? micro.burst.low || 0 : desktop || motion.mobileHigh ? micro.burst.desktop : micro.burst.mobile;
     if (styled && sprayCount > 0) {
-      spray(origin, sprayCount, micro);
+      if (desktop) {
+        setTimeout(() => {
+          const thumb = doc.querySelector('.js-cart-drawer .cart-line:first-child img');
+          spray(thumb && doc.contains(thumb) ? centerOf(thumb) : origin, sprayCount, micro);
+        }, 160);
+      } else {
+        spray(origin, sprayCount, micro);
+      }
     }
     if (desktop && styled && motion.allows(motion.flags.cartFly)) {
       fly(origin, detail, micro, motion, SF);
@@ -401,8 +408,10 @@ function initCursor(cur, motion, SF) {
     yTo(event.clientY);
     const target = event.target;
     const native = within(target, cur.nativeInside);
+    const grown = !native && within(target, cur.targets);
     ring.classList.toggle('is-native', native);
-    ring.classList.toggle('is-grown', !native && within(target, cur.targets));
+    ring.classList.toggle('is-grown', grown);
+    ring.classList.toggle('is-visible', grown);
   }
   function onOut(event) {
     if (!event.relatedTarget) {

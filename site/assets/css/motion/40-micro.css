@@ -86,7 +86,6 @@
   }
 
   html.motion--desktop.sf-cursor-on .product-card__media,
-  html.motion--desktop.sf-cursor-on .product-card__link,
   html.motion--desktop.sf-cursor-on .collection-card__media,
   html.motion--desktop.sf-cursor-on .gallery__open {
     cursor: none;

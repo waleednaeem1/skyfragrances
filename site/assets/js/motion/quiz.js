@@ -92,10 +92,10 @@ function initSteps(form, motion, cfg) {
     const out = cfg.flipOut || { ms: 380, ease: 'power3.in', rotate: -90 };
     const inn = cfg.flipIn || { ms: 520, ease: 'expo.out', rotate: 90, overlapMs: 40 };
     gsap.set([leaving, entering], { transformPerspective: cfg.perspective || 1400 });
-    gsap.set(entering, { rotationY: dir * inn.rotate, autoAlpha: 0 });
+    gsap.set(entering, { rotationY: dir * inn.rotate, x: dir * 48, autoAlpha: 0 });
     gsap.timeline({ onComplete: () => finish(leaving, entering, index) })
-      .to(leaving, { rotationY: dir * out.rotate, autoAlpha: 0, duration: out.ms / 1000, ease: out.ease })
-      .to(entering, { rotationY: 0, autoAlpha: 1, duration: inn.ms / 1000, ease: inn.ease }, '>-' + (inn.overlapMs || 0) / 1000);
+      .to(leaving, { rotationY: dir * out.rotate, x: dir * -48, autoAlpha: 0, duration: out.ms / 1000, ease: out.ease })
+      .to(entering, { rotationY: 0, x: 0, autoAlpha: 1, duration: inn.ms / 1000, ease: inn.ease }, '>-' + (inn.overlapMs || 0) / 1000);
   }
 
   function slideCss(leaving, entering, dir, index) {

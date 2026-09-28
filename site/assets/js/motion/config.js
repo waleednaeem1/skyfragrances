@@ -119,24 +119,23 @@ window.SF_MOTION = {
     glFadeMs: 900,
     frame: { objectUnits: 0.9, plateUnits: 6, plateAspect: 2 },
     ribbons: {
-      count: 4,
-      radii: [0.05, 0.032, 0.022, 0.015],
+      count: 3,
+      radii: [0.038, 0.026, 0.018, 0.012],
       tubular: 72,
       radial: 6,
-      bounds: { x: [-6.2, 6.2], y: [-3.0, 0.9], z: [-0.95, 0.6], headline: { x: 3.0, y: [-2.5, -1.0] } },
+      bounds: { x: [-5.6, 5.6], y: [-5.3, 1.2], z: [-0.95, 0.6], headline: { x: 2.96, y: [-2.5, -0.88] } },
       paths: [
-        [[-6.2, -2.4, 0.3], [-3.6, -0.9, -0.2], [-1.2, 0.25, -0.7], [0.9, 0.45, -0.6], [3.4, -0.5, -0.1], [6.2, -2.0, 0.4]],
-        [[-6.2, -1.3, 0.6], [-3.8, 0.1, 0.1], [-1.4, 0.7, -0.4], [1.2, 0.2, -0.8], [3.8, -1.1, -0.3], [6.2, -2.8, 0.2]],
-        [[-6.2, -0.4, -0.4], [-3.2, 0.6, -0.6], [-0.6, -0.15, -0.9], [1.6, 0.8, -0.5], [4.0, 0.1, 0.0], [6.2, -1.1, 0.5]],
-        [[-6.2, -3.0, 0.1], [-4.0, -1.7, 0.4], [-1.6, -0.5, -0.2], [0.6, 0.0, -0.95], [2.8, 0.55, -0.4], [6.2, -0.3, -0.2]]
+        [[-5.6, 0.6, 0.3], [-4.0, -0.9, -0.1], [-3.4, -2.9, -0.5], [-2.0, -4.3, -0.6], [0.4, -5.05, -0.2], [2.8, -4.5, -0.1], [5.6, -2.0, 0.4]],
+        [[-5.6, -1.2, 0.6], [-4.2, -2.4, 0.2], [-2.6, -4.0, -0.3], [-0.4, -4.95, -0.8], [1.6, -5.1, -0.5], [3.6, -3.7, -0.3], [5.6, -1.0, 0.1]],
+        [[-5.6, 1.1, 0.1], [-4.4, -0.2, 0.4], [-3.5, -2.2, -0.2], [-1.8, -4.5, -0.9], [0.8, -5.15, -0.4], [3.0, -4.4, -0.3], [4.8, -3.0, -0.2], [5.6, -2.2, -0.1]]
       ],
       colors: { gold: '#C29C6E', amber: '#E0A45C' },
-      speed: [0.6, 1.6],
-      freq: [9, 15],
-      pulse: { speed: 0.06, spread: 40, mix: 0.5, gain: 0.5 },
-      breathe: { amp: 0.06, freq: 1.4, speed: 0.7 },
-      halo: { scale: 3.0, alpha: 0.14 },
-      gain: 1.0
+      speed: [0.22, 0.55],
+      freq: [4, 7],
+      pulse: { speed: 0.06, spread: 40, mix: 0.5, gain: 0.2 },
+      breathe: { amp: 0.1, freq: 1.4, speed: 0.7 },
+      halo: { scale: 4.5, alpha: 0.2 },
+      gain: 0.6
     },
     sprite: { size: 512, opacity: 0.35, y: 0, scale: 2.6 },
     camera: { fov: 50, z: 5.2 },
@@ -190,7 +189,7 @@ window.SF_MOTION = {
   },
   micro: {
     magnetic: { maxPx: 6, radius: 1.6, duration: 0.45, ease: 'power3.out', targets: '.btn--ghost, .btn--text, .section-header__link', never: '.btn--primary, .js-add-to-cart, .sticky-bar, .drawer, .modal, .js-quiz, form, [href*="/checkout"], [href*="/cart"]' },
-    cursor: { size: 22, grow: 3, fillOpacity: 0.3, follow: 0.18, targets: '.product-card, .collection-card, .gallery__open', nativeInside: '.drawer, .modal, .nav-mobile, input, select, textarea, button, .btn, .product-card__action' },
+    cursor: { size: 22, grow: 2, fillOpacity: 0.12, follow: 0.18, targets: '.product-card, .collection-card, .gallery__open', nativeInside: '.drawer, .modal, .nav-mobile, input, select, textarea, button, .btn, .product-card__action' },
     burst: { desktop: 14, mobile: 8, low: 0, ms: 420, ease: 'power3.out' },
     flight: { size: 28, ms: 400, ease: 'power3.in' },
     tick: { ms: 900, ease: 'expo.out', targets: '.collection-card__count, .stars__count, [data-tick], [data-countup]', never: '.price__now, [data-price-now], [data-sticky-price], .quiz-match, [role="status"], [aria-live]', settleMs: 4000 },
@@ -200,9 +199,9 @@ window.SF_MOTION = {
   quiz: {
     undoMs: 600,
     pointerWindowMs: 400,
-    flipOut: { ms: 380, ease: 'power3.in', rotate: -90 },
-    flipIn: { ms: 520, ease: 'expo.out', rotate: 90, overlapMs: 40 },
-    perspective: 1400,
+    flipOut: { ms: 380, ease: 'power3.in', rotate: -34 },
+    flipIn: { ms: 520, ease: 'expo.out', rotate: 34, overlapMs: 40 },
+    perspective: 2600,
     slide: { ms: 320, x: 24, fallbackMs: 400 },
     result: { scale: 1.08, veilMs: 400, notesStaggerMs: 60, maxScore: 33, holdMs: 450, turnMs: 900, notesAtMs: 1250, mobileAtMs: 600, imageWaitMs: 1500, tick: { ms: 900, lateMs: 400 } }
   },
@@ -216,17 +215,17 @@ window.SF_MOTION = {
     restore: { hashRealign: true, settleMs: 80, windowMs: 2500 }
   },
   intro: {
-    particles: { desktop: 680, mobile: 260 },
+    particles: { desktop: 520, mobile: 260 },
     convergeMs: 1250,
-    markInAt: 1000,
-    shimmerAt: 1220,
-    tagAt: 1280,
-    dissolveAt: 1780,
-    dissolveMs: 340,
+    markInAt: 950,
+    shimmerAt: 1150,
+    tagAt: 1200,
+    dissolveAt: 1600,
+    dissolveMs: 300,
     passThroughAt: 0.8,
     mobileScale: 0.86,
     calm: { markInMs: 300, holdMs: 520, fadeMs: 300 },
-    failsafeMs: 2600,
+    failsafeMs: 2000,
     guardMs: 800
   }
 };
