@@ -1,0 +1,63 @@
+@layer motion {
+  :root {
+    --sf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --sf-ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
+    --sf-ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+    --sf-dur-reveal: 600ms;
+    --sf-reveal-y: 18px;
+    --sf-hero-clip: 1100ms;
+    --sf-hero-sweep: 900ms;
+    --sf-hero-actions: 400ms;
+    --sf-hero-delay-mobile: 300ms;
+    --sf-hero-delay-desktop: 600ms;
+    --sf-plate-drift: 14s;
+    --sf-plate-fade: 12s;
+    --sf-fan-rotate: 16deg;
+    --sf-fan-rise: 24px;
+    --sf-card-sweep: 700ms;
+    --sf-story-hue: 900ms;
+    --sf-story-hue-mobile: 300ms;
+    --sf-quiz-slide: 320ms;
+    --sf-veil: 200ms;
+    --sf-veil-failsafe: 900ms;
+    --sf-underline: 280ms;
+  }
+  html.js .sf-reveal.sf-reveal--gsap,
+  html.js .sf-reveal--stagger.sf-reveal--gsap > * {
+    transition: none;
+    will-change: auto;
+  }
+  .sf-layer,
+  .sf-plate,
+  .sf-veil,
+  .sf-cursor,
+  .sf-spray {
+    pointer-events: none;
+    user-select: none;
+  }
+  html.lenis,
+  html.lenis body {
+    height: auto;
+    scroll-behavior: auto;
+  }
+  html.lenis:not(.lenis-autoToggle).lenis-stopped {
+    overflow: clip;
+  }
+  html.lenis [data-lenis-prevent],
+  html.lenis [data-lenis-prevent-wheel],
+  html.lenis [data-lenis-prevent-touch] {
+    overscroll-behavior: contain;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.sf-reduce .sf-layer,
+    html.sf-reduce .sf-plate {
+      animation: none;
+      transform: none;
+    }
+    html.sf-reduce .sf-veil,
+    html.sf-reduce .sf-cursor,
+    html.sf-reduce .sf-spray {
+      display: none;
+    }
+  }
+}

@@ -1,0 +1,136 @@
+@layer motion {
+  :root {
+    --sf-story-tilt: 900ms;
+    --sf-story-notes: 700ms;
+    --sf-story-notes-y: 16px;
+    --sf-story-glow-alpha: 0.22;
+    --sf-story-wash-alpha: 0.06;
+  }
+  .story {
+    position: relative;
+    isolation: isolate;
+    --sf-story-rgb: 212 176 132;
+  }
+  .story__container {
+    position: relative;
+    z-index: 1;
+  }
+  .story__glow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    background:
+      radial-gradient(ellipse 60% 48% at 50% 42%, rgb(var(--sf-story-rgb) / var(--sf-story-glow-alpha)) 0%, rgb(var(--sf-story-rgb) / 0.05) 48%, rgb(var(--sf-story-rgb) / 0) 74%),
+      linear-gradient(180deg, rgb(var(--sf-story-rgb) / 0) 0%, rgb(var(--sf-story-rgb) / var(--sf-story-wash-alpha)) 55%, rgb(var(--sf-story-rgb) / 0) 100%);
+    transition: opacity var(--sf-story-hue) var(--sf-ease-silk);
+  }
+  .story__glow.is-on { opacity: 1; }
+  .story__glow.is-dip,
+  .story__halo.is-dip {
+    opacity: 0;
+    transition-duration: var(--sf-story-hue-mobile);
+  }
+  .story__figure { display: none; }
+  html.motion--desktop .story--gsap .pyramid__tier:not(.is-seen) .pyramid__label,
+  html.motion--desktop .story--gsap .pyramid__tier:not(.is-seen) .pyramid__note {
+    opacity: 0;
+  }
+  html.motion--desktop .story--gsap .pyramid__tier.is-seen .pyramid__label,
+  html.motion--desktop .story--gsap .pyramid__tier.is-seen .pyramid__note {
+    opacity: 1;
+  }
+  @media (max-width: 1023px) {
+    .story__glow--b { display: none; }
+  }
+  @media (min-width: 1024px) {
+    .story__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: var(--sp-8);
+      align-items: start;
+    }
+    .story__figure {
+      display: block;
+      position: sticky;
+      top: calc(var(--header-h-solid) + var(--sp-6));
+      z-index: 0;
+    }
+    .story__stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      height: calc(100vh - var(--header-h-solid) - var(--sp-9));
+      max-height: 40rem;
+      perspective: 1200px;
+    }
+    .story__tilt {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(100%, 22rem);
+      height: 100%;
+      transform-style: preserve-3d;
+    }
+    .story.is-active .story__tilt { will-change: transform; }
+    .story__halo {
+      position: absolute;
+      inset: -6% -18%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(ellipse 52% 46% at 50% 50%, rgb(var(--sf-story-rgb) / 0.30) 0%, rgb(var(--sf-story-rgb) / 0.08) 45%, rgb(var(--sf-story-rgb) / 0) 72%);
+      transition: opacity var(--sf-story-hue) var(--sf-ease-silk);
+    }
+    .story__halo.is-on { opacity: 1; }
+    .story__bottle {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      -webkit-mask-image: radial-gradient(ellipse 62% 72% at 50% 50%, #000 52%, rgb(0 0 0 / 0) 98%);
+      mask-image: radial-gradient(ellipse 62% 72% at 50% 50%, #000 52%, rgb(0 0 0 / 0) 98%);
+    }
+    .story .pyramid { gap: 0; }
+    .story .pyramid__tier {
+      --tier-w: 100%;
+      justify-items: start;
+      text-align: start;
+      align-content: center;
+      min-height: 30vh;
+      padding-block: var(--sp-6);
+    }
+    .story .pyramid__notes { justify-content: flex-start; }
+    .story .pyramid__label {
+      position: relative;
+      padding-bottom: 0.5rem;
+    }
+    .story .pyramid__label::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 1.5rem;
+      height: 1px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--sf-story-hue) var(--sf-ease-out);
+    }
+    .story[data-note="top"] .pyramid__tier--top .pyramid__label::after,
+    .story[data-note="heart"] .pyramid__tier--heart .pyramid__label::after,
+    .story[data-note="base"] .pyramid__tier--base .pyramid__label::after { transform: scaleX(1); }
+    .story--no-figure .story__layout { grid-template-columns: minmax(0, 1fr); }
+    .story--no-figure .pyramid__tier { min-height: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.sf-reduce .story__glow,
+    html.sf-reduce .story__halo { transition: none; }
+    html.sf-reduce .story__tilt { transform: none; }
+    html.sf-reduce .story .pyramid__label::after { transform: scaleX(1); }
+  }
+}

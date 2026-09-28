@@ -1,0 +1,12 @@
+/*!
+ * GSAP 3.13.0
+ * https://gsap.com
+ * 
+ * @license Copyright 2025, GreenSock. All rights reserved.
+ * Subject to the terms at https://gsap.com/standard-license.
+ * @author: Jack Doyle, jack@greensock.com
+ */
+
+Package: gsap@3.13.0 (npm), files dist/gsap.min.js and dist/ScrollTrigger.min.js, tarball sha1 597d4e019a2bb487785387d91296adebf92db9dd.
+package.json license field: Standard 'no charge' license: https://gsap.com/standard-license.
+GSAP 3.13 is free for all use, including commercial, under the GSAP Standard License at the URL above (Webflow, 2025). No LICENSE file ships in the npm package; the licence is the URL and the header notice reproduced above.

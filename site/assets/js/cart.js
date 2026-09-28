@@ -168,12 +168,11 @@
     }
     SF.setLoading(button, true);
     return request('/api/cart/add', { size_id: sizeId, qty: qty || 1 }).then(function (result) {
-      SF.setLoading(button, false);
-      if (result && result.ok) {
-        if (source !== 'undo') {
-          openDrawer(button);
-        }
+      if (result && result.ok && source !== 'undo') {
+        doc.dispatchEvent(new CustomEvent('sf:cart-added', { detail: { button: button, form: button ? button.form || button.closest('form') : null, count: parseInt(result.data && result.data.count, 10) || 0, source: source || 'form' } }));
+        openDrawer(button);
       }
+      SF.setLoading(button, false);
       return result;
     });
   }

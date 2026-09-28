@@ -20,6 +20,9 @@ $heroOpacity = max(0, min(100, (int) ($hero['overlay_opacity'] ?? 60))) / 100;
 $heroCtaUrl = trim((string) ($hero['cta_url'] ?? '/shop'));
 $heroSecondaryUrl = trim((string) ($hero['secondary_url'] ?? '/scent-finder'));
 $heroHref = static fn (string $path): string => preg_match('#^https?://#i', $path) ? $path : url($path === '' ? '/shop' : $path);
+$heroObject = trim((string) setting('hero_object', ''));
+$heroObjectUrl = $heroObject !== '' && !str_contains($heroObject, '..') ? (preg_match('#^https?://#i', $heroObject) ? $heroObject : url('/' . ltrim($heroObject, '/'))) : asset('img/brand/monogram-transparent-256.webp');
+$heroTrust = trim((string) ($hero['trust'] ?? ''));
 $firstSectionId = $collections !== [] ? 'collections' : ($bestSellers !== [] ? 'best-sellers' : 'why-us');
 $trustItems = [
     ['droplet', 'Long-Lasting Fragrance', 'Eau de parfum concentration that stays from the morning commute to the last conversation of the night.'],
@@ -28,7 +31,7 @@ $trustItems = [
     ['refresh', 'Easy Exchange', 'Not the scent you hoped for? Sealed bottles are exchanged within seven days, no questions.'],
 ];
 ?>
-<section class="hero<?= $heroHasImage ? '' : ' hero--empty' ?>" aria-labelledby="hero-title">
+<section class="hero<?= $heroHasImage ? '' : ' hero--empty' ?>" aria-labelledby="hero-title" data-motion="hero">
 <?php if ($heroHasImage): ?>
   <div class="hero__media">
     <picture>
@@ -41,16 +44,32 @@ $trustItems = [
 <?php endif; ?>
   <div class="hero__scrim" aria-hidden="true"></div>
   <div class="hero__body">
+    <div class="hero__object" data-motion-slot="object">
+      <img src="<?= e($heroObjectUrl) ?>" alt="" width="256" height="256" decoding="async">
+    </div>
     <p class="hero__eyebrow hero__enter" style="--i:0">Eau de Parfum · Made for Pakistan</p>
-    <h1 class="hero__title hero__enter text-gold-grad" id="hero-title" style="--i:1"><?= e((string) ($hero['heading'] ?? 'More Than Just A Scent')) ?></h1>
+    <h1 class="hero__title text-gold-grad" id="hero-title"><?= e((string) ($hero['heading'] ?? 'More Than Just A Scent')) ?></h1>
 <?php if (trim((string) ($hero['subheading'] ?? '')) !== ''): ?>
     <p class="hero__sub hero__enter" style="--i:2"><?= e((string) $hero['subheading']) ?></p>
 <?php endif; ?>
-    <div class="hero__actions hero__enter" style="--i:3">
+    <div class="hero__actions">
       <a class="btn btn--primary" href="<?= e($heroHref($heroCtaUrl)) ?>"><span class="btn__label"><?= e((string) ($hero['cta_label'] ?? 'Shop The Collection')) ?></span></a>
 <?php if (trim((string) ($hero['secondary_label'] ?? '')) !== ''): ?>
       <a class="btn btn--text" href="<?= e($heroHref($heroSecondaryUrl)) ?>"><span class="btn__label"><?= e((string) $hero['secondary_label']) ?></span> <?php partial('icon.php', ['name' => 'arrow-right', 'size' => 16, 'class' => 'btn__icon']); ?></a>
 <?php endif; ?>
+    </div>
+<?php if ($heroTrust !== ''): ?>
+    <p class="hero__trust"><?= e($heroTrust) ?></p>
+<?php endif; ?>
+    <div class="hero__glow" aria-hidden="true" data-plate-b="<?= e(asset('img/motion/ribbons-b-540.webp')) ?>" data-plate-b-desktop="<?= e(asset('img/motion/ribbons-b-960.webp')) ?>">
+      <picture>
+        <source media="(min-width: 1024px)" srcset="<?= e(asset('img/motion/ribbons-glow-960.webp')) ?>">
+        <img class="hero__plate hero__plate--glow sf-plate" src="<?= e(asset('img/motion/ribbons-glow-540.webp')) ?>" alt="" width="540" height="270" loading="lazy" fetchpriority="low" decoding="async">
+      </picture>
+      <picture>
+        <source media="(min-width: 1024px)" srcset="<?= e(asset('img/motion/ribbons-a-960.webp')) ?>">
+        <img class="hero__plate hero__plate--a sf-plate" src="<?= e(asset('img/motion/ribbons-a-540.webp')) ?>" alt="" width="540" height="270" loading="lazy" fetchpriority="low" decoding="async">
+      </picture>
     </div>
   </div>
   <a class="hero__cue js-hero-cue" href="#<?= e($firstSectionId) ?>" aria-label="Scroll to the collections"><?php partial('icon.php', ['name' => 'chevron-down', 'size' => 22]); ?></a>
@@ -59,11 +78,12 @@ $trustItems = [
 <section class="section" id="collections" aria-labelledby="collections-title">
   <div class="container">
     <?php partial('section-header.php', ['eyebrow' => 'Curated', 'title' => 'Shop by Collection', 'titleId' => 'collections-title', 'sub' => 'Five skies, five moods. Each collection is a time of day, bottled.', 'linkHref' => url('/collections'), 'linkLabel' => 'All collections']); ?>
-    <div class="rail grid--mosaic sf-reveal sf-reveal--stagger">
+    <div class="rail grid--mosaic sf-reveal sf-reveal--stagger" data-motion="cards">
 <?php foreach ($collections as $index => $collection): ?>
       <?php partial('collection-card.php', ['collection' => $collection, 'variant' => $index === 0 ? 'large' : '', 'sizes' => $index === 0 ? '(min-width: 768px) 50vw, 78vw' : '(min-width: 768px) 25vw, 78vw']); ?>
 <?php endforeach; ?>
     </div>
+    <div class="sf-rail-progress" aria-hidden="true"></div>
   </div>
 </section>
 <?php endif; ?>
@@ -71,11 +91,12 @@ $trustItems = [
 <section class="section section--divided" id="best-sellers" aria-labelledby="best-sellers-title">
   <div class="container">
     <?php partial('section-header.php', ['eyebrow' => 'Loved most', 'title' => 'Best Sellers', 'titleId' => 'best-sellers-title', 'sub' => 'The bottles our customers finish, then order again.', 'linkHref' => url('/best-sellers'), 'linkLabel' => 'View all']); ?>
-    <div class="rail rail--cards sf-reveal sf-reveal--stagger">
+    <div class="rail rail--cards sf-reveal sf-reveal--stagger" data-motion="cards">
 <?php foreach ($bestSellers as $index => $product): ?>
       <?php partial('product-card.php', ['product' => $product, 'eager' => $index < 2]); ?>
 <?php endforeach; ?>
     </div>
+    <div class="sf-rail-progress" aria-hidden="true"></div>
   </div>
 </section>
 <?php endif; ?>
@@ -83,7 +104,7 @@ $trustItems = [
 <section class="section section--divided" id="new-arrivals" aria-labelledby="new-arrivals-title">
   <div class="container">
     <?php partial('section-header.php', ['eyebrow' => 'Just landed', 'title' => 'New Arrivals', 'titleId' => 'new-arrivals-title', 'sub' => 'The latest compositions to leave the studio.', 'linkHref' => url('/new-arrivals'), 'linkLabel' => 'View all']); ?>
-    <div class="grid grid--products sf-reveal sf-reveal--stagger">
+    <div class="grid grid--products sf-reveal sf-reveal--stagger" data-motion="cards">
 <?php foreach ($newArrivals as $index => $product): ?>
 <?php if ($index >= 4): ?>
       <div class="u-hide-md-down"><?php partial('product-card.php', ['product' => $product]); ?></div>

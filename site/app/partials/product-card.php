@@ -153,7 +153,7 @@ $imageSizes = (string) ($sizes ?? '(min-width: 1200px) 22vw, (min-width: 768px) 
 $jpgSrcset = product_card_image_srcset($imageSet, 'jpg', ['thumb', 'card']);
 $webpSrcset = product_card_image_srcset($imageSet, 'webp', ['thumb', 'card']);
 ?>
-<article class="<?= e($cardClasses) ?>">
+<article class="<?= e($cardClasses) ?>" data-motion-card="product">
 <?php if ($imageSet !== null): ?>
   <a class="product-card__media" href="<?= e($productUrl) ?>" tabindex="-1" aria-hidden="true">
     <picture>
