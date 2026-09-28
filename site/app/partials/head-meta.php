@@ -66,11 +66,6 @@ foreach (['jost-variable.woff2', 'cormorant-garamond-variable.woff2'] as $fontFi
 }
 $googleVerification = (string) setting('google_verification', '');
 $bodyClasses = preg_split('/\s+/', (string) ($head['body_class'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-$motionPage = array_intersect(['home', 'listing', 'collections', 'product', 'quiz'], $bodyClasses) !== [];
-$motionVersion = 0;
-foreach (array_merge(glob(APP_ROOT . '/assets/js/motion/*.js') ?: [], glob(APP_ROOT . '/assets/js/vendor/*.js') ?: []) as $motionFile) {
-    $motionVersion = max($motionVersion, (int) @filemtime($motionFile));
-}
 $heroPreloads = [];
 if (in_array('home', $bodyClasses, true)) {
     foreach ([['hero_image_mobile', '(max-width: 767px)'], ['hero_image_desktop', '(min-width: 768px)']] as [$heroKey, $heroMedia]) {
@@ -116,11 +111,7 @@ if (in_array('home', $bodyClasses, true)) {
 <script src="<?= e(asset('js/motion/config.js')) ?>"></script>
 <script src="<?= e(asset('js/intro.js')) ?>"></script>
 <link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
-<?php if ($motionPage): ?>
-<link id="sf-motion-css" rel="stylesheet" href="<?= e(asset('css/motion.css')) ?>">
-<?php endif; ?>
 <script>document.documentElement.classList.add('js');</script>
-<script type="module" src="<?= e(asset('js/motion/core.js')) ?>" defer data-motion-v="<?= e((string) $motionVersion) ?>"></script>
 <?php foreach ($jsonld as $block): ?>
 <script type="application/ld+json"><?= ejs($block) ?></script>
 <?php endforeach; ?>

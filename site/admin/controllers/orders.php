@@ -130,19 +130,17 @@ function adm_orders_bulk_shipped(array $orders): never
     foreach ($orders as $order) {
         if (!in_array($order['status'], ['confirmed', 'packing'], true)) {
             $blocking[] = $order['order_number'] . ' is ' . strtolower(adm_order_status_label((string) $order['status']));
-        } elseif (trim((string) ($order['tracking_number'] ?? '')) === '') {
-            $blocking[] = $order['order_number'] . ' has no tracking number';
         }
     }
     if ($blocking !== []) {
-        flash('error', 'Nothing was shipped. ' . implode('; ', array_slice($blocking, 0, 6)) . (count($blocking) > 6 ? '…' : '') . '. Add tracking on each order first, then try again.');
+        flash('error', 'Nothing was shipped. ' . implode('; ', array_slice($blocking, 0, 6)) . (count($blocking) > 6 ? '…' : '') . '. Move them to Confirmed or Packing first, then try again.');
         redirect('/admin/orders', 303);
     }
     $updated = 0;
     foreach ($orders as $order) {
         $result = order_transition((int) $order['id'], 'shipped', adm_actor(), '', ['courier_name' => $courier, 'tracking_number' => $order['tracking_number'], 'tracking_url' => $order['tracking_url']]);
         if ($result['ok']) {
-            adm_order_log($order, 'order.status_change', 'Status changed from ' . adm_order_status_label((string) $result['from']) . ' to Shipped (' . $courier . ' ' . $order['tracking_number'] . ', bulk)', ['status' => $result['from'], 'courier_name' => $order['courier_name']], ['status' => 'shipped', 'courier_name' => $courier]);
+            adm_order_log($order, 'order.status_change', 'Status changed from ' . adm_order_status_label((string) $result['from']) . ' to Shipped (' . trim($courier . ' ' . (string) $order['tracking_number']) . ', bulk)', ['status' => $result['from'], 'courier_name' => $order['courier_name']], ['status' => 'shipped', 'courier_name' => $courier]);
             $updated++;
         }
     }

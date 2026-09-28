@@ -332,13 +332,13 @@ function adm_order_post_shipping(array $order): never
             flash('error', "That status change isn't allowed. The order is currently " . adm_order_status_label((string) $order['status']) . '.');
             redirect(adm_order_path($order), 303);
         }
-        if ($input['courier_name'] === '' || $input['tracking_number'] === '') {
-            flash('error', 'Add the courier name and tracking number before marking the order shipped.');
+        if ($input['courier_name'] === '') {
+            flash('error', 'Add the courier name before marking the order shipped. The tracking number can be added later.');
             redirect(adm_order_path($order), 303);
         }
         $result = order_transition((int) $order['id'], 'shipped', adm_actor(), '', $input);
         if ($result['ok']) {
-            adm_order_log($order, 'order.status_change', 'Status changed from ' . adm_order_status_label((string) $result['from']) . ' to Shipped (' . $input['courier_name'] . ' ' . $input['tracking_number'] . ')', ['status' => $result['from'], 'courier_name' => $order['courier_name'], 'tracking_number' => $order['tracking_number']], ['status' => 'shipped', 'courier_name' => $input['courier_name'], 'tracking_number' => $input['tracking_number']]);
+            adm_order_log($order, 'order.status_change', 'Status changed from ' . adm_order_status_label((string) $result['from']) . ' to Shipped (' . trim($input['courier_name'] . ' ' . $input['tracking_number']) . ')', ['status' => $result['from'], 'courier_name' => $order['courier_name'], 'tracking_number' => $order['tracking_number']], ['status' => 'shipped', 'courier_name' => $input['courier_name'], 'tracking_number' => $input['tracking_number']]);
         }
         adm_order_flash_result($result, 'Order marked Shipped. Send the tracking on WhatsApp below.');
         redirect(adm_order_path($order), 303);

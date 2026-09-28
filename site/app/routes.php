@@ -35,6 +35,6 @@ return [
     ['name' => 'scent.show', 'method' => 'GET', 'path' => '/scent/{slug}', 'controller' => 'listing.php', 'view' => 'listing.php', 'where' => ['slug' => 'slug'], 'preset' => ['family' => '{slug}'], 'body_class' => 'listing scent'],
     ['name' => 'product.show', 'method' => 'GET', 'path' => '/product/{slug}', 'controller' => 'product.php', 'view' => 'product.php', 'where' => ['slug' => 'slug'], 'body_class' => 'product'],
     ['name' => 'review.store', 'method' => 'POST', 'path' => '/product/{slug}/review', 'controller' => 'review-submit.php', 'view' => null, 'where' => ['slug' => 'slug'], 'robots' => 'noindex,follow', 'body_class' => 'product'],
-    ['name' => 'order.show', 'method' => 'GET', 'path' => '/order/{order}', 'controller' => 'confirmation.php', 'view' => 'confirmation.php', 'where' => ['order' => 'order'], 'robots' => 'noindex,follow', 'body_class' => 'confirmation'],
+    ['name' => 'order.show', 'method' => 'GET|POST', 'path' => '/order/{order}', 'controller' => 'confirmation.php', 'view' => 'confirmation.php', 'where' => ['order' => 'order'], 'robots' => 'noindex,follow', 'body_class' => 'confirmation'],
     ['name' => 'notfound', 'method' => 'GET|POST', 'path' => '*', 'controller' => 'notfound.php', 'view' => '404.php', 'robots' => 'noindex,follow', 'body_class' => 'error'],
 ];

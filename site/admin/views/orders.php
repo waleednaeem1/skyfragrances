@@ -147,7 +147,7 @@ foreach ($orders as $o) {
 <?php foreach ($bulkShip as $bs): ?>
     <input type="hidden" name="ids[]" value="<?= e((string) $bs['id']) ?>">
 <?php endforeach; ?>
-    <p class="adm-note">One courier for all: <?php foreach ($bulkShip as $i => $bs): ?><?= $i > 0 ? ', ' : '' ?><span class="adm-mono"><?= e((string) $bs['order_number']) ?></span><?= trim((string) $bs['tracking_number']) === '' ? ' <span class="adm-badge adm-badge--red adm-badge--sm">no tracking</span>' : '' ?><?php endforeach; ?>. Tracking numbers are never set in bulk — every order must already have one saved.</p>
+    <p class="adm-note">One courier for all: <?php foreach ($bulkShip as $i => $bs): ?><?= $i > 0 ? ', ' : '' ?><span class="adm-mono"><?= e((string) $bs['order_number']) ?></span><?= trim((string) $bs['tracking_number']) === '' ? ' <span class="adm-badge adm-badge--sm">no tracking yet</span>' : '' ?><?php endforeach; ?>. Tracking numbers are never set in bulk — add them on each order afterwards.</p>
     <?php partial_admin('field.php', ['type' => 'text', 'name' => 'courier_name', 'id' => 'bulk-courier', 'label' => 'Courier', 'value' => '', 'required' => true, 'maxlength' => 60, 'attr' => ['list' => 'bulk-courier-list', 'autocomplete' => 'off']]); ?>
     <datalist id="bulk-courier-list"><?php foreach (ADM_ORDER_COURIERS as $courier): ?><option value="<?= e($courier) ?>"></option><?php endforeach; ?></datalist>
     <div class="adm-cluster">
