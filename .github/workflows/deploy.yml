@@ -34,7 +34,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: site/
-          server-dir: ${{ vars.FTP_SERVER_DIR || 'public_html/' }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR || vars.FTP_SERVER_DIR || 'public_html/' }}
           state-name: .deploy-state.json
           dangerous-clean-slate: false
           exclude: |
