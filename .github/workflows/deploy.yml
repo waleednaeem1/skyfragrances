@@ -15,7 +15,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -25,26 +25,39 @@ jobs:
           find site -name '*.php' -not -path '*/vendor/*' -print0 | xargs -0 -n1 php -l > /dev/null
           echo "PHP syntax OK"
 
-      - name: Upload changed files to public_html
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftps
-          port: 21
-          local-dir: site/
-          server-dir: ${{ secrets.FTP_SERVER_DIR || vars.FTP_SERVER_DIR || 'public_html/' }}
-          state-name: .deploy-state.json
-          dangerous-clean-slate: false
-          exclude: |
-            **/.git*
-            **/.git*/**
-            config.php
-            config.sample.php
-            install.php
-            dev/**
-            storage/**
-            uploads/**
-            **/.DS_Store
-            cj.txt
+      - name: Prepare the SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.SSH_PORT }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Sync changed files into public_html over SSH
+        env:
+          TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT }}
+          REMOTE_DIR: ${{ secrets.SSH_REMOTE_DIR || 'domains/skyfragrances.com/public_html' }}
+        run: |
+          set -e
+          rsync -rlptz --checksum --omit-dir-times --no-perms \
+            -e "ssh -p $PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes" \
+            --exclude 'config.php' \
+            --exclude 'config.sample.php' \
+            --exclude 'install.php' \
+            --exclude 'dev/' \
+            --exclude 'storage/' \
+            --exclude 'uploads/' \
+            --exclude 'cj.txt' \
+            --exclude '.DS_Store' \
+            --exclude '.git*' \
+            site/ "$TARGET:$REMOTE_DIR/"
+          ssh -p "$PORT" -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$TARGET" \
+            "cd '$REMOTE_DIR' && rm -f storage/cache/settings.json storage/cache/sitemap.xml 2>/dev/null; ls -la index.php assets/css/motion.css assets/js/motion/core.js | awk '{print \$5, \$9}'"
+
+      - name: Verify the live site
+        run: |
+          set -e
+          code=$(curl -s -o /tmp/home.html -w '%{http_code}' https://skyfragrances.com/)
+          echo "home HTTP $code"
+          test "$code" = "200"
+          grep -q 'motion/core.js' /tmp/home.html && echo "motion layer served" || { echo "motion layer NOT served"; exit 1; }
