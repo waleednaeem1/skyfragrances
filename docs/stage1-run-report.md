@@ -12,7 +12,7 @@ MySQL 9.3.0. Everything below was exercised with `curl` against `http://127.0.0.
 | DB reset | `DROP DATABASE skyfragrances_dev; CREATE DATABASE … utf8mb4_unicode_ci` | empty database |
 | Stale state | removed a corrupted `config.php`, an empty `storage/cache/settings.php`, a stray session file | clean tree |
 | Server | `php -d display_startup_errors=0 -S 127.0.0.1:8088 dev/router.php` (PID recorded, killed at the end) | `GET /` → 503 "not configured yet" before install, as designed |
-| Install | GET step 1 → GET step 2 (CSRF `_token`) → POST `db_save` → GET step 3 → POST `install` (admin `admin` / `Admin#Sky2026!`, seed on) → GET step 4 | 54 schema + 235 seed statements, admin created, `site_indexable=0` (host is not skyfragrances.com), `storage/.installed` written |
+| Install | GET step 1 → GET step 2 (CSRF `_token`) → POST `db_save` → GET step 3 → POST `install` (admin `admin` / `<local-dev-admin-password>`, seed on) → GET step 4 | 54 schema + 235 seed statements, admin created, `site_indexable=0` (host is not skyfragrances.com), `storage/.installed` written |
 | Re-run | `GET /install.php` with the install cookie and with a fresh cookie; `GET /install.php?step=3` fresh | Finish/Delete panel with the cookie; "Sky Fragrances is already installed — delete install.php" without it; step 3 is not reachable |
 | Routes | every entry in `app/routes.php` and `app/routes-admin.php` (tables below) | see tables |
 | Admin auth | wrong password, correct login, logged-in sweep, logout, 6 wrong passwords, correct password while locked | see below |
@@ -157,7 +157,7 @@ plus the admin row; `site_indexable` is `0`.
 Applied after the hosting + security reviews of the stage-1 tree. Every file below was re-linted
 (`php -l`, 93 files, clean) and the smoke run repeated end to end: database dropped and recreated,
 `php -S 127.0.0.1:8088 -t site site/dev/router.php`, `install.php` driven with `curl`
-(`admin` / `Admin#Sky2026!`, seed on), every storefront and admin route re-fetched, then the server
+(`admin` / `<local-dev-admin-password>`, seed on), every storefront and admin route re-fetched, then the server
 was stopped and all test rows, session files, caches and logs removed. The database holds exactly
 the seed plus the admin row again; `robots.txt` was restored to the canonical `Sitemap:` line after
 the local install rewrote it.

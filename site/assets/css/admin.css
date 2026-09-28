@@ -367,7 +367,7 @@ p { margin: 0 0 var(--sp-3); }
 
 /* -- §8 · BREAKPOINTS ---------------------------------------- */
 @media (min-width: 768px) {
-  .adm-table-wrap { display: block; overflow-x: auto; }
+  .adm-table-wrap { display: block; overflow-x: auto; position: relative; }
   .adm-cards { display: none; }
   .adm-page__actions { width: auto; }
   .adm-page__actions .adm-btn { flex: 0 0 auto; }

@@ -11,4 +11,4 @@ Disallow: /api/
 Disallow: /scent-finder/result
 Disallow: /*?sort=
 Disallow: /*?page=
-Sitemap: http://127.0.0.1:8088/sitemap.xml
+Sitemap: https://skyfragrances.com/sitemap.xml

@@ -22,7 +22,7 @@ browser would (cookie jar, `_token` from each form, one-time key read from `stor
 |---|---|---|
 | 1 | `GET /install.php?step=1` | 200, requirements page |
 | 2 | `GET ?step=2` → `POST ?step=2` (`action=db_save`, DB 127.0.0.1:3306, base_url `http://127.0.0.1:8088`, no SMTP) | 303 → step 3, `config.php` written (`env=development`) |
-| 3 | `GET ?step=3` → `POST ?step=3` (`action=install`, `admin` / `Admin#Sky2026!`, seed on) | 200 "Finished": **27 schema + 234 seed statements, 0 errors**; `storage/.installed` written; `config.php` chmod 0400 |
+| 3 | `GET ?step=3` → `POST ?step=3` (`action=install`, `admin` / `<local-dev-admin-password>`, seed on) | 200 "Finished": **27 schema + 234 seed statements, 0 errors**; `storage/.installed` written; `config.php` chmod 0400 |
 | 4 | — | install.php had **deleted itself** (C-47) so `?step=4` was 404 — see fix 1 |
 
 The DB was fresh (`resume` stage), so the `replace_partial` checkbox was not rendered and not needed.

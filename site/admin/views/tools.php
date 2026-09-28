@@ -147,4 +147,4 @@ partial_admin('table.php', [
   </ul>
 <?php endif; ?>
 </div>
-<p class="adm-note">Locked out with no email? Copy <span class="adm-mono">app/tools/reset-password.php</span> to the site root in File Manager and open it — the setup guide has the steps.</p>
+<p class="adm-note">Locked out with no email? Open the “Forgotten admin password” section of your GO-LIVE guide — it resets the password from hPanel → phpMyAdmin in a few steps.</p>

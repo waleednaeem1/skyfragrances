@@ -224,11 +224,24 @@ function product_form_row(array $form, ?int $productId): array
     ] + ($productId === null ? ['created_at' => $now, 'rating_avg' => '0.00', 'rating_count' => 0, 'sales_count' => 0] : []);
 }
 
+function product_form_price_label(array $size): string
+{
+    $sale = (string) ($size['sale_price'] ?? '');
+    return money((string) $size['price']) . ($sale === '' ? '' : ' (sale ' . money($sale) . ')');
+}
+
+function product_form_price_changed(array $before, array $after): bool
+{
+    return money_paisa((string) $before['price']) !== money_paisa((string) $after['price'])
+        || money_paisa((string) ($before['sale_price'] ?? '')) !== money_paisa((string) ($after['sale_price'] ?? ''));
+}
+
 function product_form_save_sizes(int $productId, array $sizes, array $existing): array
 {
     $now = now_karachi();
     $keep = [];
     $stockNotes = [];
+    $priceNotes = [];
     foreach ($sizes as $i => $size) {
         $data = [
             'size_label' => $size['size_label'], 'size_ml' => $size['size_ml'] === '' ? null : (int) $size['size_ml'], 'sku' => $size['sku'],
@@ -241,6 +254,9 @@ function product_form_save_sizes(int $productId, array $sizes, array $existing):
             $keep[] = $size['id'];
             if ((int) $before['stock'] !== (int) $size['stock']) {
                 $stockNotes[] = $size['size_label'] . ' ' . (int) $before['stock'] . ' → ' . (int) $size['stock'];
+            }
+            if (product_form_price_changed($before, $size)) {
+                $priceNotes[] = $size['size_label'] . ' ' . product_form_price_label($before) . ' → ' . product_form_price_label($size);
             }
             continue;
         }
@@ -261,7 +277,7 @@ function product_form_save_sizes(int $productId, array $sizes, array $existing):
         }
         $removed[] = $row['size_label'];
     }
-    return ['stock' => $stockNotes, 'removed' => $removed];
+    return ['stock' => $stockNotes, 'removed' => $removed, 'price' => $priceNotes];
 }
 
 function product_form_save(array $form, array $sizes, array $alts, ?array $product, array $existingSizes): array
@@ -292,6 +308,9 @@ function product_form_save(array $form, array $sizes, array $alts, ?array $produ
         $changed = catalogue_changed_fields($product, $row, array_diff(array_keys(product_form_defaults()), ['id']));
         if ($sizeReport['stock'] !== []) {
             catalogue_log('product', $productId, 'product.stock', 'Stock set on ' . $row['name'] . ': ' . implode(', ', $sizeReport['stock']));
+        }
+        if ($sizeReport['price'] !== []) {
+            $changed[] = 'prices (' . implode(', ', $sizeReport['price']) . ')';
         }
         if ($sizeReport['removed'] !== []) {
             $changed[] = 'sizes removed (' . implode(', ', $sizeReport['removed']) . ')';

@@ -41,6 +41,6 @@ $locked = ($lockMinutes ?? 0) > 0;
 <?php if ($locked): ?>
   <p class="adm-note">If you are locked out, you can wait. The lock clears by itself.</p>
 <?php endif; ?>
-  <p class="adm-note">Forgot your password? See step 9 of your setup guide.</p>
+  <p class="adm-note">Forgot your password? See “Forgotten admin password” in your GO-LIVE guide.</p>
 <?php endif; ?>
 </div>

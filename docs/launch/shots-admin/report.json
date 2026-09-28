@@ -1,0 +1,98 @@
+[
+  {
+    "path": "/admin",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/orders",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/orders/SF-260928-PPYT",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders_SF_260928_PPYT--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/products",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/products/14",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products_14--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/settings",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_settings--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/orders",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/orders/SF-260928-PPYT",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_orders_SF_260928_PPYT--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/products",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/products/14",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_products_14--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/admin/settings",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-admin/admin_settings--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  }
+]

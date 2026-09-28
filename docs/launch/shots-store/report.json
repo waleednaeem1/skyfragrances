@@ -1,0 +1,194 @@
+[
+  {
+    "path": "/",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/home--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/shop--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/collections",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/collections--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/for-her",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/for_her--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/product_azure_oud--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/scent-finder",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/scent_finder--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/cart",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/cart--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/checkout--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/track",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/track--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/contact",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/contact--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/faq",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/faq--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/about",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/about--desktop.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/home--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/shop",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/shop--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/collections",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/collections--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/for-her",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/for_her--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/product/azure-oud",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/product_azure_oud--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/scent-finder",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/scent_finder--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/cart",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/cart--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/checkout",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/checkout--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/track",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/track--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/contact",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/contact--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/faq",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/faq--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  },
+  {
+    "path": "/about",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "/Users/dev/Documents/B2B Projects/skyfragrances/docs/launch/shots-store/about--mobile.png",
+    "horizontalOverflow": false,
+    "errors": []
+  }
+]
