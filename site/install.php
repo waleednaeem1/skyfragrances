@@ -818,8 +818,7 @@ function inst_page_db_form(array $state, string $error = '', array $old = []): n
     if ($error !== '') {
         $body .= '<div class="box bad"><p class="err">' . inst_e($error) . '</p></div>';
     }
-    $body .= inst_install_key_field();
-    $body .= '<form method="post" action="install.php?step=2" class="box">' . inst_csrf_field() . '<input type="hidden" name="action" value="db_save">';
+    $body .= '<form method="post" action="install.php?step=2" class="box">' . inst_csrf_field() . '<input type="hidden" name="action" value="db_save">' . inst_install_key_field();
     $body .= inst_field('text', 'db_host', 'Database host', $v('db_host', (string) ($db['host'] ?? 'localhost')), 'Usually "localhost" on Hostinger.');
     $body .= inst_field('number', 'db_port', 'Database port', $v('db_port', (string) ($db['port'] ?? '3306')), 'Usually 3306.');
     $body .= inst_field('text', 'db_name', 'Database name', $v('db_name', (string) ($db['name'] ?? '')), 'For example u123456789_skyfrag.');
@@ -847,8 +846,7 @@ function inst_page_admin_form(array $state, string $error = '', array $old = [],
     if ($mailTest !== null) {
         $body .= '<div class="box ' . ($mailTest['ok'] ? 'good' : 'bad') . '"><h2>' . ($mailTest['ok'] ? 'Test email sent' : 'Test email failed') . '</h2><p>' . inst_e($mailTest['detail']) . '</p></div>';
     }
-    $body .= inst_install_key_field();
-    $body .= '<form method="post" action="install.php?step=3" class="box">' . inst_csrf_field() . '<input type="hidden" name="action" value="install">';
+    $body .= '<form method="post" action="install.php?step=3" class="box">' . inst_csrf_field() . '<input type="hidden" name="action" value="install">' . inst_install_key_field();
     $body .= inst_field('text', 'admin_username', 'Admin username', $v('admin_username', 'admin'), 'Letters, numbers, dots, dashes and underscores. 3 to 64 characters.');
     $body .= inst_field('email', 'admin_email', 'Your email address', $v('admin_email'), 'Used for order notifications and shown on the contact page.');
     $body .= inst_field('password', 'admin_password', 'Admin password', '', 'At least ' . INSTALL_MIN_PASSWORD . ' characters.');
