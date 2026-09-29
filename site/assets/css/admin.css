@@ -404,14 +404,11 @@ p { margin: 0 0 var(--sp-3); }
   .adm-side__rule { border: 0; border-top: 1px solid var(--ink-600); margin: var(--sp-3) 0; }
   .adm-side form { margin: 0; }
   .adm-top__title { text-align: left; }
-  .adm-main { margin-left: var(--adm-side-w); padding: var(--sp-5) var(--sp-6) var(--sp-8); max-width: none; }
-  .adm-main > * { max-width: 1160px; margin-left: auto; margin-right: auto; }
-  .adm-main > .adm-form, .adm-main > .adm-summary { margin-left: 0; }
+  .adm-main { margin-left: var(--adm-side-w); margin-right: auto; padding: var(--sp-5) var(--sp-6) var(--sp-8); max-width: calc(1160px + 2 * var(--sp-6)); }
   .adm-nav { display: none; }
-  .adm-actionbar { left: var(--adm-side-w); bottom: 0; }
+  .adm-actionbar { left: var(--adm-side-w); right: auto; bottom: 0; width: min(calc(1160px + 2 * var(--sp-6)), calc(100% - var(--adm-side-w))); }
   .admin.has-actionbar .adm-main { padding-bottom: 120px; }
   .adm-grid { grid-template-columns: repeat(4, 1fr); }
-  .adm-tabs, .adm-rail { margin-left: 0; margin-right: 0; padding-left: 0; padding-right: 0; }
 }
 
 /* -- §9 · FILTERS -------------------------------------------- */
