@@ -32,7 +32,7 @@ return [
         'index.php', 'install.php', 'cron.php', '.htaccess', '.user.ini', 'config.sample.php', 'robots.txt', 'favicon.ico',
         'app/.htaccess', 'db/.htaccess', 'storage/.htaccess', 'uploads/.htaccess', 'assets/.htaccess', 'admin/.htaccess',
         'admin/controllers/.htaccess', 'admin/views/.htaccess', 'admin/partials/.htaccess',
-        'app/bootstrap.php', 'admin/index.php', 'db/schema.sql', 'db/seed.sql', 'db/sample-manifest.php',
+        'app/bootstrap.php', 'admin/index.php', 'db/schema.sql', 'db/seed.sql', 'db/sample-manifest.php', 'app/data/default-copy.php',
         'storage/index.php', 'db/index.php', 'admin/controllers/index.php', 'admin/views/index.php', 'admin/partials/index.php',
         'app/lib/vendor/PHPMailer/PHPMailer.php', 'app/lib/vendor/PHPMailer/SMTP.php', 'app/lib/vendor/PHPMailer/Exception.php', 'app/lib/vendor/PHPMailer/LICENSE',
         'uploads/products/sample/azure-oud-1-card.webp', 'uploads/og/sample/azure-oud-1-og.jpg', 'uploads/collections/dawn-chorus-card.webp',

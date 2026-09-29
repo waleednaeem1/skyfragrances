@@ -10,3 +10,12 @@ Admin pages: `TOUR_COOKIE=skyfr_admin=<session id> node dev-tools/tour.mjs ... /
 
 Uses the Playwright install in ../rangeaahan/node_modules (Chromium 1208 cached in
 ~/Library/Caches/ms-playwright). Local servers: `php -S 127.0.0.1:8088 dev/router.php` from site/.
+
+`extract-default-copy.php` — reads `site/db/seed.sql` and writes `site/app/data/default-copy.php`,
+the file the admin "Restore default text" / "Restore default wording" buttons read from. Run it
+after every copy change in seed.sql; `build-zip.php` runs it with `--check` and refuses to build
+while the data file is stale. Statements may hold one row or many (`VALUES (...), (...)`, the
+mysqldump extended-insert form); every row is read and any text after the last row aborts the run.
+
+    php dev-tools/extract-default-copy.php
+    php dev-tools/extract-default-copy.php --check

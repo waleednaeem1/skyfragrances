@@ -77,9 +77,11 @@ return [
 
     $r('admin.pages', 'GET', '/pages', 'pages.php', 'pages.php', 'admin-pages'),
     $r('admin.pages.edit', 'GET|POST', '/pages/{slug}', 'pages.php', 'page-form.php', 'admin-page-form', ['slug' => 'slug']),
+    $r('admin.pages.restore_default', 'POST', '/pages/{slug}/restore-default', 'pages.php', null, 'admin-page-form', ['slug' => 'slug']),
 
     $r('admin.settings', 'GET|POST', '/settings', 'settings.php', 'settings.php', 'admin-settings'),
     $r('admin.settings.https_permanent', 'POST', '/settings/https-permanent', 'settings.php', null, 'admin-settings'),
+    $r('admin.settings.restore_wording', 'POST', '/settings/restore-wording', 'settings.php', null, 'admin-settings'),
 
     $r('admin.tools', 'GET', '/tools', 'tools.php', 'tools.php', 'admin-tools'),
     $r('admin.tools.remove_sample_data', 'GET|POST', '/tools/remove-sample-data', 'tools.php', 'tools-confirm.php', 'admin-tools'),

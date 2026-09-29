@@ -31,7 +31,7 @@ partial_admin('tabs.php', ['tabs' => $tabs, 'label' => 'Settings sections']);
   </ul>
 </div>
 <?php endif; ?>
-<form method="post" action="<?= e(url('/admin/settings')) ?>" class="adm-form" enctype="multipart/form-data" novalidate data-guard>
+<form method="post" action="<?= e(url('/admin/settings')) ?>" class="adm-form" id="settings-form" enctype="multipart/form-data" novalidate data-guard>
   <?= csrf_field() ?>
   <input type="hidden" name="tab" value="<?= e($tab) ?>">
   <input type="hidden" name="action" value="save">
@@ -97,8 +97,16 @@ partial_admin('field.php', $fieldArgs);
 <?php endif; ?>
 <?php endforeach; ?>
   </div>
-<?php partial_admin('action-bar.php', ['buttons' => [['label' => 'Save ' . $tabLabel, 'variant' => 'gold', 'type' => 'submit', 'name' => 'action', 'value' => 'save']], 'note' => 'Saves this tab only']); ?>
 </form>
+<?php
+$actionButtons = [['label' => 'Save ' . $tabLabel, 'variant' => 'gold', 'type' => 'submit', 'name' => 'action', 'value' => 'save', 'attr' => ['form' => 'settings-form']]];
+$wordingKeys = is_array($wordingKeys ?? null) ? $wordingKeys : [];
+if ($wordingKeys !== []) {
+    $wordingLabels = array_map(static fn (string $key): string => (string) ($fields[$key]['label'] ?? $key), $wordingKeys);
+    $actionButtons[] = ['label' => 'Restore default wording', 'variant' => 'ghost', 'post' => '/admin/settings/restore-wording', 'fields' => ['tab' => $tab], 'confirm' => 'Restore the default wording on the ' . $tabLabel . " tab?\nPuts the original Sky Fragrances text back into: " . implode(', ', $wordingLabels) . '. Everything else on this tab stays as it is, and anything typed but not saved is lost.', 'confirm_label' => 'Restore the wording'];
+}
+partial_admin('action-bar.php', ['buttons' => $actionButtons, 'note' => 'Saves this tab only']);
+?>
 <?php if ($tab === 'advanced'): ?>
 <div class="adm-card">
   <div class="adm-card__head"><h2 class="adm-card__title">Server</h2></div>

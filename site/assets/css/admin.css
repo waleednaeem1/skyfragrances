@@ -123,6 +123,8 @@ p { margin: 0 0 var(--sp-3); }
 .adm-actionbar--static { position: static; box-shadow: none; border: 0; padding: var(--sp-3) 0 0; }
 .adm-actionbar__buttons { display: flex; gap: var(--sp-2); flex: 1; justify-content: flex-end; flex-wrap: wrap; }
 .adm-actionbar__buttons .adm-btn { flex: 1 1 auto; }
+.adm-actionbar__buttons .adm-inline-form { flex: 1 1 auto; display: flex; }
+.adm-actionbar__buttons .adm-inline-form .adm-btn { width: 100%; }
 .adm-actionbar__count { font-size: 0.9rem; font-weight: 500; white-space: nowrap; }
 .adm-actionbar__note { font-size: 0.8rem; color: var(--adm-muted); }
 .adm-actionbar--bulk .adm-actionbar__buttons { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; justify-content: flex-start; }
@@ -378,6 +380,7 @@ p { margin: 0 0 var(--sp-3); }
   .adm-filters__toggle { display: none; }
   .adm-filters__panel { display: block; }
   .adm-actionbar__buttons .adm-btn { flex: 0 0 auto; }
+  .adm-actionbar__buttons .adm-inline-form { flex: 0 0 auto; }
   .adm-confirm { max-width: 520px; margin: auto; border-radius: 12px; }
   .adm-confirm__box { border-radius: 12px; padding: var(--sp-5); }
   .adm-confirm .adm-sheet__handle { display: none; }

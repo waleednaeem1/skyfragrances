@@ -1,8 +1,14 @@
 <?php
 declare(strict_types=1);
 
+function zip_fail(string $message): never
+{
+    fwrite(STDERR, $message);
+    exit(1);
+}
+
 if (PHP_SAPI !== 'cli') {
-    exit("Run from the command line: php dev-tools/build-zip.php\n");
+    zip_fail("Run from the command line: php dev-tools/build-zip.php\n");
 }
 
 $repoRoot = dirname(__DIR__);
@@ -45,16 +51,23 @@ function build_is_excluded(string $rel, array $exact, array $prefixes, array $ba
 
 $sample = (string) file_get_contents($siteRoot . '/config.sample.php');
 if (!str_contains($sample, 'REPLACE_ME') || preg_match('/[0-9a-f]{64}/', $sample)) {
-    exit("config.sample.php looks like it carries real secrets. Aborting.\n");
+    zip_fail("config.sample.php looks like it carries real secrets. Aborting.\n");
+}
+
+$copyOutput = [];
+$copyStatus = 1;
+exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/extract-default-copy.php') . ' --check 2>&1', $copyOutput, $copyStatus);
+if ($copyStatus !== 0) {
+    zip_fail(trim(implode("\n", $copyOutput)) . "\napp/data/default-copy.php is stale relative to db/seed.sql. Run php dev-tools/extract-default-copy.php and build again. Aborting.\n");
 }
 
 if (!is_dir($distDir) && !mkdir($distDir, 0755, true)) {
-    exit("Cannot create dist/.\n");
+    zip_fail("Cannot create dist/.\n");
 }
 
 $zip = new ZipArchive();
 if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-    exit("Cannot open $zipPath for writing.\n");
+    zip_fail("Cannot open $zipPath for writing.\n");
 }
 
 $iterator = new RecursiveIteratorIterator(
@@ -96,7 +109,7 @@ function build_abort(ZipArchive $zip, string $zipPath, string $message): never
 {
     $zip->close();
     unlink($zipPath);
-    exit($message . "\nAborted.\n");
+    zip_fail($message . "\nAborted.\n");
 }
 
 $installSource = (string) $verify->getFromName('install.php');
@@ -165,18 +178,18 @@ $forbidden = array_filter($names, static function (string $name) use ($excludedE
 });
 if ($forbidden !== []) {
     unlink($zipPath);
-    exit("ZIP contained forbidden entries:\n  " . implode("\n  ", $forbidden) . "\nAborted.\n");
+    zip_fail("ZIP contained forbidden entries:\n  " . implode("\n  ", $forbidden) . "\nAborted.\n");
 }
 foreach ($manifest['required_files'] as $required) {
     if (!in_array($required, $names, true)) {
         unlink($zipPath);
-        exit("ZIP is missing $required. Aborted.\n");
+        zip_fail("ZIP is missing $required. Aborted.\n");
     }
 }
 $htaccessCount = count(array_filter($names, static fn (string $name): bool => basename($name) === '.htaccess'));
 if ($htaccessCount !== $manifest['required_htaccess_count']) {
     unlink($zipPath);
-    exit("ZIP holds $htaccessCount .htaccess files, expected {$manifest['required_htaccess_count']}. Aborted.\n");
+    zip_fail("ZIP holds $htaccessCount .htaccess files, expected {$manifest['required_htaccess_count']}. Aborted.\n");
 }
 
 echo "Wrote $zipPath\n$added files added, " . count($skipped) . " local files left out.\n";
@@ -205,5 +218,5 @@ if ($src->open($zipPath) === true && $dst->open($wrappedPath, ZipArchive::CREATE
     $src->close();
     echo "Wrote $flatCopy and $wrappedPath (folder-wrapped for hPanel)\n";
 } else {
-    exit("Could not write the folder-wrapped ZIP.\n");
+    zip_fail("Could not write the folder-wrapped ZIP.\n");
 }

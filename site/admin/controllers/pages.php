@@ -106,8 +106,48 @@ function pages_snapshot(array $page): array
     ];
 }
 
+const PAGES_DEFAULT_COLUMNS = ['title', 'heading', 'body', 'body_format', 'template', 'seo_title', 'seo_description'];
+
+function pages_default_row(string $slug): ?array
+{
+    $defaults = default_copy()['pages'][$slug] ?? null;
+    if (!is_array($defaults)) {
+        return null;
+    }
+    $row = [];
+    foreach (PAGES_DEFAULT_COLUMNS as $column) {
+        if (array_key_exists($column, $defaults)) {
+            $row[$column] = $defaults[$column] === null ? null : (string) $defaults[$column];
+        }
+    }
+    return isset($row['title'], $row['body']) && trim($row['body']) !== '' ? $row : null;
+}
+
 $routeName = (string) ($route['name'] ?? '');
 $now = now_karachi();
+
+if ($routeName === 'admin.pages.restore_default') {
+    $slug = strtolower((string) $params['slug']);
+    $page = db_fetch('SELECT id, slug, title, heading, body, body_format, template, is_system, is_active, sort_order, seo_title, seo_description FROM content_pages WHERE slug = :slug', ['slug' => $slug]);
+    if ($page === null) {
+        flash('error', 'There is no page called /' . $slug . '.');
+        redirect('/admin/pages', 303);
+    }
+    $data = pages_default_row($slug);
+    if ($data === null) {
+        flash('error', 'There is no default text for /' . $page['slug'] . ', so nothing was changed.');
+        redirect('/admin/pages/' . $page['slug'], 303);
+    }
+    $changed = catalogue_changed_fields($page, $data, array_keys($data));
+    if ($changed === []) {
+        flash('info', $page['title'] . ' already has the default text.');
+        redirect('/admin/pages/' . $page['slug'], 303);
+    }
+    db_update('content_pages', $data + ['updated_at' => $now], ['id' => (int) $page['id']]);
+    catalogue_log('page', (int) $page['id'], 'page.restore_default', 'Restored the default text on /' . $page['slug'] . ' (' . implode(', ', $changed) . ')', pages_snapshot($page), pages_snapshot($data + $page));
+    flash('success', 'Default text restored on ' . $data['title'] . '. See it live at ' . settings_site_url() . '/' . $page['slug'] . '.');
+    redirect('/admin/pages/' . $page['slug'], 303);
+}
 
 if ($routeName === 'admin.pages.edit') {
     $slug = strtolower((string) $params['slug']);
@@ -192,6 +232,7 @@ if ($routeName === 'admin.pages.edit') {
         'isSystem' => $isSystem,
         'faqItems' => $faqItems,
         'siteUrl' => url('/' . $page['slug']),
+        'hasDefault' => pages_default_row($slug) !== null,
     ], ['title' => $page['title'], 'body_class' => (string) $route['body_class'], 'back' => '/admin/pages']);
 }
 

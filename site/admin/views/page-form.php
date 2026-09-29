@@ -44,7 +44,7 @@ $faqRow = static function (int $index, array $item, string $error, bool $isTempl
   </ul>
 </div>
 <?php endif; ?>
-<form method="post" action="<?= e(url($formAction)) ?>" class="adm-form" data-guard novalidate>
+<form method="post" action="<?= e(url($formAction)) ?>" class="adm-form" id="page-form" data-guard novalidate>
   <?= csrf_field() ?>
   <div class="adm-form__section">
     <h2 class="adm-form__section-title">Page</h2>
@@ -94,8 +94,12 @@ $faqRow = static function (int $index, array $item, string $error, bool $isTempl
     <?php partial_admin('field.php', ['type' => 'text', 'name' => 'seo_title', 'label' => 'SEO title', 'value' => $form['seo_title'], 'maxlength' => 160, 'error' => $errors['seo_title'] ?? '', 'placeholder' => $form['title'] . ' | Sky Fragrances', 'help' => 'What Google shows as the blue link. Blank uses the title. Aim for under 60 characters.', 'attr' => ['data-counter-warn' => '60']]); ?>
     <?php partial_admin('field.php', ['type' => 'textarea', 'name' => 'seo_description', 'label' => 'SEO description', 'value' => $form['seo_description'], 'rows' => 3, 'maxlength' => 255, 'error' => $errors['seo_description'] ?? '', 'help' => 'The grey line under the link in search results. Aim for 120–160 characters.', 'attr' => ['data-counter-warn' => '160']]); ?>
   </div>
-  <?php partial_admin('action-bar.php', ['buttons' => [
-      ['label' => 'Save page', 'variant' => 'gold'],
-      ['label' => 'Cancel', 'href' => '/admin/pages', 'variant' => 'text'],
-  ]]); ?>
 </form>
+<?php
+$actionButtons = [['label' => 'Save page', 'variant' => 'gold', 'attr' => ['form' => 'page-form']]];
+if (!empty($hasDefault)) {
+    $actionButtons[] = ['label' => 'Restore default text', 'variant' => 'ghost', 'post' => '/admin/pages/' . $slug . '/restore-default', 'confirm' => "Restore the default text on this page?\nThe wording on /" . $slug . " goes back to the original Sky Fragrances text, and anything typed here but not saved is lost. Nothing else changes.", 'confirm_label' => 'Restore the default text'];
+}
+$actionButtons[] = ['label' => 'Cancel', 'href' => '/admin/pages', 'variant' => 'text'];
+partial_admin('action-bar.php', ['buttons' => $actionButtons]);
+?>

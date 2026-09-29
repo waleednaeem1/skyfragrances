@@ -10,6 +10,7 @@ const SETTINGS_IMAGE_RULES = [
     'og_default_image' => ['max' => 1200, 'cover' => [1200, 630]],
 ];
 const SETTINGS_SECRET_KEYS = ['bank_account_number', 'bank_iban', 'jazzcash_number', 'easypaisa_number', 'maintenance_bypass', 'contact_phone', 'whatsapp', 'contact_email', 'order_notify_email'];
+const SETTINGS_WORDING_KEYS = ['hero_trust_line', 'newsletter_heading', 'newsletter_text', 'quiz_band_text', 'cod_note', 'manual_payment_note', 'maintenance_message', 'whatsapp_reply_template', 'contact_reply_time', 'returns_days', 'footer_blurb'];
 
 function settings_definitions(): array
 {
@@ -27,6 +28,7 @@ function settings_definitions(): array
         'contact_email' => ['contact', 'email', 'Contact email', ['help' => 'Customers see this and replies go here.']],
         'order_notify_email' => ['contact', 'email', 'Order notifications go to', ['help' => 'Leave blank to use the contact email.']],
         'business_hours' => ['contact', 'text', 'Business hours', ['maxlength' => 120]],
+        'contact_reply_time' => ['contact', 'text', 'Reply time promised to customers', ['maxlength' => 60, 'help' => 'Finishes the line "we reply within …" in the email a customer gets after writing to you. Something like "one working day".']],
         'instagram_url' => ['contact', 'url', 'Instagram URL', []],
         'instagram_handle' => ['contact', 'text', 'Instagram handle', ['maxlength' => 40]],
         'facebook_url' => ['contact', 'url', 'Facebook URL', []],
@@ -58,6 +60,7 @@ function settings_definitions(): array
         'shipping_fee' => ['shipping', 'money', 'Delivery fee', ['required' => true]],
         'free_shipping_threshold' => ['shipping', 'money', 'Free delivery from', ['required' => true, 'help' => '0 means delivery is always free. Tested on the order subtotal before any coupon.']],
         'delivery_time' => ['shipping', 'text', 'Delivery time shown to customers', ['maxlength' => 60, 'required' => true]],
+        'returns_days' => ['shipping', 'int', 'Exchange window in days', ['min' => 1, 'max' => 60, 'help' => 'How many days after delivery a sealed bottle can be exchanged. Quoted in the order and delivery emails; keep it in step with the Returns page.']],
         'cod_enabled' => ['payments', 'bool', 'Cash on delivery', []],
         'cod_max_total' => ['payments', 'money', 'COD limit', ['help' => '0 means no limit. Above this amount customers must pay in advance.']],
         'manual_hold_hours' => ['payments', 'int', 'Hours to hold an unpaid transfer order', ['min' => 6, 'max' => 240, 'help' => 'Unpaid bank, JazzCash and Easypaisa orders older than this get an amber badge and can be cancelled in one go from Orders.']],
@@ -105,6 +108,13 @@ function settings_definitions(): array
 function settings_tab_keys(string $tab): array
 {
     return array_keys(array_filter(settings_definitions(), static fn (array $def): bool => $def['tab'] === $tab));
+}
+
+function settings_wording_keys(string $tab): array
+{
+    $definitions = settings_definitions();
+    $defaults = default_copy()['settings'];
+    return array_values(array_filter(SETTINGS_WORDING_KEYS, static fn (string $key): bool => isset($definitions[$key]) && $definitions[$key]['tab'] === $tab && !in_array($key, SETTINGS_SECRET_KEYS, true) && isset($defaults[$key])));
 }
 
 function settings_current(): array
@@ -279,7 +289,8 @@ function settings_log(array $admin, string $action, string $summary, ?array $bef
 
 $admin = auth_user();
 $definitions = settings_definitions();
-$tab = (string) (request_method() === 'POST' ? request_post('tab', 'store') : request_query('tab', 'store'));
+$tabInput = request_method() === 'POST' ? request_post('tab', 'store') : request_query('tab', 'store');
+$tab = is_string($tabInput) ? $tabInput : 'store';
 if (!isset(SETTINGS_TABS[$tab])) {
     $tab = 'store';
 }
@@ -295,6 +306,35 @@ if (($route['name'] ?? '') === 'admin.settings.https_permanent') {
         flash('error', 'HTTPS was not made permanent. ' . $outcome['detail']);
     }
     redirect('/admin/settings?tab=advanced', 303);
+}
+
+if (($route['name'] ?? '') === 'admin.settings.restore_wording') {
+    $restoreTab = request_post('tab', '');
+    if (!is_string($restoreTab) || !isset(SETTINGS_TABS[$restoreTab])) {
+        flash('error', 'Choose a settings tab before restoring its wording.');
+        redirect('/admin/settings', 303);
+    }
+    $keys = settings_wording_keys($tab);
+    if ($keys === []) {
+        flash('error', 'The ' . SETTINGS_TABS[$tab] . ' tab has no default wording to restore.');
+        redirect($tabUrl, 303);
+    }
+    $stored = db_fetch_pairs('SELECT setting_key, setting_value FROM settings');
+    $defaults = default_copy()['settings'];
+    $changes = [];
+    foreach ($keys as $key) {
+        if (!array_key_exists($key, $stored) || (string) $stored[$key] !== (string) $defaults[$key]) {
+            $changes[$key] = (string) $defaults[$key];
+        }
+    }
+    if ($changes === []) {
+        flash('info', 'The ' . SETTINGS_TABS[$tab] . ' wording already matches the defaults.');
+        redirect($tabUrl, 303);
+    }
+    settings_write($changes, $tab);
+    settings_log($admin, 'setting.restore_wording', 'Default wording restored (' . SETTINGS_TABS[$tab] . '): ' . implode(', ', array_keys($changes)), array_intersect_key($stored, $changes), $changes);
+    flash('success', count($changes) === 1 ? '1 wording setting restored to its default.' : count($changes) . ' wording settings restored to their defaults.');
+    redirect($tabUrl, 303);
 }
 
 $current = settings_current();
@@ -394,6 +434,7 @@ render_admin('settings.php', [
     'fields' => array_intersect_key($definitions, array_flip(settings_tab_keys($tab))),
     'values' => $values,
     'errors' => $errors,
+    'wordingKeys' => settings_wording_keys($tab),
     'defaults' => settings_defaults(),
     'panelOrigin' => request_origin(),
     'httpsPermanent' => https_redirect_is_permanent(APP_ROOT),

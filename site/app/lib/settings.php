@@ -17,6 +17,7 @@ function settings_defaults(): array
         'contact_email' => '',
         'order_notify_email' => '',
         'business_hours' => '',
+        'contact_reply_time' => 'one working day',
         'instagram_url' => '',
         'instagram_handle' => '',
         'facebook_url' => '',
@@ -54,6 +55,7 @@ function settings_defaults(): array
         'shipping_fee' => '250.00',
         'free_shipping_threshold' => '3000.00',
         'delivery_time' => '2–4 working days',
+        'returns_days' => '7',
         'cod_enabled' => '1',
         'cod_note' => 'Pay the courier when your parcel arrives.',
         'bank_enabled' => '0',
@@ -179,4 +181,20 @@ function setting_money(string $key, string $default = '0.00'): string
         return $default;
     }
     return money_from_paisa(money_paisa(trim((string) $value)));
+}
+
+function default_copy(): array
+{
+    static $copy = null;
+    if ($copy !== null) {
+        return $copy;
+    }
+    $file = APP_ROOT . '/app/data/default-copy.php';
+    $loaded = is_file($file) ? require $file : null;
+    $copy = ['pages' => [], 'settings' => []];
+    if (is_array($loaded)) {
+        $copy['pages'] = is_array($loaded['pages'] ?? null) ? $loaded['pages'] : [];
+        $copy['settings'] = is_array($loaded['settings'] ?? null) ? $loaded['settings'] : [];
+    }
+    return $copy;
 }
