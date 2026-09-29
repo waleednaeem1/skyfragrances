@@ -42,7 +42,8 @@
 }
 
 /* -- §2 · SHELL ---------------------------------------------- */
-.admin { margin: 0; background: var(--adm-bg); color: var(--adm-text); font: 16px/1.5 var(--font-body); -webkit-text-size-adjust: 100%; min-height: 100vh; }
+html.adm-root { overscroll-behavior-y: none; }
+.admin { overscroll-behavior-y: none; margin: 0; background: var(--adm-bg); color: var(--adm-text); font: 16px/1.5 var(--font-body); -webkit-text-size-adjust: 100%; min-height: 100vh; }
 .admin *, .admin *::before, .admin *::after { box-sizing: border-box; }
 a { color: var(--adm-text); }
 h1, h2, h3 { font-family: var(--font-display); font-weight: 400; margin: 0 0 var(--sp-2); color: var(--adm-text); letter-spacing: 0; text-transform: none; line-height: 1.2; }

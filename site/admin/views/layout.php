@@ -28,7 +28,7 @@ $flashes = flash_take();
 $navData = ['isActive' => $isActive, 'currentPath' => $currentPath, 'badges' => $badges, 'createUrl' => $createUrl];
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="en" class="adm-root">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
