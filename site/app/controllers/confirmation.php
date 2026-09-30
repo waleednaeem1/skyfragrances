@@ -44,7 +44,7 @@ function confirmation_view_data(array $order, array $state = []): array
         'address' => ['name' => $order['customer_name'], 'phone' => $order['customer_phone'], 'address' => $order['address'], 'city' => $order['city'], 'postal_code' => $order['postal_code'], 'note' => $order['customer_note']],
         'emailAddress' => $order['customer_email'],
         'emailSent' => $emailSent,
-        'whatsappUrl' => order_whatsapp_url("Assalam-o-Alaikum! I've just placed order " . $order['order_number'] . '.'),
+        'whatsappUrl' => order_whatsapp_url("Assalam-o-Alaikum. I've just placed order " . $order['order_number'] . '.'),
         'trackUrl' => url('/track?order=' . eu((string) $order['order_number'])),
         'accountLines' => $isManual ? payment_account_lines((string) $order['payment_method']) : [],
         'accountSnapshot' => $order['payment_account_snapshot'],

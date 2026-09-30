@@ -442,3 +442,32 @@ literal would otherwise mislead a builder, the minimal in-place edit noted in th
 B.4.9, Part C new). Notes read `Superseded by … §2.4 — C-nn` (losing text), `Amended by …`
 (text that stands with an addition) or `Corrected by …` (a factual claim that was wrong). PLAN §16
 summarises every ruling in plain English and lists the findings that were reviewed and rejected.
+
+**Acceptance run (2026-09-29, `docs/acceptance-report.md`).** Rulings recorded while running 07 B.4
+end to end on a fresh install:
+
+- **Critical CSS ships as a linked file, not an inline block.** `assets/css/critical.css` (~14 KB gz)
+  is loaded as a blocking `<link>` with `site.css` preloaded low-priority behind it; `head-meta.php`
+  falls back to the single blocking `site.css` link only when `critical.css` is absent. The 14 KB *raw*
+  budget in 07 B.2.1 is superseded — the foundation layers are 21 KB raw as built and the measured
+  numbers live in `docs/lighthouse/summary.md` and `docs/perf/critical-css.md`. `critical.css` and
+  `assets/js/css.js` are `required_files` in `dev/zip-manifest.php` so a build cannot ship without them.
+- **COD fallback is enforced in code (07 A.5.3 rule 3).** `payment_methods_enabled()` returns `['cod']`
+  and logs a warning when every enabled method is unusable (all manual methods still `REPLACE ME` and COD
+  switched off); before this an owner could reach a checkout that offered nothing.
+- **Dashboard placeholder banner (07 A.5.3 rule 2, B.4.6)** is the red `adm-banner` on the dashboard
+  listing every enabled manual method whose account details still contain `REPLACE ME`.
+- **`/track` is not in the sitemap.** 07 B.1.4 already `Disallow`s it in `robots.txt`; listing a blocked
+  URL in the sitemap only produces Search Console warnings. B.4.9's "exactly the active catalogue" wins.
+- **A sold-out default size never lands the visitor on a dead button.** `product_pick_default_size()`
+  keeps the owner's default unless it is out of stock and another size is available, in which case the
+  first in-stock size is preselected (the `?size=` request parameter still wins). Without this a
+  no-JavaScript visitor could not buy the other size at all (B.4.10).
+- **Dev router mirrors the host for denied paths.** `dev/router.php` refuses
+  `/admin/(controllers|views|partials)` like the per-directory `.htaccess` files do, renders every denied
+  path through `index.php` with `REDIRECT_STATUS` set (the branded 404, exactly what `ErrorDocument 403`
+  produces on LiteSpeed), and serves static files before enabling `zlib.output_compression` — the old
+  order made `php -S` return an invalid response for gzip-negotiated `robots.txt` and `favicon.ico`,
+  which is what cost Lighthouse its Best Practices and SEO points on localhost.
+- Voice rule: the WhatsApp prefill texts open with "Assalam-o-Alaikum." (no exclamation mark, no
+  "Hi Sky Fragrances").

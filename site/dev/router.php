@@ -6,9 +6,10 @@ $query = (string) ($_SERVER['QUERY_STRING'] ?? '');
 
 function dev_deny(int $status, string $message): bool
 {
+    global $siteRoot;
+    $_SERVER['REDIRECT_STATUS'] = (string) $status;
     http_response_code($status);
-    header('Content-Type: text/plain; charset=utf-8');
-    echo $message;
+    require $siteRoot . '/index.php';
     return true;
 }
 
@@ -53,7 +54,7 @@ $devImmutableTypes = ['webp' => 'image/webp', 'png' => 'image/png', 'jpg' => 'im
 if (str_contains($path, "\0") || str_contains($path, '..') || str_contains($path, '\\')) {
     return dev_deny(404, 'Not found');
 }
-if (preg_match('#^/(app|db|storage|dev)(/|$)#i', $path)) {
+if (preg_match('#^/(app|db|storage|dev|admin/(controllers|views|partials))(/|$)#i', $path)) {
     return dev_deny(403, 'Forbidden');
 }
 if (preg_match('#^/config[^/]*\.php$#i', $path) || preg_match('#(^|/)\.(user\.ini|htaccess|htpasswd|env|git[^/]*)$#i', $path)) {
@@ -90,15 +91,15 @@ if (preg_match('#^/assets/#i', $path)) {
     }
     return dev_deny(404, 'Not found');
 }
+if ($path !== '/' && !preg_match('#^/admin(/.*)?$#i', $path) && is_file($siteRoot . $path)) {
+    return false;
+}
 if (dev_accepts_gzip() && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && !preg_match('#^/api/#i', $path)) {
     ini_set('zlib.output_compression', '1');
 }
 if (preg_match('#^/admin(/.*)?$#i', $path)) {
     require $siteRoot . '/admin/index.php';
     return true;
-}
-if ($path !== '/' && is_file($siteRoot . $path)) {
-    return false;
 }
 require $siteRoot . '/index.php';
 return true;

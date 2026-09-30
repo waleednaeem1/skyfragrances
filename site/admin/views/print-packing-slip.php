@@ -38,6 +38,15 @@ td { padding: 9px 4px; border-bottom: 1px solid var(--line); vertical-align: mid
 .foot { display: flex; justify-content: space-between; gap: 24px; margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 10pt; color: var(--muted); }
 .sign { flex: 1; border-bottom: 1px solid var(--ink); height: 34px; }
 .count { font-size: 10pt; color: var(--muted); margin: 6px 0 0; text-align: right; }
+@media screen and (max-width: 600px) {
+  .slip { margin: 8px; padding: 16px; }
+  .head { flex-wrap: wrap; }
+  .logo { width: 40mm; }
+  .num { text-align: left; }
+  .num strong { font-size: 18pt; }
+  table .hide-narrow { display: none; }
+  .foot { flex-wrap: wrap; }
+}
 @media print {
   html, body { background: #fff; }
   .toolbar { display: none !important; }

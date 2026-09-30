@@ -1,0 +1,84 @@
+{
+  "mobile /product/azure-oud": {
+    "text": "Azure Oud",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": true,
+    "width": 63,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "mobile /faq": {
+    "text": "Frequently Asked Questions",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": true,
+    "width": 150,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "mobile /shipping": {
+    "text": "Shipping and Delivery",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": true,
+    "width": 150,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "mobile /collections": {
+    "text": "Collections",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": false,
+    "width": 85,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "mobile consoleErrors": [],
+  "desktop /product/azure-oud": {
+    "text": "Azure Oud",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": false,
+    "width": 71,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "desktop /faq": {
+    "text": "Frequently Asked Questions",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": false,
+    "width": 198,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "desktop /shipping": {
+    "text": "Shipping and Delivery",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": false,
+    "width": 154,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "desktop /collections": {
+    "text": "Collections",
+    "display": "block",
+    "textOverflow": "ellipsis",
+    "clipped": false,
+    "width": 85,
+    "height": 44,
+    "listOverflows": false,
+    "crumbHeight": 60
+  },
+  "desktop consoleErrors": []
+}

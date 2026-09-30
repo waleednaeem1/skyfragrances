@@ -1,0 +1,750 @@
+{
+ "admin-dump": {
+  "h1": "SF-260929-6PDX",
+  "forms": [
+   {
+    "action": "/admin/logout",
+    "fields": [
+     "button:={Log out}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/payment",
+    "fields": [
+     "input:action=mark_paid",
+     "input:amount=8950.00",
+     "input:note=",
+     "button:={Mark as paid}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/status",
+    "fields": [
+     "input:to=confirmed",
+     "input:note=",
+     "button:={Back to confirmed}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/notes",
+    "fields": [
+     "input:action=contact",
+     "input:customer_name=Fresh Walk Tester",
+     "input:customer_phone=0300 1234567",
+     "input:customer_email=fresh.walk@example.com",
+     "textarea:address=House 12, Street 4, DHA Phase 6",
+     "input:city=Karachi",
+     "input:postal_code=75500",
+     "button:={}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/shipping",
+    "fields": [
+     "input:courier_name=Leopards Courier",
+     "input:tracking_number=LC123456789PK",
+     "input:tracking_url=",
+     "button:={Save courier details}",
+     "button:mark_shipped=1{Save & mark shipped}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/notes",
+    "fields": [
+     "input:action=note",
+     "textarea:body=",
+     "input:pin=1 [ ]",
+     "button:={Add note}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/status",
+    "fields": [
+     "input:to=cancelled",
+     "input:note=",
+     "button:={Cancel this order — permanent}"
+    ]
+   },
+   {
+    "action": "/admin/orders/SF-260929-6PDX/status",
+    "fields": []
+   },
+   {
+    "action": "/admin/logout",
+    "fields": [
+     "button:={Log out}"
+    ]
+   },
+   {
+    "action": null,
+    "fields": [
+     "input:=",
+     "button:={Cancel}",
+     "button:={Confirm}"
+    ]
+   }
+  ],
+  "proofLinks": [],
+  "sections": [
+   "Payment",
+   "WhatsApp",
+   "Items",
+   "Totals",
+   "Status",
+   "Customer",
+   "Shipping",
+   "Timeline",
+   "Internal notes",
+   "Danger zone",
+   "Are you sure?"
+  ],
+  "errors": []
+ },
+ "admin-finish": {
+  "confirmSeen": 1,
+  "transferPaid": {
+   "url": "http://127.0.0.1:8101/admin/orders/SF-260929-NMJA",
+   "badges": [
+    "1",
+    "8",
+    "PENDING",
+    "BANK TRANSFER",
+    "PAID",
+    "REVIEW NEEDED"
+   ],
+   "flash": [
+    "Done: Payment recorded. The order status is unchanged — confirm it when you are ready. ×",
+    "Done: Payment recorded. The order status is unchanged — confirm it when you are ready.",
+    "×"
+   ],
+   "history": [
+    "PENDING 29 Sep 2026, 11:51 am by System",
+    "REVIEW NEEDED 29 Sep 2026, 11:51 am by Customer “Proof submitted”",
+    "PAID 29 Sep 2026, 11:55 am by Admin (sky.owner) “Payment approved”"
+   ]
+  },
+  "transferConfirmed": {
+   "url": "http://127.0.0.1:8101/admin/orders/SF-260929-NMJA",
+   "badges": [
+    "1",
+    "8",
+    "CONFIRMED",
+    "BANK TRANSFER",
+    "PAID",
+    "PENDING",
+    "REVIEW NEEDED"
+   ],
+   "flash": [
+    "Done: Order marked Confirmed. ×",
+    "Done: Order marked Confirmed.",
+    "×"
+   ],
+   "history": [
+    "PENDING 29 Sep 2026, 11:51 am by System",
+    "REVIEW NEEDED 29 Sep 2026, 11:51 am by Customer “Proof submitted”",
+    "PAID 29 Sep 2026, 11:55 am by Admin (sky.owner) “Payment approved”",
+    "CONFIRMED 29 Sep 2026, 11:55 am by Admin (sky.owner)"
+   ]
+  },
+  "codShipped": {
+   "url": "http://127.0.0.1:8101/admin/orders/SF-260929-6PDX",
+   "badges": [
+    "1",
+    "8",
+    "SHIPPED",
+    "CASH ON DELIVERY",
+    "UNPAID",
+    "PENDING",
+    "CONFIRMED",
+    "PACKING"
+   ],
+   "flash": [
+    "Done: Order marked Shipped. Send the tracking on WhatsApp below. ×",
+    "Done: Order marked Shipped. Send the tracking on WhatsApp below.",
+    "×"
+   ],
+   "history": [
+    "PENDING 29 Sep 2026, 11:46 am by System",
+    "CONFIRMED 29 Sep 2026, 11:52 am by Admin (sky.owner)",
+    "PACKING 29 Sep 2026, 11:52 am by Admin (sky.owner)",
+    "SHIPPED 29 Sep 2026, 11:55 am by Admin (sky.owner)"
+   ]
+  },
+  "prints": {
+   "invoice": 200,
+   "packingSlip": 200,
+   "proof": {
+    "status": 200,
+    "type": "image/jpeg",
+    "bytes": 44711
+   }
+  },
+  "list": [
+   "SF-260929-NMJA 1 item 29 Sep, 11:51 am NEW Fresh Transfer Tester 0321 7654321 · Karachi Rs. 5,450 BANK TRANSFER PAID 📎 CONFIRMED Call WhatsApp Print slip",
+   "SF-260929-6PDX 1 item 29 Sep, 11:46 am NEW Fresh Walk Tester 0300 1234567 · Karachi Rs. 8,950 CASH ON DELIVERY UNPAID SHIPPED Leopards Courier LC123456789PK Cop"
+  ],
+  "trackRight": "Track Your Order Enter your order number and the phone number you ordered with. Both are on your confirmation page. We couldn't find an order with those details. Please check the order number and the phone number used when ordering, or message us on WhatsApp. ",
+  "trackWrong": "Track Your Order Enter your order number and the phone number you ordered with. Both are on your confirmation page. We couldn't find an order with those details. Please check the order number and the phone number used when ordering, or message us on WhatsApp. ",
+  "proofAnonymous": {
+   "status": 200,
+   "url": "http://127.0.0.1:8101/admin/login?next=%2Fadmin%2Forders%2Fsf-260929-nmja%2Fproof"
+  },
+  "errors": []
+ },
+ "admin-inspect": {
+  "afterLogin": {
+   "url": "http://127.0.0.1:8101/admin",
+   "h1": "Good morning, sky.owner"
+  },
+  "orders": {
+   "rows": [
+    "SF-260929-6PDX 1 item 29 Sep, 11:46 am NEW Fresh Walk Tester 0300 1234567 · Karachi Rs. 8,950 CASH ON DELIVERY UNPAID PENDING Call WhatsApp Print slip"
+   ],
+   "links": [
+    "/admin/orders/export.csv",
+    "/admin/orders/SF-260929-6PDX/packing-slip",
+    "/admin/orders/SF-260929-6PDX"
+   ]
+  },
+  "detail": {
+   "url": "http://127.0.0.1:8101/admin/orders/SF-260929-6PDX/packing-slip",
+   "forms": []
+  },
+  "errors": []
+ },
+ "admin-settings": {
+  "dashboardBanners": [
+   "install.php is still on the server. Delete it now from hPanel File Manager.",
+   "Customers cannot pay by Bank Transfer, JazzCash, Easypaisa: the account details are still the REPLACE ME placeholders, so these methods are hidden at checkout. Enter the real account details in Settings › Payments.",
+   "This store is still showing sample data. Remove it in Tools before you go live."
+  ],
+  "paymentsBefore": [
+   {
+    "action": "/admin/logout",
+    "fields": [
+     "button:={Log out}"
+    ]
+   },
+   {
+    "action": "/admin/settings",
+    "fields": [
+     "input:action=save",
+     "input:cod_enabled=1 [x]",
+     "input:cod_max_total=0",
+     "input:manual_hold_hours=48",
+     "textarea:cod_note=Pay the courier in cash when your parcel",
+     "input:bank_enabled=1 [x]",
+     "input:bank_name=REPLACE ME — Your Bank Name",
+     "input:bank_account_title=REPLACE ME — Account Title",
+     "input:bank_account_number=0000-0000000-000 (REPLACE ME)",
+     "input:bank_iban=PK00XXXX0000000000000000 (REPLACE ME)",
+     "input:jazzcash_enabled=1 [x]",
+     "input:jazzcash_account_title=REPLACE ME — JazzCash Account Title",
+     "input:jazzcash_number=0300-0000000 (REPLACE ME)",
+     "input:easypaisa_enabled=1 [x]",
+     "input:easypaisa_account_title=REPLACE ME — Easypaisa Account Title",
+     "input:easypaisa_number=0345-0000000 (REPLACE ME)",
+     "textarea:manual_payment_note=Transfer the exact total first, then add"
+    ]
+   },
+   {
+    "action": "/admin/settings/restore-wording",
+    "fields": [
+     "button:={Restore default wording}"
+    ]
+   },
+   {
+    "action": "/admin/logout",
+    "fields": [
+     "button:={Log out}"
+    ]
+   },
+   {
+    "action": null,
+    "fields": [
+     "input:=",
+     "button:={Cancel}",
+     "button:={Confirm}"
+    ]
+   }
+  ],
+  "paymentsAfter": {
+   "url": "http://127.0.0.1:8101/admin/settings?tab=payments",
+   "flash": [
+    "Done: 5 settings saved. ×",
+    "Done: 5 settings saved.",
+    "×"
+   ],
+   "forms": [
+    {
+     "action": "/admin/logout",
+     "fields": [
+      "button:={Log out}"
+     ]
+    },
+    {
+     "action": "/admin/settings",
+     "fields": [
+      "input:action=save",
+      "input:cod_enabled=1 [x]",
+      "input:cod_max_total=0",
+      "input:manual_hold_hours=48",
+      "textarea:cod_note=Pay the courier in cash when your parcel",
+      "input:bank_enabled=1 [x]",
+      "input:bank_name=Meezan Bank",
+      "input:bank_account_title=Sky Fragrances",
+      "input:bank_account_number=0123-4567890-001",
+      "input:bank_iban=PK36MEZN0001234567890001",
+      "input:jazzcash_enabled=1 [x]",
+      "input:jazzcash_account_title=REPLACE ME — JazzCash Account Title",
+      "input:jazzcash_number=0300-0000000 (REPLACE ME)",
+      "input:easypaisa_enabled=1 [x]",
+      "input:easypaisa_account_title=REPLACE ME — Easypaisa Account Title",
+      "input:easypaisa_number=0345-0000000 (REPLACE ME)",
+      "textarea:manual_payment_note=Transfer the exact total first, then add"
+     ]
+    },
+    {
+     "action": "/admin/settings/restore-wording",
+     "fields": [
+      "button:={Restore default wording}"
+     ]
+    },
+    {
+     "action": "/admin/logout",
+     "fields": [
+      "button:={Log out}"
+     ]
+    },
+    {
+     "action": null,
+     "fields": [
+      "input:=",
+      "button:={Cancel}",
+      "button:={Confirm}"
+     ]
+    }
+   ]
+  },
+  "dashboardBannersAfter": [
+   "install.php is still on the server. Delete it now from hPanel File Manager.",
+   "Customers cannot pay by JazzCash, Easypaisa: the account details are still the REPLACE ME placeholders, so these methods are hidden at checkout. Enter the real account details in Settings › Payments.",
+   "This store is still showing sample data. Remove it in Tools before you go live."
+  ],
+  "codDetail": {
+   "h1": "SF-260929-6PDX",
+   "forms": [
+    {
+     "action": "/admin/logout",
+     "fields": [
+      "button:={Log out}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/payment",
+     "fields": [
+      "input:action=mark_paid",
+      "input:amount=8950.00",
+      "input:note=",
+      "button:={Mark as paid}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/status",
+     "fields": [
+      "input:to=confirmed",
+      "button:={Mark confirmed}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/notes",
+     "fields": [
+      "input:action=contact",
+      "input:customer_name=Fresh Walk Tester",
+      "input:customer_phone=0300 1234567",
+      "input:customer_email=fresh.walk@example.com",
+      "textarea:address=House 12, Street 4, DHA Phase 6",
+      "input:city=Karachi",
+      "input:postal_code=75500",
+      "button:={}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/shipping",
+     "fields": [
+      "input:courier_name=",
+      "input:tracking_number=",
+      "input:tracking_url=",
+      "button:={Save courier details}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/notes",
+     "fields": [
+      "input:action=note",
+      "textarea:body=",
+      "input:pin=1 [ ]",
+      "button:={Add note}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/status",
+     "fields": [
+      "input:to=cancelled",
+      "input:note=",
+      "button:={Cancel this order — permanent}"
+     ]
+    },
+    {
+     "action": "/admin/orders/SF-260929-6PDX/status",
+     "fields": [
+      "input:to=confirmed",
+      "button:={Mark confirmed}"
+     ]
+    },
+    {
+     "action": "/admin/logout",
+     "fields": [
+      "button:={Log out}"
+     ]
+    },
+    {
+     "action": null,
+     "fields": [
+      "input:=",
+      "button:={Cancel}",
+      "button:={Confirm}"
+     ]
+    }
+   ]
+  },
+  "errors": []
+ },
+ "install": {
+  "step1": {
+   "title": "Check server — Sky Fragrances installer",
+   "h1": "Welcome",
+   "rows": [
+    "OK PHP version 8.2.28",
+    "OK PHP memory limit 256M — product photos up to 40.0 megapixels can be resized",
+    "OK Upload size limits post_max_size 100M, upload_max_filesize 50M",
+    "OK PHP extension pdo_mysql installed",
+    "OK PHP extension mbstring installed",
+    "OK PHP extension fileinfo installed",
+    "OK PHP extension gd installed",
+    "OK PHP extension openssl installed",
+    "OK PHP extension curl installed",
+    "OK WebP images supported — product photos will be small and fast",
+    "OK Website folder is writable config.php can be created for you",
+    "OK Folder storage exists and is writable",
+    "OK Folder storage/logs exists and is writable",
+    "OK Folder storage/cache exists and is writable",
+    "OK Folder storage/sessions exists and is writable",
+    "OK Folder storage/sessions/shop exists and is writable",
+    "OK Folder storage/sessions/admin exists and is writable",
+    "OK Folder storage/proofs exists and is writable",
+    "OK Folder uploads exists and is writable",
+    "OK Folder uploads/products exists and is writable",
+    "OK Folder uploads/collections exists and is writable",
+    "OK Folder uploads/og exists and is writable",
+    "OK Folder uploads/settings exists and is writable",
+    "OK Protection file .htaccess present",
+    "OK Protection file app/.htaccess present",
+    "OK Protection file db/.htaccess present",
+    "OK Protection file storage/.htaccess present",
+    "OK Protection file uploads/.htaccess present",
+    "OK Protection file assets/.htaccess present",
+    "OK Protection file admin/.htaccess present",
+    "OK Protection file admin/controllers/.htaccess present",
+    "OK Protection file admin/views/.htaccess present",
+    "OK Protection file admin/partials/.htaccess present",
+    "OK Client IP detection visitors connect to this server directly; their own addresses will be used for rate limits",
+    "OK Database blueprint db/schema.sql present",
+    "OK Sample data db/seed.sql present",
+    "NOTE Pretty web addresses could not be checked from this server (this is normal before your domain points here). Test /shop in your browser after installing."
+   ],
+   "boxes": [],
+   "steps": [
+    "1Check server",
+    "2Database",
+    "3Admin & data",
+    "4Finish"
+   ]
+  },
+  "step2": {
+   "h1": "Database",
+   "boxes": [
+    "Prove you own this hosting account",
+    "Shop address",
+    "Email sending (optional)"
+   ],
+   "fields": [
+    "_token=hidden:d57c62bd5fc5e384bfb717f8cc354a8b2416abde9ad95a77016570fe4fd2aeea",
+    "action=hidden:db_save",
+    "install_key=text:",
+    "db_host=text:localhost",
+    "db_port=number:3306",
+    "db_name=text:",
+    "db_user=text:",
+    "db_pass=password:",
+    "base_url=url:http://127.0.0.1:8101",
+    "smtp_host=text:smtp.hostinger.com",
+    "smtp_port=number:587",
+    "smtp_user=email:",
+    "smtp_pass=password:",
+    "smtp_from_name=text:Sky Fragrances"
+   ]
+  },
+  "installKeyFile": "32 chars",
+  "step2wrong": {
+   "url": "http://127.0.0.1:8101/install.php?step=2",
+   "boxes": [
+    "Could not connect to the database. Check the database name, username and password in hPanel → Databases. The server said: SQLSTATE[HY000] [1045] Access denied for user 'skyfr'@'localhost' (using password: YES)",
+    "Shop address",
+    "Email sending (optional)"
+   ],
+   "error": "Could not connect to the database. Check the database name, username and password in hPanel → Databases. The server said: SQLSTATE[HY000] [1045] Access denied for user 'skyfr'@'localhost' (using password: YES)"
+  },
+  "step3": {
+   "url": "http://127.0.0.1:8101/install.php?step=3",
+   "h1": "Admin account & sample data",
+   "boxes": [],
+   "fields": [
+    "_token=hidden:d57c62bd5fc5e384bfb717f8cc354a8b2416abde9ad95a77016570fe4fd2aeea",
+    "action=hidden:install",
+    "admin_username=text:",
+    "admin_email=email:",
+    "admin_password=password:",
+    "admin_password2=password:",
+    "store_name=text:Sky Fragrances",
+    "whatsapp=text:",
+    "seed=checkbox:1 checked"
+   ],
+   "buttons": [
+    "Create the shop"
+   ]
+  },
+  "configAfterStep2": "config.php written",
+  "step4": {
+   "url": "http://127.0.0.1:8101/install.php?step=3",
+   "h1": "Admin account & sample data",
+   "boxes": [],
+   "report": [],
+   "steps": [
+    "done:1Check server",
+    "done:2Database",
+    "on:3Admin & data",
+    ":4Finish"
+   ]
+  },
+  "after": {
+   "installed": false,
+   "installKey": true,
+   "installPhp": true,
+   "configMode": "0600"
+  },
+  "errors": []
+ },
+ "install3": {
+  "resume1": {
+   "h1": "Welcome",
+   "boxes": [],
+   "notice": []
+  },
+  "step3": {
+   "url": "http://127.0.0.1:8101/install.php?step=3",
+   "h1": "Admin account & sample data",
+   "fields": [
+    "_token=hidden:0f9ac48dfdc3012635adae103fc6972ce5260ae04c2295b7e4b8f9221f89fdbc",
+    "action=hidden:install",
+    "install_key=text:",
+    "admin_username=text:",
+    "admin_email=email:",
+    "admin_password=password:",
+    "admin_password2=password:",
+    "store_name=text:Sky Fragrances",
+    "whatsapp=text:",
+    "seed=checkbox:1 checked"
+   ]
+  },
+  "step4": {
+   "url": "http://127.0.0.1:8101/install.php?step=4",
+   "h1": "",
+   "boxes": [
+    "Delete install.php now Your shop is installed, but this file could not delete itself. Anyone who can open it while it exists can see your server details, so it must go. Open hPanel → File Manager → public_html and delete this file: /private",
+    "Delete install.php now",
+    "Security checks",
+    "Next steps Delete install.php (above). Log in at http://127.0.0.1:8101/admin/login. Your phone becomes a known device on the first login. Open Admin → Settings and fill in your phone, WhatsApp, bank details and announcement text. Replace th",
+    "Next steps"
+   ],
+   "report": [
+    "OK Database tables 27 statements ran without errors",
+    "OK Sample data 236 statements ran without errors",
+    "OK Installation lock storage/.installed written — this installer will not run again",
+    "OK Admin account created for sky.owner",
+    "NOTE Search engines told not to index this copy because it is not at https://skyfragrances.com. When the shop moves to its real address, switch site_indexable on in Admin → Settings → Advanced.",
+    "OK Folder storage ready",
+    "OK Folder storage/logs ready",
+    "OK Folder storage/cache ready",
+    "OK Folder storage/sessions ready",
+    "OK Folder storage/sessions/shop ready",
+    "OK Folder storage/sessions/admin ready",
+    "OK Folder storage/proofs ready",
+    "OK Folder uploads ready",
+    "OK Folder uploads/products ready",
+    "OK Folder uploads/collections ready",
+    "OK Folder uploads/og ready",
+    "OK Folder uploads/settings ready",
+    "OK Protection file app/.htaccess present",
+    "OK Protection file db/.htaccess present",
+    "OK Protection file storage/.htaccess present",
+    "OK Protection file uploads/.htaccess present",
+    "OK Protection file assets/.htaccess present",
+    "OK Protection file admin/.htaccess present",
+    "OK Protection file admin/controllers/.htaccess present",
+    "OK Protection file admin/views/.htaccess present",
+    "OK Protection file admin/partials/.htaccess present",
+    "OK Client IP detection visitors connect directly; their own addresses are used for rate limits",
+    "NOTE HTTPS redirect left temporary (302) because this is a local copy.",
+    "OK config.php locked read-only (0400); nothing on the site ever rewrites it",
+    "NOTE Uploads folder cannot run programs Could not verify — open http://127.0.0.1:8101/uploads/.probe-d7516376b30a.php on your phone; it must NOT show the word EXEC. (The test file was removed; upload any .php to uploads/ to repeat the test.)",
+    "NOTE Private file app/bootstrap.php Could not verify — open http://127.0.0.1:8101/app/bootstrap.php on your phone; it must show an error, never the file.",
+    "NOTE Private file db/schema.sql Could not verify — open http://127.0.0.1:8101/db/schema.sql on your phone; it must show an error, never the file.",
+    "NOTE Private file storage/.htaccess Could not verify — open http://127.0.0.1:8101/storage/.htaccess on your phone; it must show an error, never the file.",
+    "NOTE Private file storage/.installed Could not verify — open http://127.0.0.1:8101/storage/.installed on your phone; it must show an error, never the file.",
+    "NOTE Private file config.php Could not verify — open http://127.0.0.1:8101/config.php on your phone; it must show an error, never the file.",
+    "NOTE Private file .user.ini Could not verify — open http://127.0.0.1:8101/.user.ini on your phone; it must show an error, never the file.",
+    "NOTE Private file admin/controllers/dashboard.php Could not verify — open http://127.0.0.1:8101/admin/controllers/dashboard.php on your phone; it must show an error, never the file."
+   ],
+   "steps": [
+    "done:1Check server",
+    "done:2Database",
+    "done:3Admin & data",
+    "on:4Finish"
+   ]
+  },
+  "step4checks": {
+   "rowsAll": [
+    "OK Database tables 27 statements ran without errors",
+    "OK Sample data 236 statements ran without errors",
+    "OK Installation lock storage/.installed written — this installer will not run again",
+    "OK Admin account created for sky.owner",
+    "NOTE Search engines told not to index this copy because it is not at https://skyfragrances.com. When the shop moves to its real address, switch site_indexable on in Admin → Settings → Advanced.",
+    "OK Folder storage ready",
+    "OK Folder storage/logs ready",
+    "OK Folder storage/cache ready",
+    "OK Folder storage/sessions ready",
+    "OK Folder storage/sessions/shop ready",
+    "OK Folder storage/sessions/admin ready",
+    "OK Folder storage/proofs ready",
+    "OK Folder uploads ready",
+    "OK Folder uploads/products ready",
+    "OK Folder uploads/collections ready",
+    "OK Folder uploads/og ready",
+    "OK Folder uploads/settings ready",
+    "OK Protection file app/.htaccess present",
+    "OK Protection file db/.htaccess present",
+    "OK Protection file storage/.htaccess present",
+    "OK Protection file uploads/.htaccess present",
+    "OK Protection file assets/.htaccess present",
+    "OK Protection file admin/.htaccess present",
+    "OK Protection file admin/controllers/.htaccess present",
+    "OK Protection file admin/views/.htaccess present",
+    "OK Protection file admin/partials/.htaccess present",
+    "OK Client IP detection visitors connect directly; their own addresses are used for rate limits",
+    "NOTE HTTPS redirect left temporary (302) because this is a local copy.",
+    "OK config.php locked read-only (0400); nothing on the site ever rewrites it",
+    "NOTE Uploads folder cannot run programs Could not verify — open http://127.0.0.1:8101/uploads/.probe-6daaccc3e398.php on your phone; it must NOT show the word EXEC. (The test file was removed; upload any .php to uploads/ to repeat the test.)",
+    "NOTE Private file app/bootstrap.php Could not verify — open http://127.0.0.1:8101/app/bootstrap.php on your phone; it must show an error, never the file.",
+    "NOTE Private file db/schema.sql Could not verify — open http://127.0.0.1:8101/db/schema.sql on your phone; it must show an error, never the file.",
+    "NOTE Private file storage/.htaccess Could not verify — open http://127.0.0.1:8101/storage/.htaccess on your phone; it must show an error, never the file.",
+    "NOTE Private file storage/.installed Could not verify — open http://127.0.0.1:8101/storage/.installed on your phone; it must show an error, never the file.",
+    "NOTE Private file config.php Could not verify — open http://127.0.0.1:8101/config.php on your phone; it must show an error, never the file.",
+    "NOTE Private file .user.ini Could not verify — open http://127.0.0.1:8101/.user.ini on your phone; it must show an error, never the file.",
+    "NOTE Private file admin/controllers/dashboard.php Could not verify — open http://127.0.0.1:8101/admin/controllers/dashboard.php on your phone; it must show an error, never the file."
+   ]
+  },
+  "after": {
+   "installed": true,
+   "installKey": false,
+   "installPhp": true,
+   "configMode": "0400"
+  },
+  "errors": []
+ },
+ "refuse": {
+  "refuse_root": {
+   "status": 200,
+   "h1": "",
+   "boxes": [
+    "Sky Fragrances is already installed — delete install.php The settings table says the installation was completed. This installer will not run again. Leaving the file here is a security risk. Open hPanel → File Manager → public_html and delet",
+    "Sky Fragrances is already installed — delete install.php"
+   ]
+  },
+  "refuse?step=2": {
+   "status": 200,
+   "h1": "",
+   "boxes": [
+    "Sky Fragrances is already installed — delete install.php The settings table says the installation was completed. This installer will not run again. Leaving the file here is a security risk. Open hPanel → File Manager → public_html and delet",
+    "Sky Fragrances is already installed — delete install.php"
+   ]
+  },
+  "refuse?step=3": {
+   "status": 200,
+   "h1": "",
+   "boxes": [
+    "Sky Fragrances is already installed — delete install.php The settings table says the installation was completed. This installer will not run again. Leaving the file here is a security risk. Open hPanel → File Manager → public_html and delet",
+    "Sky Fragrances is already installed — delete install.php"
+   ]
+  },
+  "afterDelete": {
+   "h1": "",
+   "text": "SKY FRAGRANCES · Installerinstall.php has been deletedWell done. Your shop is ready.Go to the admin login",
+   "fileExists": false
+  },
+  "getAfterDelete": {
+   "status": 404,
+   "title": "Page Not Found | Sky Fragrances"
+  },
+  "errors": [
+   "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+ },
+ "shop-transfer": {
+  "transfer": {
+   "pdp": {
+    "status": 200,
+    "title": "Cirrus Eau de Parfum — Fresh Unisex | Sky Fragrances",
+    "price": "Rs. 5,450\n          \n          \n          Inclusive of all t"
+   },
+   "checkout": {
+    "url": "http://127.0.0.1:8101/checkout",
+    "methods": [
+     "cod*",
+     "bank"
+    ],
+    "summary": "1 item · Rs. 5,450 Show order Hide Cirrus50ml × 1 Rs. 5,450"
+   },
+   "result": {
+    "url": "http://127.0.0.1:8101/order/SF-260929-NMJA?t=a77cf1c9b2a0df4c2fb7d2c5b186d3c7",
+    "h1": "Thank you, Fresh.",
+    "text": "Thank you, Fresh. Your order is in. Here is everything you need to keep. SF-260929-NMJA Placed 29 Sep 2026, 11:51 AM · Pending Awaiting verification We've sent a confirmation to fresh.walk@example.com. Message us about this order Track your order Bank Transfer We're verifying your payment. You'll get a confirmation once it clears — usually within a few hours. Transaction IDTXN20260929-FRESH-0001 ReceiptUploaded 29 Sep 2026, 11:51 AM Not paid yet? Transfer exactly Rs. 5,450 to: BankMeezan Bank Ac"
+   },
+   "orderNumber": "SF-260929-NMJA"
+  },
+  "track": {
+   "url": "http://127.0.0.1:8101/track",
+   "h1": "Track Your Order",
+   "text": "Track Your Order Enter your order number and the phone number you ordered with. Both are on your confirmation page. We couldn't find an order with those details. Please check the order number and the phone number used when ordering, or message us on WhatsApp. Website Order number Phone number Any fo"
+  },
+  "errors": [
+   "console: Loading the image 'blob:http://127.0.0.1:8101/d85a0747-e700-45bb-a65d-99d053fc0053' violates the following Content Security Policy directive: \"img-src 'self' data:\". The action has been blocked."
+  ]
+ },
+ "track": {
+  "trackRight": "Track Your Order Enter your order number and the phone number you ordered with. Both are on your confirmation page. Website Order number Phone number Any format works: 0300 1234567 or +92 300 1234567. Check again Need help? Message us Order status Hello, Fresh. SF-260929-6PDX Placed 29 Sep 2026 · 1 ",
+  "trackTransfer": "Track Your Order Enter your order number and the phone number you ordered with. Both are on your confirmation page. Website Order number Phone number Any format works: 0300 1234567 or +92 300 1234567. Check again Need help? Message us Order status Hello, Fresh. SF-260929-NMJA Placed 29 Sep 2026 · 1 ",
+  "trackWrong": "Track Your Order Enter your order number and the phone number you ordered with. Both are on your confirmation page. We couldn't find an order with those details. Please check the order number and the phone number used when ordering, or message us on WhatsApp. Website Order number Phone number Any fo",
+  "errors": []
+ }
+}

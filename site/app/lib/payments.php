@@ -46,7 +46,12 @@ function payment_method_enabled(string $method): bool
 
 function payment_methods_enabled(): array
 {
-    return array_values(array_filter(PAYMENT_METHODS, 'payment_method_enabled'));
+    $methods = array_values(array_filter(PAYMENT_METHODS, 'payment_method_enabled'));
+    if ($methods === []) {
+        log_write('warning', 'No payment method is usable; Cash on Delivery offered as the fallback', ['cod_enabled' => setting_bool('cod_enabled', false)]);
+        return ['cod'];
+    }
+    return $methods;
 }
 
 function payment_methods_for_view(): array

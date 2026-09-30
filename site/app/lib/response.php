@@ -104,7 +104,7 @@ function response_csp(): string
         "script-src 'self' '" . CSP_BOOTSTRAP_SCRIPT_HASH . "'",
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self'",
-        "img-src 'self' data:",
+        "img-src 'self' data: blob:",
         "connect-src 'self'",
         "frame-src 'none'",
     ];

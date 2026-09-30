@@ -137,11 +137,12 @@ function order_items_fingerprint(int $orderId): string
 
 function order_outstanding_transfer(string $phoneNormalized, string $ipHash, int $excludeOrderId = 0): ?array
 {
-    foreach (['phone' => ['phone_normalized', $phoneNormalized], 'ip' => ['ip_hash', $ipHash]] as $matched => [$column, $value]) {
-        $row = db_fetch(
-            "SELECT order_number FROM orders WHERE {$column} = :value AND payment_method IN ('bank', 'jazzcash', 'easypaisa') AND status = 'pending' AND payment_status IN ('unpaid', 'awaiting_verification', 'failed') AND id <> :exclude ORDER BY created_at DESC LIMIT 1",
-            ['value' => $value, 'exclude' => $excludeOrderId]
-        );
+    $lookups = [
+        'phone' => ["SELECT order_number FROM orders WHERE phone_normalized = :value AND payment_method IN ('bank', 'jazzcash', 'easypaisa') AND status = 'pending' AND payment_status IN ('unpaid', 'awaiting_verification', 'failed') AND id <> :exclude ORDER BY created_at DESC LIMIT 1", $phoneNormalized],
+        'ip' => ["SELECT order_number FROM orders WHERE ip_hash = :value AND payment_method IN ('bank', 'jazzcash', 'easypaisa') AND status = 'pending' AND payment_status IN ('unpaid', 'awaiting_verification', 'failed') AND id <> :exclude ORDER BY created_at DESC LIMIT 1", $ipHash],
+    ];
+    foreach ($lookups as $matched => [$sql, $value]) {
+        $row = db_fetch($sql, ['value' => $value, 'exclude' => $excludeOrderId]);
         if ($row !== null) {
             return ['order_number' => (string) $row['order_number'], 'matched' => $matched];
         }
@@ -159,9 +160,11 @@ function order_outstanding_transfer_message(array $outstanding): string
 
 function order_recent_count(string $column, string $value, int $seconds): int
 {
-    $column = in_array($column, ['phone_normalized', 'ip_hash'], true) ? $column : 'phone_normalized';
+    $sql = $column === 'ip_hash'
+        ? "SELECT COUNT(*) FROM orders WHERE ip_hash = :value AND created_at > :since AND status <> 'cancelled'"
+        : "SELECT COUNT(*) FROM orders WHERE phone_normalized = :value AND created_at > :since AND status <> 'cancelled'";
     return (int) db_fetch_column(
-        "SELECT COUNT(*) FROM orders WHERE {$column} = :value AND created_at > :since AND status <> 'cancelled'",
+        $sql,
         ['value' => $value, 'since' => date('Y-m-d H:i:s', time() - $seconds)]
     );
 }

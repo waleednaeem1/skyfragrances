@@ -21,6 +21,9 @@ if (!empty($attention['outbox'])) {
 <?php if (!empty($installerPresent)): ?>
 <div class="adm-banner" role="alert">install.php is still on the server. Delete it now from hPanel File Manager.</div>
 <?php endif; ?>
+<?php if (!empty($placeholderMethods)): ?>
+<div class="adm-banner" role="alert">Customers cannot pay by <?= e(implode(', ', $placeholderMethods)) ?>: the account details are still the REPLACE ME placeholders, so these methods are hidden at checkout. <a href="<?= e(url('/admin/settings?tab=payments')) ?>">Enter the real account details in Settings › Payments</a>.</div>
+<?php endif; ?>
 <?php if (!empty($maintenanceOn)): ?>
 <div class="adm-banner adm-banner--warn" role="status">The shop is in maintenance mode — customers see the closed page. <a href="<?= e(url('/admin/settings?tab=advanced')) ?>">Turn it off in Settings › Advanced</a>.</div>
 <?php endif; ?>

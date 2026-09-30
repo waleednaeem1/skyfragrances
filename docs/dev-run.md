@@ -34,7 +34,7 @@ are displayed and every log level is written. On Hostinger the same file is writ
 
 | Request | Behaviour |
 |---|---|
-| `/app/...`, `/db/...`, `/storage/...`, `/dev/...`, `/config.php`, `/.user.ini`, `/.htaccess`, `*.sql`, `*.md`, `*.log` | 403 (the same paths are denied by `.htaccess` on Hostinger) |
+| `/app/...`, `/db/...`, `/storage/...`, `/dev/...`, `/admin/controllers|views|partials/...`, `/config.php`, `/.user.ini`, `/.htaccess`, `*.sql`, `*.md`, `*.log` | denied — rendered through `index.php` with `REDIRECT_STATUS` set, so you see the branded 404 exactly as `ErrorDocument 403 /index.php` produces it on Hostinger |
 | `/index.php/anything` | 301 to `/anything` |
 | `/shop/` (trailing slash, not a real directory) | 301 to `/shop` |
 | `/uploads/*.php` | 403; other existing files under `/uploads/` and `/assets/` are served as-is |

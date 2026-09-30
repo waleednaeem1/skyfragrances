@@ -134,17 +134,19 @@ function product_pick_default_size(array $sizes, int $requestedId): ?array
             return $size;
         }
     }
-    foreach ($sizes as $size) {
-        if ($size['is_default']) {
-            return $size;
-        }
-    }
+    $firstInStock = null;
     foreach ($sizes as $size) {
         if ($size['in_stock']) {
-            return $size;
+            $firstInStock = $size;
+            break;
         }
     }
-    return $sizes[0];
+    foreach ($sizes as $size) {
+        if ($size['is_default']) {
+            return $size['in_stock'] || $firstInStock === null ? $size : $firstInStock;
+        }
+    }
+    return $firstInStock ?? $sizes[0];
 }
 
 function product_split_list(?string $raw): array
@@ -401,7 +403,7 @@ function product_whatsapp(array $product, ?array $defaultSize): array
         return ['digits' => '', 'base' => '', 'href' => '', 'in' => '', 'out' => ''];
     }
     $link = canonical('/product/' . $product['slug']);
-    $intro = "Assalam-o-Alaikum! I'd like to order from Sky Fragrances.\n\nProduct: " . $product['name'] . "\n";
+    $intro = "Assalam-o-Alaikum. I'd like to order from Sky Fragrances.\n\nProduct: " . $product['name'] . "\n";
     $in = $intro . "Size: {size}\nPrice: {price}\nLink: " . $link . "\n\nPlease confirm availability and delivery.";
     $out = $intro . "Size: {size} (shown as out of stock)\nLink: " . $link . "\n\nPlease let me know when this size is back in stock.";
     $base = 'https://wa.me/' . $digits;

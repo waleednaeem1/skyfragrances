@@ -823,6 +823,7 @@
     color: var(--ink-500);
   }
   .breadcrumb__item:last-child::after { content: none; }
+  .breadcrumb__item:last-child { min-width: 0; }
   .breadcrumb__link {
     display: inline-flex;
     align-items: center;
@@ -834,9 +835,10 @@
   }
   .breadcrumb__link:hover { color: var(--accent); }
   .breadcrumb__current {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
+    min-width: 0;
     min-height: var(--tap);
+    line-height: var(--tap);
     color: var(--text);
   }
 

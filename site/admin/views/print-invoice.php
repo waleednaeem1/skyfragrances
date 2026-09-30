@@ -47,6 +47,17 @@ td { padding: 7px 4px; border-bottom: 1px solid var(--line); vertical-align: top
 .collect { border: 3px solid var(--ink); padding: 10px 14px; font-weight: 700; font-size: 13pt; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 10px; }
 .foot { margin-top: 18px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 9.5pt; color: var(--muted); }
 .foot .thanks { color: var(--ink); font-family: "Cormorant Garamond", Georgia, serif; font-size: 12pt; margin: 0 0 6px; }
+@media screen and (max-width: 600px) {
+  .sheet { margin: 8px; padding: 16px; }
+  .head { flex-wrap: wrap; }
+  .logo { width: 40mm; }
+  .doc { text-align: left; }
+  .doc h1 { font-size: 20pt; letter-spacing: 0.12em; }
+  .cols { display: block; }
+  .cols > div + div { margin-top: 12px; }
+  table .hide-narrow { display: none; }
+  .totals { width: 100%; }
+}
 @media print {
   html, body { background: #fff; }
   .toolbar { display: none !important; }

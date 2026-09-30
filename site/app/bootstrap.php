@@ -163,7 +163,7 @@ function bootstrap_session_start(): void
     }
     $cookie = session_get_cookie_params();
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => defined('SKYFR_ADMIN') ? 0 : 259200,
         'path' => $ownsSession ? BASE_PATH . '/' : $cookie['path'],
         'domain' => '',
         'secure' => APP_ENV === 'production',

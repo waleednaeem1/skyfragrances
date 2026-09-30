@@ -1,74 +1,117 @@
-# Sky Fragrances — Launch build completion report
+# Sky Fragrances: completion report
 
-Written 2026-09-28 (late evening, Karachi) against branch `main` at commit `0f714ea` **plus the
-uncommitted working tree** (see §9.1: `site/index.php`, `site/install.php`, `site/app/lib/text.php`,
-`site/dev/zip-manifest.php`, `.gitignore`, untracked `README.md` and launch evidence). The ZIP the
-owner receives, `dist/skyfragrances-20260928-1906.zip`, was built from that working tree on 2026-09-29
-00:06 Karachi (its only difference from the 23:16 `1816` build is `app/tools/reset-password.php`).
-Scope: the launch build only — storefront, commerce engine, intro loader, admin panel. The motion
-layer on `motion-wip` is reported in §7 as work in progress and counts toward no brief item.
+Written 2026-10-01, 00:10 Karachi. This replaces the copy from 2026-09-28. That copy was written
+before the motion layer merge, the acceptance run and the stage-5 screenshots, so its numbers and
+statuses no longer apply.
 
-This report replaces the earlier copy written against commit `9728844` at 14:34; everything below
-was re-derived from the current files.
+**What this report covers**
 
-Sources read for this report, line by line: `docs/plan/00-brief.md`; `docs/plan/08-decisions-register.md`
-(§3 open questions, §4 scope decisions, the C-nn rulings cited below); `docs/launch/storefront-smoke.md`
-(run 22:09–22:25); `docs/launch/admin-smoke.md` (run 22:45–23:07, 86 checks); `docs/stage1-run-report.md`;
-`docs/stage2-run-report.md`; `docs/HANDOVER.md` (incl. §7 fresh-install rehearsal 23:18–23:24);
-`docs/launch/guide-review.md`; `docs/launch/observations-for-polish.md`; `docs/build/admin-orders.md`;
-the 24 PNGs + `report.json` in `docs/launch/shots-store/`, the 12 PNGs + `report.json` in
-`docs/launch/shots-admin/`, `docs/launch/shots-fresh-install/04-finish.png` + `evidence.json`; the
-`motion-wip` commit `b37bd1f` and `docs/motion/00-brief.md` / `PLAN.md` headings; and the shipped
-source under `site/` (grepped for every claim marked "code").
+- **The ZIP the owner receives.** `dist/skyfragrances-public_html-folder.zip` is 13,943,403 bytes
+  and holds 595 files. It was built on 2026-09-29 at 11:41 from `main` at `49cd8f1` plus the
+  uncommitted acceptance-run fixes. The build is still current: all nine files the acceptance run
+  changed are byte-identical in `dist/public_html/`, and nothing under `site/` is newer than the
+  ZIP.
+- **The live site.** https://skyfragrances.com runs `49cd8f1`, which is what was pushed. The
+  acceptance fixes are not on it (see §9, item 2). I checked the live site read-only on
+  2026-10-01 between 00:00 and 00:10: `curl` for status codes and headers, plus five Lighthouse
+  runs.
+- **No code was changed and nothing was committed.**
+- **Update, 2026-10-01 00:25 Karachi (handover-gap run, HO §8d, AR §15).** Two code fixes:
+  `app/lib/response.php` (CSP `img-src` now allows `blob:`, so the proof preview renders) and
+  `assets/css/critical.css` (long breadcrumbs end in "…" instead of being cut mid-word). The ZIP
+  was rebuilt: `dist/skyfragrances-public_html-folder.zip` is now **13,943,403 bytes**, 595 files,
+  the same list as before, only those two files differ. The guide-review pass 5 findings were
+  applied to `docs/GO-LIVE-GUIDE.md` and `docs/HANDOVER.md`. Rows 1.5, 2.5, 3.5c, 6.6 and 6.7 and
+  §9.2 items 7–8 below are updated; the counts do not change. Still nothing committed.
+
+**Sources I read in full**
+
+- `docs/plan/00-brief.md`
+- `docs/acceptance-report.md` (97 checklist items, run on 2026-09-29)
+- `docs/plan/08-decisions-register.md` (§3 open questions, §4 scope, §5 acceptance-run rulings)
+- `docs/HANDOVER.md` (§5 limitations, §7b rehearsal of the ZIP, §9 open items)
+- `docs/lighthouse/summary.md`, `docs/lighthouse/fresh-install-zip/summary.md` and
+  `docs/perf/critical-css.md`
+- the headings and findings of `docs/guide-review.md`. Pass 5 of that file was being written by
+  another session while I worked (its timestamp is 2026-10-01 00:08), so I quote only what it
+  said at that time.
+- the motion documents: `docs/motion/00-brief.md`, `run-report.md`, `technical-fixes.md` and the
+  headings of `review-a11y.md`
+- `docs/a11y-audit.md` and `docs/security-final.md` §10
+- `docs/launch/observations-for-polish.md`
+
+**Screenshots I opened**
+
+- All 24 storefront PNGs in `docs/shots/stage5/`. Each was cut into full-width strips, and I read
+  every strip covering the top of each page.
+- All 33 screenshots in `docs/shots/stage5/admin/` (replaced on 2026-10-01, see §10 finding 1).
+- Three screenshots from other runs, where stage 5 had no usable shot:
+  `docs/launch/shots-fresh-install-zip/26-admin-order-transfer-detail.png`,
+  `docs/launch/shots-admin/admin_orders_SF_260928_PAQ6--mobile.png` and
+  `docs/launch/shots-admin/admin--mobile.png`.
 
 ## Status vocabulary
 
 | Mark | Meaning |
 |---|---|
-| **DONE** | Built and exercised by a recorded run (a smoke-report line, a screenshot, or the fresh-install rehearsal). |
-| **DONE\*** | Built — the code path exists and was read for this report — but no recorded run exercised it. Treat as untested. |
-| **PARTIAL** | Some of the requirement is built and proven; the rest is not. The gap is named. |
-| **NOT DONE** | Not built, or built but never proven and the brief's acceptance criterion is unmet. |
+| **DONE** | Built and proven by a recorded run, a screenshot or a live probe. The evidence is named. |
+| **PARTIAL** | Part of the requirement is built and proven, and part is not. The missing part is named. It is a PARTIAL even when the gap is "never proven" rather than "known broken". |
+| **NOT DONE** | Not built, or built but failing the brief. |
 
-Evidence abbreviations: `S1` = stage1-run-report, `S2` = stage2-run-report, `SF` = storefront-smoke,
-`AS` = admin-smoke, `HO` = HANDOVER, `OBS` = observations-for-polish, `GR` = guide-review,
-`shots-store/…`, `shots-admin/…`, `shots-fresh-install/…` = screenshot files; code paths are
-relative to `site/`.
+**How evidence is cited**
+
+- `AR §n`: `docs/acceptance-report.md`
+- `HO`: `docs/HANDOVER.md`
+- `GR5 #n`: finding n in `docs/guide-review.md` pass 5
+- `LH`: `docs/lighthouse/summary.md`
+- `LIVE`: my probes of skyfragrances.com on 2026-10-01
+- File names ending in `.png` are in `docs/shots/stage5/` unless another folder is named.
+- Code paths are relative to `site/`.
+
+---
 
 ## 0. Summary
 
-- Requirement rows tracked in §1–§6: **102. DONE 90 · DONE\* 4 (built, never exercised) · PARTIAL 7 · NOT DONE 1.**
-  (Before the 2026-09-29 gap run: 83 / 7 / 8 / 4.)
-- The one NOT DONE item: **5.16** — no Hostinger run is recorded; `OBS` proves a human put the build
-  on Hostinger on 2026-09-28 and found three problems there, but no report, screenshot or route table
-  from that host exists in the repository.
-- Closed on 2026-09-29 (HO §8b): the price-range filter (3.2b), JazzCash and Easypaisa orders
-  (3.5d/e, 6.4), proof viewer / mark paid / restore-stock-on-cancel (4.10, 4.11, 4.13), and the
-  C-64 password-recovery tool (`app/tools/reset-password.php`, built and exercised over HTTP).
-  Lighthouse (5.4) moved from *never measured* to *measured and below target on mobile*: 76–77
-  mobile, 98 desktop (`docs/launch/lighthouse.md`).
-- The seven PARTIAL rows: hPanel upload (2.3 — rehearsed locally, a live extract dropped the
-  dot-files), order emails (3.6b — built, never delivered: no SMTP in any run), Lighthouse (5.4 —
-  mobile 76–77 against a 90 target; the intro loader is the whole gap), "never expose errors" (5.15
-  — PHP side proven, `.htaccess` side only read, CSP stripped by Hostinger's CDN), MariaDB 10.4+
-  (5.20 — proven on 10.11 only), every admin function tested (6.5 — six actions never pressed, three
-  of them deliberately because they change shared state), and the go-live guide (6.7 — complete,
-  38 review gaps applied, never trialled by a non-developer, no hPanel screenshots).
-- The four DONE\* rows are code that exists and was read but that no run touched: HTTPS force
-  (2.7), cart drawer open state (3.4a), the uploads PHP block on a real Apache/LiteSpeed (5.14), and
-  the push-to-deploy workflow (6.8).
-- Nothing in the launch build references `core.js`, `motion.css` or the motion section modules
-  (`SF` step 2 grep over responses and sources; `HO` §7 ZIP check). `assets/js/motion/config.js` does
-  ship — the intro loader reads `window.SF_MOTION` from it — and is a `required_files` entry in
-  `dev/zip-manifest.php`.
-- The `dist/` folder now has exactly one current ZIP (`1906`), one unpacked twin and the
-  `htaccess-upload/` fallback; the `1816` ZIP, `skyfragrances-update-2026-09-28.zip`, `update-pack/`,
-  `admin-ui-fix/` and the stale `public_html-READY-TO-UPLOAD/` are under `dist/old-builds/`. **Layout contradiction to resolve
-  before the owner extracts again:** `OBS` says hPanel's extractor drops top-level dot-files and "the ZIP
-  now wraps everything in `public_html/`", but the 23:16 ZIP is flat (`favicon.ico`, `install.php`,
-  `.user.ini` at the root; zero entries under `public_html/`) and the guide's Part 4 describes the
-  flat extraction. If the `OBS` finding is right, extracting this ZIP in hPanel loses `.htaccess` and
-  `.user.ini` (see §5.16, §9.1).
+**Counts.** The brief breaks down into 82 requirement rows in §1–§6: **74 DONE, 8 PARTIAL,
+0 NOT DONE.**
+
+**The nine PARTIAL rows**
+
+| Row | Requirement | What is missing |
+|---|---|---|
+| 1.5 | "Better than Le Labo / Byredo" | Every product image is generated placeholder bottle art. No real photography exists yet. (The mobile breadcrumb cut is fixed; the hero plate's straight edge is still unconfirmed.) |
+| 2.4 | One CSS file | The storefront loads 2 or 3 stylesheets and the admin loads 2. |
+| 2.5 | Works by upload through hPanel File Manager | No recorded run of a File-Manager upload on Hostinger. (The guide's checklist no longer causes the nested-folder mistake.) |
+| 3.6b | Emails to the customer and the admin | No email has been delivered in any run. They have only been queued or rendered. |
+| 4.9 | Settings | Logo and image uploads and the social links were never exercised. |
+| 5.9 | MySQL 8 and MariaDB 10.4+ | Proven only on MySQL 9.3 and MariaDB 10.11. |
+| 6.5 | Test every admin function | Same gap as 4.9. |
+| 6.7 | Non-developer guide | Pass 5's 4 BLOCKER and 10 RISK items are now applied, including Part 0 for the already-live shop. It was never tried by a non-developer and has no hPanel screenshots. |
+
+**Things the owner must know now**
+
+1. **The shop is already live, public and indexable, and it still shows the sample catalogue.**
+   - `robots` says `index,follow` and `/sitemap.xml` lists 40 addresses.
+   - The 12 sample perfumes can be put in the cart and ordered.
+   - The go-live guide assumes an empty hosting account. Its Parts 1–5 would take the live shop
+     offline (GR5 #1).
+   - Do the guide's Part 0 and the **LIVE** lines of its day-one checklist (`docs/GO-LIVE-GUIDE.md`,
+     top) before anything else:
+     hide the products, turn indexing off and fix the payment details.
+2. **Lighthouse on the live host meets the 90+ target:** 99 / 99 / 99 on `/`, `/shop` and
+   `/product/azure-oud` (mobile, simulated 4G, motion layer on). `/` and the product page also
+   score 100 for accessibility, best practices and SEO. Details in §7.
+3. **The acceptance run's fixes are in the ZIP but not on the live site.** Examples: the COD
+   fallback, the red dashboard banner for placeholder payment details, and the 3-day cart cookie.
+   The live sitemap still lists `/track`, which fix 5 removed. Because a push to `main`
+   auto-deploys (`.github/workflows/deploy.yml`), they reach the live site only when the owner
+   approves a commit and a push.
+4. **Two of the acceptance report's claims rested on screenshots that did not show what it says (resolved 2026-10-01, see 4.2).**
+   Its §12 says the stage-5 tour captured 15 admin screens at 375 px with 0 overflow (the §5 last
+   row and §8 rely on this). In fact all 14 desktop PNGs are byte-identical, and so are all 14
+   mobile PNGs: every one is the **admin login page** (§10, finding 1). The admin works (the ZIP
+   rehearsal shows it at 1280 px, and the 28 Sep tour shows it at 375 px). But no screenshot of
+   the final build proves the admin on a phone.
 
 ---
 
@@ -76,339 +119,418 @@ relative to `site/`.
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 1.1 | Name Sky Fragrances, domain skyfragrances.com | DONE | `settings.store_name` seed; `robots.txt` line 14 `Sitemap: https://skyfragrances.com/sitemap.xml`; installer canonical-host rule (S1 review, C-47); "Sky Fragrances" in the header/footer of every `shots-store/*` PNG. |
-| 1.2 | Tagline "More Than Just A Scent" | DONE | Hero h1 in `shots-store/home--desktop.png` and `home--mobile.png`; WhatsApp sign-off "Sky Fragrances — More Than Just A Scent" (AS §4). The `<h1>` of `/about` also reads it (`about--desktop.png`). |
-| 1.3 | Logo: gold SF monogram + wordmark on black | DONE | `assets/img/brand/*`, `assets/img/logo.png/.svg`; monogram in the header and lockup in the footer of every store shot; Settings › Store shows `logo.png` as current (`shots-admin/admin_settings--desktop.png`). |
-| 1.4 | Ultra-luxury minimal look: #0A0A0A black, champagne gold, ivory, Cormorant Garamond headings, Jost body, whitespace | DONE | `assets/fonts/cormorant-garamond-variable.woff2`, `jost-variable.woff2` (self-hosted, OFL licences shipped); serif headings and gold rules visible in `home--desktop.png`, `product_azure_oud--desktop.png`, `faq--desktop.png`. Whether it "looks better than Le Labo / Byredo" is a judgement no run can prove; what the shots show is a consistent dark-gold system with **placeholder bottle art** (§8, `OBS`). |
-| 1.5 | Subtle animations: fade/slide on scroll, hover zoom on products | DONE | `assets/js/reveal.js` (`.sf-reveal`, fixed in `0f714ea` for Back/anchor restores — `OBS`); product-card hover image swap `app/partials/product-card.php:166`; gallery "Hover to zoom" `app/partials/gallery.php:38` + `product.js:288`. `prefers-reduced-motion` honoured (`site.css`, 2 blocks; intro `sf-intro-calm` path SF step 5). |
-| 1.6 | Market Pakistan, PKR as "Rs. 4,950", Asia/Karachi | DONE | `money('4950.00')` = `Rs. 4,950` (S1 CLI contract); every price in the screenshots; Settings › Store timezone read-only `Asia/Karachi` (`admin_settings--desktop.png`); dashboard dates in Karachi time (`dashboard.php:55`). |
+| 1.1 | Name Sky Fragrances, domain skyfragrances.com | DONE | LIVE: `https://skyfragrances.com/` 200, `/robots.txt` 200; the header monogram and footer lockup are in every storefront shot (`home--desktop.png`, `contact--desktop.png`). |
+| 1.2 | Tagline "More Than Just A Scent" | DONE | It is the hero `<h1>` in `home--desktop.png` and `home--mobile.png`, and the footer line under the logo in every page shot. |
+| 1.3 | Logo: champagne-gold "SF" monogram plus "SKY FRAGRANCES" on black | DONE | Monogram in the header of every shot; full lockup on the admin login (`admin/admin--mobile.png`) and in the footer; files are in `assets/img/`. |
+| 1.4 | Ultra-luxury minimal look: #0A0A0A, champagne gold, ivory, Cormorant Garamond headings, Jost body, lots of whitespace | DONE | Self-hosted variable fonts in `assets/fonts/`. Serif headings, gold rules, gold-gradient buttons and the single ivory "Why choose us" band (register Q-22) are in `home--desktop.png`, `product_azure_oud--desktop.png` and `faq--mobile.png`. |
+| 1.5 | "Must look better than top perfume brands (Le Labo, Byredo, J. and Scentsation)" | PARTIAL | The layout, type and motion are consistent and hold up at both sizes in every stage-5 shot. But **every product, collection and Instagram image is generated placeholder art**: the same outlined bottle on a coloured glow (`shop--desktop.png`, `home--desktop.png`). No brand at that level sells with placeholder art, and only the owner's photography closes the gap (`docs/launch/observations-for-polish.md`). Two visual flaws are visible in the shots: (a) the hero's ribbon plate ends in a straight horizontal edge across the subheading at both widths (`home--mobile.png`, and the same in `docs/shots/live/home--mobile.png`), which no review has confirmed or ruled out on a real device; (b) mobile breadcrumbs were cut mid-word with no ellipsis ("AZURE OU" in `product_azure_oud--mobile.png`, "FREQUENTLY ASKED QUE" in `faq--mobile.png`) — **fixed 2026-10-01** in `assets/css/critical.css`: they now end in "…" ("AZURE …", "FREQUENTLY ASKED Q…"; `docs/launch/shots-breadcrumb/`, AR §15). The row stays PARTIAL for the placeholder art and the unconfirmed hero edge. |
+| 1.6 | Subtle animations (fade/slide on scroll, hover zoom on products) | DONE | `assets/js/reveal.js` and the motion layer (`assets/js/motion/**`, `assets/css/motion.css`); card hover and gallery zoom (`app/partials/product-card.php`, `app/partials/gallery.php`). With reduced motion nothing animates: 0 running animations, no intro, Lenis off (AR §10). |
+| 1.7 | Pakistan, PKR shown as "Rs. 4,950", Asia/Karachi | DONE | Every price in the shots uses that format ("From Rs. 3,950 ~~Rs. 4,950~~" in `shop--desktop.png`); `money()`; `/track` and the admin show dates in Karachi time (AR §2, §4). |
 
----
-
-## 2. Hosting & tech (brief lines 13–19)
+## 2. Hosting and tech (brief lines 13–19)
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 2.1 | Hostinger shared: PHP 8.x + MySQL only; no Node, Composer, build step | DONE | No `composer.json`, `package.json` or `node_modules` under `site/`; PHPMailer is vendored by hand (`app/lib/vendor/PHPMailer/`, 3 files + licence); `node --check` is dev tooling only (SF step 1). The ZIP has no `dev/` (HO §7). |
-| 2.2 | Plain PHP + PDO with prepared statements everywhere; vanilla JS; one CSS file | DONE | `app/lib/db.php` named-placeholder helpers; `db_query()` with a positional placeholder throws (S1 CLI contract). One storefront stylesheet `assets/css/site.css`; the admin has its own `admin.css` (a second file, for a second surface — not a violation of the intent). 10 JS files, no framework. |
-| 2.3 | Works by uploading via hPanel File Manager + importing the DB | PARTIAL | Rehearsed locally from the ZIP with a fresh database (HO §7, `shots-fresh-install/04-finish.png`). On the real hPanel a human found that the extractor **drops top-level dot-files** (`OBS`), which the flat ZIP depends on; the workaround files `dist/htaccess-upload/htaccess.txt` + `user.ini` exist and the guide (Part 4, "If you uploaded the folder") covers renaming them. The ZIP layout was not changed to match the `OBS` note (§0). |
-| 2.4 | `config.php` for DB credentials | DONE | Written by the installer at mode 0400 (`shots-fresh-install/04-finish.png` "config.php locked"); `config.sample.php` ships; `config.php` excluded from the ZIP (HO §7). |
-| 2.5 | One-time `install.php`: creates tables, admin, sample data, tells the owner to delete it | DONE | Four screens, 27 schema + 234 seed statements, admin created, lock written (HO §7; `04-finish.png`). Red "Delete install.php now" panel with a self-delete button on non-production hosts; self-deletes on skyfragrances.com (`install.php:912–934`, HO §5.3). Re-run refused every time (`06-refusal.png`). Installer hardening: owner key inside the form (`c220904`, after a human found the key box outside the form — `OBS`), fail-closed on a dead `config.php` (S1 review). |
-| 2.6 | Pretty URLs via `.htaccess` (`/product/azure-oud`, `/shop`, `/cart`) | DONE | Every pretty route 200 through the dev router that mirrors the rewrite (SF step 2, 38 URLs; S2 §3); the real `.htaccess` (`site/.htaccess` lines 2–27) is read, not exercised (§5.16). `GET /__rewrite-probe` lets the installer self-check the rewrite on the real host (S1 fix). |
-| 2.7 | Force HTTPS | DONE\* | `.htaccess:21–27` redirects `http` → `https` as a 302 that the installer / Settings › Advanced flips to 301 after a live certificate check (C-52); `www` → apex 301. Cannot run under `php -S`; on Hostinger the guide says to keep hPanel "Force HTTPS" **off** (HO §5.11, GR gap 3). HSTS deliberately off (Q-23). |
+| 2.1 | Hostinger shared hosting: PHP 8.x and MySQL only; no Node, no Composer, no build step | DONE | No `composer.json`, `package.json` or `node_modules` under `site/`. PHPMailer is vendored by hand. The ZIP has no `dev/` (HO §7b). LIVE: the site is served by Hostinger (`platform: hostinger`). `motion.css` is made by `cat motion/*.css` on the developer's machine and ships already assembled, so the owner never runs it. |
+| 2.2 | Plain PHP with PDO, prepared statements everywhere | DONE | `app/lib/db.php`. The last two `{$column}` interpolations were rewritten as literal statements (AR §11 fix 9); source scans are in `docs/security-final.md` §6. `'; DROP TABLE products; --` in search, coupon, contact and track did nothing (AR §9). |
+| 2.3 | Vanilla JS | DONE | No framework. The client's own motion brief (`docs/motion/00-brief.md`, 2026-09-26) later asked for GSAP + ScrollTrigger and Lenis. These are vendored in `assets/js/vendor/` with licences, and phones never load them (HO §6). **Correction to the task text: there is no Three.js in the tree.** The hero ribbons are a hand-written WebGL module (`assets/js/motion/ribbons-gl.js`, 13.6 KB), as decided in `docs/motion/PLAN.md` §8 row 1. |
+| 2.4 | One CSS file | PARTIAL | The storefront loads `assets/css/critical.css` (blocking) plus `site.css` (deferred) on every page, and `motion.css` as well on home, listing, collections, product and quiz. The admin loads `admin.css` plus the shared foundation sheet (commit `78efea4`). The critical/site split is a register ruling (08 §5, acceptance run) that bought Lighthouse points; `motion.css` came with the client's motion brief. There is still no build step and all the CSS is hand-written. But "one CSS file" is literally not what ships: it is 4 files. |
+| 2.5 | Must work by uploading through hPanel File Manager and importing the DB | PARTIAL | **Proven locally:** the ZIP was unzipped, installed through `install.php` and walked end to end (HO §7b, 27 screenshots in `docs/launch/shots-fresh-install-zip/`); `db/schema.sql` + `db/seed.sql` load cleanly on MariaDB 10.11 (AR §13). **Not proven:** (a) no File-Manager upload and extract on Hostinger is recorded, although the live site proves an install happened there somehow; (b) the phpMyAdmin import itself (AR §1, LIVE HOST); (c) ~~the guide's printed day-one checklist still says "Extract → destination exactly `/public_html`"~~ — fixed 2026-10-01: the checklist and Part 4 now extract in `domains/skyfragrances.com` (path must end there) and check for `.htaccess`, `.user.ini` and no inner `public_html` (GR5 #5 applied). (a) and (b) remain. |
+| 2.6 | `config.php` for DB credentials | DONE | Written by the installer with mode 0400 and never rewritten; `config.sample.php` ships; `config.php` is not in the ZIP (HO §7b). LIVE: `/config.php` returns 404. |
+| 2.7 | One-time `install.php` creates the tables, the admin account and sample data, and tells the owner to delete it | DONE | 27 schema + 236 seed statements, admin created, a re-run is refused, a red "Delete install.php now" panel with a delete button off production, and it deletes itself on the real domain (AR §1; HO §7b `04-finish.png`, `30-install-refused.png`, `31-install-deleted.png`). LIVE: `/install.php` returns 404. |
+| 2.8 | Pretty URLs through `.htaccess` (`/product/azure-oud`, `/shop`, `/cart`) | DONE | LIVE: `/shop`, `/product/azure-oud`, `/cart`, `/collections`, `/for-him`, `/scent-finder` and `/track` all return 200. Trailing slash and case variants 301 (AR §1). |
+| 2.9 | Force HTTPS | DONE | LIVE: `http://skyfragrances.com/` → 301 to https; `http://…/admin/login` → 301 to `https://…/admin/login` before any form is sent; `www` → 301 to apex. **Caveat:** on the live host it is Hostinger's edge (`platform: hostinger`) that sends these 301s, not the site's own `.htaccess` rule. HSTS is deliberately off (Q-23). |
 
----
-
-## 3. Storefront pages (brief lines 21–41)
+## 3. Storefront (brief lines 21–41)
 
 ### 3.1 Home
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 3.1a | Full-screen hero with logo/tagline + CTA | DONE | `app/views/home.php`; `shots-store/home--desktop.png` / `home--mobile.png` (eyebrow, "More Than Just A Scent", two CTAs). The hero image slot (`hero_image_desktop/_mobile`) is **empty until the owner uploads one** — today the hero is type on black. |
-| 3.1b | Announcement bar | DONE | `app/partials/announcement-bar.php`; a settings change shows on `/` and was restored (AS §5). The "STAGE4 ANNOUNCEMENT BANNER TEXT" in every store shot is another agent's dev data, not the seed (SF step 6). |
-| 3.1c | Shop by collection | DONE | Five collection cards in `home--desktop.png`; a sixth "Stage4 Collection Edited" is dev data. |
-| 3.1d | Best sellers | DONE | Rail in `home--desktop.png`; ordered by `sales_count` (`listing.php:229`) — meaningful only once real orders exist. |
-| 3.1e | New arrivals | DONE | Rail in `home--desktop.png` with NEW badges. |
-| 3.1f | For Him / For Her / Unisex | DONE | Three tiles in both home shots → `/for-him`, `/for-her`, `/unisex` (all 200, SF step 2). |
-| 3.1g | Why-choose-us: long-lasting, COD nationwide, fast delivery, easy exchange | DONE | Four tiles with those promises on the ivory band (`home--desktop.png`); `delivery_time` interpolated from Settings. |
-| 3.1h | Newsletter signup | DONE | Section + footer form; `POST /api/newsletter` 200 / 422 / 429 (S1, S1 review); subscriber then visible in admin and exported (AS §5). |
-| 3.1i | Instagram section | DONE | `home.php:159–193`; "@skyfragrances" band with six tiles in `home--desktop.png`. Tiles are owner-uploaded images from six settings (register §4: `instagram_posts` table cut); **no live Instagram feed**. |
+| 3.1a | Full-screen hero with logo, tagline and CTA | DONE | `home--desktop.png`: monogram, eyebrow, "More Than Just A Scent", "Explore the collections" and "Take the scent finder", with the trust line inside the first 900 px. `home--mobile.png` is the same at 375 px. See 1.5 for the plate edge. The hero image slots stay empty until the owner uploads one. |
+| 3.1b | Announcement bar | DONE | "Free delivery on orders above Rs. 3,000 — cash on delivery nationwide" in every shot and live. It is editable in Settings, and a change showed on the next request (AR §5). |
+| 3.1c | Shop by collection | DONE | A mosaic of five tiles (Dawn Chorus, Azure Heights, Golden Hour, Midnight Meridian, Monsoon Veil) in `home--desktop.png`. |
+| 3.1d | Best sellers | DONE | The "Loved most / Best Sellers" rail of 8 in `home--desktop.png`. It is ordered by sales, so it only means something once real orders exist. |
+| 3.1e | New arrivals | DONE | The "Just landed / New Arrivals" rail with NEW and SALE badges in `home--desktop.png`. |
+| 3.1f | For Him / For Her / Unisex | DONE | Three tiles ("For Him, For Her, For Everyone") in `home--desktop.png` and `home--mobile.png`. LIVE: `/for-him`, `/for-her` and `/unisex` all return 200. |
+| 3.1g | Why choose us (long-lasting, COD nationwide, fast delivery, easy exchange) | DONE | The ivory band with exactly those four promises in `home--desktop.png`. The delivery time comes from Settings. |
+| 3.1h | Newsletter signup | DONE | "Join the Sky List" on home and in the footer. `POST /api/newsletter` stores a row, a duplicate stores nothing new, and the list appears in admin and the CSV (AR §5). |
+| 3.1i | Instagram section | DONE | "@skyfragrances" band with six tiles and a Follow link (`home--desktop.png`). The tiles are six owner-set image + link settings (register §4). **There is no live Instagram feed**, and today the tiles show the placeholder bottles. |
 
 ### 3.2 Shop
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 3.2a | Filters: collection, gender, scent family | DONE | Sidebar with counts in `shop--desktop.png`; `/shop?collection=golden-hour&family=floral` 200 (S1); mobile "Filter & sort" sheet (`shop--mobile.png`). |
-| 3.2b | Filter: price range | DONE | Server side as fixed bands (`listing.php:124–129`, `listing_price_bands()`). Exercised over HTTP 2026-09-29 (HO §8b): `/shop` 132 cards → `?price=-5000` 30 → `?price=9000-` 82; `/for-her` renders its own bands (`-6000` …) with counts; a junk value 301s back to `/shop`. The earlier "empty PRICE group" desktop shot was a screenshot artefact, not a rendering bug. |
-| 3.2c | Sort | DONE | "Featured" select in `shop--desktop.png`; `price_asc` → 301 to canonical `price-asc` (S2 fix 6). |
-| 3.2d | Search | DONE | `/search?q=oud` 200; header search with `/api/search-suggest` (S1, S2 regression 1 fixed). |
-| 3.2e | Pagination | DONE | 24 per page (`listing.php:4`); out-of-range page is 404 by 03 §5 (S2 after-review). With 14 products nothing paginates in the screenshots. |
+| 3.2a | Filters: collection, gender, scent family | DONE | Sidebar with counts in `shop--desktop.png`; "Filter & sort" drawer on mobile (`shop--mobile.png`; AR §8 keyboard and focus trap). |
+| 3.2b | Filter: price range | DONE | Four computed bands (`listing_price_bands()` in `app/controllers/listing.php`), exercised over HTTP (HO §8b). LIVE: the `/shop` HTML has the Price and Availability groups. In `shop--desktop.png` both groups sit below the sidebar's own scroll, so the shot does not show them. |
+| 3.2c | Sort | DONE | "Featured" select in `shop--desktop.png`; old sort keys 301 to the canonical ones (stage-2 run report). |
+| 3.2d | Search | DONE | Header search with suggestions; the injection string is echoed escaped (AR §9); searches are included in the SEO crawl (AR §9). |
+| 3.2e | Pagination | DONE | 24 per page. `/shop?page=2` is a 404 when there is no page 2 (`docs/stage2-run-report.md` line 218). With 12 products no shot shows a second page. |
 
 ### 3.3 Product page
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 3.3a | Image gallery with zoom | DONE | Thumbnails + main image + "Hover to zoom" + lightbox (`gallery.php`, `product.js:288`, `views/product.php:230`); `product_azure_oud--desktop.png`. |
-| 3.3b | Size selector, each with price / sale price / stock | DONE | 50ml Rs. 8,950 / 100ml Rs. 13,950 tiles, "In stock", SKU (`product_azure_oud--desktop.png`); sale price charged when lower (SF step 3 Silver Lining 3,950); sold-out size 409 (SF step 3). |
-| 3.3c | Scent notes pyramid (top/heart/base) | DONE | "The Composition" block (`notes-pyramid.php`; desktop and mobile shots). |
-| 3.3d | Longevity & sillage meters | DONE | "10+ hours" / "Strong" meters (`meters.php`; both product shots). |
-| 3.3e | Season / occasion | DONE | Autumn · Winter / Evening · Signature chips (`views/product.php:168–185`). |
-| 3.3f | Customer reviews, admin-approved only, no fake reviews | DONE | Only `status = approved` rendered (`controllers/product.php:302, 506`); approve/reject flips the PDP (AS §5). The 8 seeded reviews ship **pending** (C-68) and go with the sample data; "Compliments every single time" in the shot is a review approved on the shared dev DB. |
-| 3.3g | Related products | DONE | "You May Also Like" rail (`partials/related.php`; both product shots). |
-| 3.3h | Sticky add-to-cart on mobile | DONE | `.sticky-bar` with thumb, size and ADD (`views/product.php:205`); visible in `product_azure_oud--mobile.png`. |
-| 3.3i | WhatsApp order button | DONE | "Order on WhatsApp" under Add to Cart (both product shots). |
+| 3.3a | Image gallery with zoom | DONE | Thumbnails, main image and lightbox in `product_azure_oud--desktop.png`; swipe dots on mobile; the lightbox keyboard test is in `docs/a11y-audit.md`. |
+| 3.3b | Size selector; each size has its own price, sale price and stock | DONE | 50 ml Rs. 8,950 and 100 ml Rs. 13,950 tiles with SKU and stock line (`product_azure_oud--desktop.png`). A sold-out size cannot be added (409), and the sale price is what gets charged (AR §2, §4). **The stage-5 PDP shots show 50 ml selected and "Sold out"**: they were taken at 11:11, before AR §11 fix 6 (11:22) made the default fall back to an in-stock size. No shot of the fixed state exists; the fix was proven over HTTP only (AR §10). |
+| 3.3c | Scent notes pyramid (top, heart, base) | DONE | "Inside the bottle / The Composition" with Top, Heart and Base tiers (`product_azure_oud--desktop.png`, mobile likewise). |
+| 3.3d | Longevity and sillage meters | DONE | "Longevity 10+ hours" and "Sillage Strong" meters (`product_azure_oud--desktop.png`). |
+| 3.3e | Season and occasion | DONE | "Best season: Autumn, Winter" and "Occasion: Evening, Signature" chips (same shot). |
+| 3.3f | Customer reviews: admin-approved only, no fake reviews | DONE | Only approved reviews render. Approving a 2★ changed the average and `aggregateRating`; a rejected review never appeared (AR §5). The 8 seeded reviews ship unapproved and are removed with the sample data (C-68, AR §7). `product_azure_oud--desktop.png` shows "No reviews yet" and the write-a-review form ("Reviews are checked by our team before they appear"). |
+| 3.3g | Related products | DONE | `app/partials/related.php`, a "You may also like" rail. Its `srcset` was fixed so it no longer pulls the 1400 px image (LH "What changed" 2). |
+| 3.3h | Sticky add-to-cart on mobile | DONE | Probe: the bar shows only once the buy box has scrolled away, the WhatsApp button moves above it, and the body gains 68 px of padding (AR §8). In the full-page `product_azure_oud--mobile.png` the bar is drawn mid-page; that is how full-page capture draws a fixed element, not a layout bug. |
+| 3.3i | WhatsApp order button | DONE | "Ask on WhatsApp" under the buy button (`product_azure_oud--desktop.png`). The prefilled text starts "Assalam-o-Alaikum." (AR §11 fix 8). |
 
 ### 3.4 Cart
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 3.4a | Slide-out cart drawer | DONE\* | `app/partials/cart-drawer.php`, `assets/js/cart.js`; header cart badge shows "1" in the checkout/cart shots. No screenshot of the drawer open; the tour never opened it. |
-| 3.4b | Cart page | DONE | `cart--desktop.png` / `cart--mobile.png`: line, stepper, Remove, Order summary. Mobile overflow fixed at 320/375/414 (S2 after-review regression 3). |
-| 3.4c | Free-shipping progress bar | DONE | "Free delivery unlocked" state in the cart shots; the progress track + "You're Rs. X away" branch in `views/cart.php:95–98`; threshold arithmetic proven at the API (S2 §4: Rs. 2,450 → ship 250; Rs. 4,900 → free). |
-| 3.4d | Coupon codes | DONE | Coupon box in the cart shots; WELCOME10 applied / removed / below-minimum / expired / exhausted / invalid all exact (S2 §4, SF step 3). |
+| 3.4a | Slide-out cart drawer | DONE | Full-height drawer with internal scroll; it closes on backdrop tap and Esc and focus returns to the cart button (AR §8). Removing the last item empties it cleanly (AR §3). No stage-5 shot shows it open. |
+| 3.4b | Cart page | DONE | `cart--mobile.png` and `cart--desktop.png`: line, quantity stepper, Remove, order summary. |
+| 3.4c | Free-shipping progress bar | DONE | Exact at Rs. 2,999 (shipping 250, bar showing) and at Rs. 3,000 ("You've unlocked free delivery"); the threshold is tested before discount (C-43, AR §3). `cart--mobile.png` shows the free state. |
+| 3.4d | Coupon codes | DONE | WELCOME10 below and above the Rs. 3,000 minimum, expired and used-up codes, lower case with leading spaces, the never-negative total, and a lock-out after 10 wrong codes (AR §3). |
 
 ### 3.5 Checkout
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 3.5a | Guest checkout: name, phone, email (opt), city, address, notes | DONE | `checkout--desktop.png` / `--mobile.png`; postal code added as optional. Orders placed with those fields (S2 §5, SF step 4, HO §7). |
-| 3.5b | Cash on Delivery | DONE | COD orders placed in every run (S2 (a), SF step 4, AS §4, HO §7 `SF-260928-PUNF`). |
-| 3.5c | Bank Transfer with account details shown, transaction ID + screenshot upload | DONE | S2 (b) and SF step 4: account snapshot stored on the order, reference saved, PNG proof re-encoded to JPEG under `storage/proofs/`, `payment_status = awaiting_verification`, proof URL 403 to the public. |
-| 3.5d | JazzCash | DONE | Order `SF-260928-PSZ4` placed through the real checkout with transaction ID, sender name and a proof upload; confirmation says *awaiting verification*; proof streamed to the admin; marked paid → refunded → cancelled with stock restored (`docs/launch/shots-commerce/`, `results.json`). Radio stays hidden while the seeded `REPLACE ME` details are unset — test values were set for the run and restored byte-for-byte. |
-| 3.5e | Easypaisa | DONE | Order `SF-260928-PJ2G` placed the same way (test details set, then restored); marked paid → confirmed → cancelled with stock restored (`docs/launch/shots-commerce/`). A second transfer order from the same IP/phone while one is unverified is refused (C-58), which is why the two methods had to be exercised in sequence. |
-| 3.5f | Account details editable in admin | DONE | Settings › Payments: 4 bank keys, JazzCash and Easypaisa titles/numbers, per-method enable toggles; "all four off" refused (AS §5); placeholders listed in HO §2. |
+| 3.5a | Guest checkout: name, phone, email (optional), city, address, notes | DONE | No account needed (`checkout--mobile.png`, `checkout--desktop.png`). Phone uses `inputmode=tel` and every input is at least 16 px, so iOS does not zoom (AR §8). |
+| 3.5b | Cash on Delivery | DONE | `SF-260929-GQ29`, and a COD order placed with JavaScript off at 375 px (AR §2, §10). |
+| 3.5c | Bank Transfer / JazzCash / Easypaisa: show the account details (editable in admin), customer enters a transaction ID and uploads a screenshot | DONE | `SF-260929-6SDM` (bank), `SF-260929-R4K5` (JazzCash) and `SF-260929-QK4J` (Easypaisa). The checkout shows the account lines; a PDF or a 12 MB file is refused in plain words; a method still on `REPLACE ME` is hidden (AR §2, §6). All four radios are in `checkout--mobile.png`. The little preview of the chosen screenshot used to be blocked by the CSP (`img-src 'self' data:` against the `blob:` URL in `assets/js/forms.js:271`); **fixed 2026-10-01** — `app/lib/response.php:107` now allows `blob:`, and at 375 and 1440 px the preview renders with 0 console errors and 0 CSP violations (AR §15, `docs/launch/shots-proof-preview/`, HO §8d). |
 
-### 3.6 Confirmation, tracking, quiz, pages, WhatsApp
+### 3.6 Confirmation and emails
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 3.6a | Order confirmation page | DONE | `/order/{number}?t={token}`; wrong/absent token → `/track` (C-76). The lower-casing 301 hop on every receipt was removed in the working tree (`site/index.php` diff; HO §8) — `shots-fresh-install/evidence.json` shows `303 /checkout → 200 /order/SF-260928-PUNF`. |
-| 3.6b | Email to customer and admin | PARTIAL | Templates `app/emails/order-customer.php`, `order-admin.php`, `status-update.php`, `contact-*.php`; outbox drained on admin loads (≤ 2 / 12 s, C-56) and by optional `cron.php`. **No email has ever left the app** — every run had no SMTP, so every "sent" mail is an HTML preview under `storage/logs/mail-preview/` (S1, S2 §5, SF step 8, HO §7). The dev dashboard says "SMTP is not configured — 23 emails cannot be sent" (`admin--desktop.png`). PHPMailer over `smtp.hostinger.com` is untested; installer's "Send test email" exists but was never pressed with a real mailbox. |
-| 3.6c | Track order (number + phone) with status timeline | DONE | Pending → Confirmed → Packing → Shipped → Delivered timeline; wrong phone reveals nothing (S2 §5, SF step 4, HO §7 `09b-track.png`); rate limits 10/15 min per IP, 20/24 h per phone. `track--desktop.png` / `--mobile.png`. |
-| 3.6d | Scent Finder quiz (4–5 questions → recommends products) | DONE | 5 questions / 19 options / 31 scores seeded; "Question 1 of 5" in `scent_finder--*.png`; result recommends three perfumes (`controllers/quiz.php`). Questions not editable in admin (register §4). |
-| 3.6e | About, Contact (form to DB + WhatsApp), FAQ, Shipping, Returns, Privacy, Terms | DONE | All 200 (SF step 2); contact POST → row → admin list → WhatsApp reply link (AS §5); `contact--*.png`, `faq--*.png` (accordion + FAQPage JSON-LD). **`about--*.png` shows "Stage4 heading / Hello world / bad link good link"** — another agent overwrote the About body on the shared dev DB; the seed copy was restored byte-identical after the admin smoke (AS §5), so the shot is not representative of the shipped text. |
-| 3.6f | Custom 404 page | DONE | Full-layout 404, `noindex`, path not echoed (S1); `/nope-404` 404 from the ZIP (HO §7). Not in the launch tour shots (S2 tour had it). |
-| 3.6g | Floating WhatsApp button on every page | DONE | Round WhatsApp button at the right edge of every `shots-store/*` PNG; `partials/whatsapp-button.php` builds `wa.me/<digits>?text=…`. |
+| 3.6a | Order confirmation page | DONE | 200 for all four methods, with the number, the totals and, for transfers, the account lines (AR §2); `docs/launch/shots-fresh-install-zip/11-confirmation-bank.png` and `11-confirmation-cod.png`. |
+| 3.6b | Email to the customer and the admin | PARTIAL | **Built:** an outbox that drains on admin page loads; a customer email with the item table, total and tracking link; an admin email with a link to the order (AR §2). **Never delivered:** no run had SMTP. Every email ended as `queued` in `email_outbox` (28 admin order emails, 8 status updates) or as a preview under `storage/logs/mail-preview/`. Whether the live site has SMTP configured is not recorded anywhere I read. |
 
----
-
-## 4. Admin panel (brief lines 43–61)
+### 3.7–3.10 Other pages
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 4.1 | Secure login: password_hash, session regeneration, CSRF on every form, login rate limiting | DONE | bcrypt cost 12 with rehash on login (`auth.php:305–318`, S1); `session_regenerate()` after login; CSRF on every admin POST (AS reads the token from every form); 5 fails/username → progressive delay, 10 fails/IP → 429 for 15 min, correct password while locked still 429 (AS §1). Sessions UA-bound, 120 min idle (HO §5.7). |
-| 4.2 | Fully mobile-friendly | DONE | Six admin pages × 375 px, 0 overflow, 0 errors (AS §6, `shots-admin/*--mobile.png`): card lists, bottom tab bar, Call/WhatsApp buttons per order. Stat-tile and chip-row defects fixed in `3b078b4` (`OBS`). |
-| 4.3 | Dashboard: today/month revenue, order counts by status, low-stock alerts, latest orders, best sellers | DONE | All six blocks in `admin--desktop.png` / `--mobile.png`; revenue = SUM of accepted statuses verified against SQL (AS §1); plus "Needs you" list and the install.php / sample-data warnings. |
-| 4.4 | Products add/edit/delete; multiple images (auto-resize, JPG/PNG/WEBP only) | DONE | Create → 303 → edit page; 3 uploads → thumb/card/zoom in webp+jpg + OG; SVG-renamed-PNG 422; 12 MB 422; reorder, set primary, delete removes 8 files; hidden → storefront 404; duplicate; hard-delete only with typed DELETE and no orders; soft-delete/restore when orders exist (AS §2; `admin_products_18--*.png`). Fresh-install: product + JPG from the ZIP (HO §7). |
-| 4.5 | Sizes with price / sale / stock / SKU; notes; gender; scent family; featured/new; active/hidden; SEO title & description | DONE | All present in `admin_products_18--desktop.png` and exercised in AS §2 (auto SKU `SF-STO-100`, price edit → PDP `Rs. 5,250`, slug rename → 301). |
-| 4.6 | Collections CRUD | DONE | Create with image, edit, replace image, reorder, toggle, delete refused while products inside, delete with DELETE (AS §3). Scent families CRUD added beyond the brief (AS §3). |
-| 4.7 | Orders list with filters/search | DONE | Status / method / payment / date / proof / per-page filters, quick chips, order-number search → straight to detail (AS §4; `admin_orders--*.png`). |
-| 4.8 | Order detail; status Pending → Confirmed → Packing → Shipped → Delivered / Cancelled | DONE | Transition guard (confirmed → delivered refused; shipped needs a courier) and full timeline (AS §4; `admin_orders_SF_260928_PAQ6--*.png`). |
-| 4.9 | Courier + tracking number | DONE | `POST …/shipping courier_name=TCS tracking_number=…` (AS §4); shown with Copy in the list. |
-| 4.10 | View payment proof | DONE | Route `admin.orders.proof` (`routes-admin.php:36`), streamed only through the admin, public path 403 (S2 (b)). Opened in a recorded run 2026-09-29: full image 200 `image/jpeg` 58 KB, thumbnail `?w=320` 200 `image/jpeg` 2.9 KB (HO §8b). |
-| 4.11 | Mark as paid | DONE | Pressed on both the JazzCash and Easypaisa orders 2026-09-29: flash *Payment recorded. The order status is unchanged*, `payment_status` `awaiting_verification` → `paid`; **Mark refunded** then took the JazzCash order to `refunded` (`docs/launch/shots-commerce/`/admin-mark-paid.png, admin-refund-recorded.png). |
-| 4.12 | Print invoice / packing slip | DONE | Both 200 with `admin-print.js`; slip shows "Collect Rs. 5,250 — cash on delivery", prices omitted (Q-14) (AS §4, HO §7). |
-| 4.13 | Restore stock on cancel | DONE | `stock_restore_order()` (`stock.php:84`) via `order_transition(…,'cancelled')` with the C-12 once-only guard. Exercised from the admin 2026-09-29: three cancels (two from the order page, one via bulk **Cancel unpaid**) each restored Azure Oud 50 ml 23 → 24 and set `stock_restored_at` (`docs/launch/shots-commerce/`/admin-cancel-stock-restored.png). |
-| 4.14 | One-click WhatsApp message to customer | DONE | 8 `wa.me` links per order detail, status-specific templates incl. Shipped with courier + tracking (AS §4). |
-| 4.15 | Export to CSV | DONE | BOM, CRLF, phone apostrophe, formula guard, filtered and by-ids variants (AS §4). |
-| 4.16 | Coupons: percent/fixed, min order, usage limit, expiry | DONE | Create/edit/toggle/duplicate-code refusal; per-phone limit and start date added; storefront applies it (AS §5; `coupon-form.php:57–61`). |
-| 4.17 | Reviews moderation | DONE | Approve / reject / bulk pending; rating counters recomputed (AS §5). |
-| 4.18 | Contact messages | DONE | List, read state, WhatsApp reply template, order link, replied/archived (AS §5). |
-| 4.19 | Newsletter subscribers + CSV export | DONE | List, search, export with BOM, unsubscribe/resubscribe (AS §5). |
-| 4.20 | Settings: store info, logo, phone/WhatsApp/email, socials, announcement, hero text, shipping fee + free threshold, delivery time, per-method payment toggles, bank/JazzCash/Easypaisa details, meta description | DONE | Seven tabs (`settings.php:4`); every tab round-tripped unchanged, then shipping fee / threshold / announcement / WhatsApp / method toggles proven on the storefront and restored; validation messages for bad ints and a 200-char meta description (AS §5; `admin_settings--*.png`). |
-| 4.21 | Admin account: change password | DONE | Wrong current / short new / change / change back, session kept (AS §5). |
+| 3.7 | Track order (number + phone) with a status timeline | DONE | A right phone in any format shows the timeline; a wrong phone and an unknown number give the same message and reveal nothing (AR §2); `track--mobile.png`; `docs/launch/shots-fresh-install-zip/12-track-shipped.png`. |
+| 3.8 | Scent Finder quiz (4–5 questions → recommendations) | DONE | 5 questions, "Question 1 of 5" (`scent_finder--mobile.png`); `/scent-finder/result?a=2-2-2-2-2` returns 3 matches with JavaScript off (AR §8). |
+| 3.9a | About | DONE | `about--desktop.png` and `about--mobile.png`; LIVE `/about` 200. |
+| 3.9b | Contact: form saved to the DB, plus WhatsApp | DONE | `contact--desktop.png` (a "Chat on WhatsApp" button and the form). Messages are stored and listed in admin with a WhatsApp reply link; the auto-reply leaves out the message body (AR §5, §9). |
+| 3.9c | FAQ | DONE | Accordion (`faq--mobile.png`); `FAQPage` JSON-LD is built from the page body (register §4). |
+| 3.9d | Shipping, Returns & Exchange, Privacy Policy, Terms | DONE | LIVE: `/shipping`, `/returns`, `/privacy` and `/terms` all return 200; included in the 40-page SEO crawl (AR §9). The copy is seeded launch text, so the owner should read the legal pages (§8). |
+| 3.9e | Custom 404 page | DONE | LIVE: `/this-does-not-exist` returns 404 with title "Page Not Found \| Sky Fragrances". Denied paths also render the branded 404 (AR §1). |
+| 3.10 | Floating WhatsApp button on every page | DONE | Present in all 24 storefront shots. It moves above the sticky bar on the product page (AR §8). LIVE link: `wa.me/923203271071`. |
 
----
-
-## 5. Quality requirements (brief lines 63–73)
+## 4. Admin panel (brief lines 43–64)
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 5.1 | Mobile-first, fully responsive, tested at 375 px | DONE | 12 store paths + 6 admin paths at 375 px, 0 horizontal overflow, 0 console/page errors (SF step 6, AS §6, both `report.json`); cart measured at 320 / 375 / 414 / 480 / 768 / 1440 (S2 regression 3). Full-page captures paint fixed elements mid-page (mobile cart mini-bar, listing "Filter & sort" button, admin bottom tab bar and save bars) — a Playwright artefact of `position: fixed`, not checked on a real phone (§9.4). |
-| 5.2 | Fast: lazy-load images | DONE | `loading="lazy"` on every non-hero image (`product-card.php:163–166`, `home.php:186`, cart/track thumbs); first card row `eager` + `fetchpriority="high"`. |
-| 5.3 | Minimal JS | DONE | 10 vanilla files, no vendor library on `main`; ~59 KB raw deferred per page (stage-2 mobile review). `product.js` still loads on every page (review note, not fixed). |
-| 5.4 | Lighthouse score 90+ target | PARTIAL | First measurement 2026-09-29 (`docs/launch/lighthouse.md`), Lighthouse 12 against `php -S`: mobile Performance **76 / 77 / 76** (home / shop / product), desktop home **98**; Accessibility and Best practices 100 everywhere; SEO 69 only because the dev database is `noindex` (100 once indexing is on). The mobile gap is the intro loader delaying LCP to 4.9–5.3 s, as the motion critique predicted; nothing was changed. Target met on desktop, missed on mobile. |
-| 5.5 | SEO: unique titles/meta | DONE | Per-product `seo_title` / `seo_description` seeded and editable; page `<title>`s differ (`Order SF-… | Sky Fragrances`, `Sky Fragrances — Luxury Perfumes in Pakistan`, HO §7). |
-| 5.6 | Open Graph tags | DONE | `head-meta.php:92–98` (`og:title`, `og:image`, `twitter:card`); per-product OG JPGs generated on upload (AS §2). |
-| 5.7 | Product JSON-LD schema | DONE | `Product` + `Offer`/`AggregateOffer` + `Brand` + `AggregateRating`/`Review` + `BreadcrumbList` (`controllers/product.php`); `lowPrice` follows price edits (AS §2). `FAQPage` and `ContactPoint` too. Never validated with Google's Rich Results test. |
-| 5.8 | sitemap.xml | DONE | 200 `application/xml`, well-formed, 43 URLs when `site_indexable=1`; deliberately 404 on any non-canonical host (SF step 2). |
-| 5.9 | robots.txt | DONE | Real static file with Disallow list and `Sitemap:` line rewritten by the installer (SF step 2, `robots.txt:14`). |
-| 5.10 | Clean URLs | DONE | §2.6; `/Shop` → 301 `/shop`, `/index.php/shop` → 301 (S2 after-review). |
-| 5.11 | Alt text | DONE | Product alts generated on upload ("Smoke Test Oud — 50ml and 100ml perfume by Sky Fragrances"), editable per image, rendered ×10 on the PDP (AS §2). |
-| 5.12 | Security: prepared statements, output escaping, CSRF tokens | DONE | §2.2; `<b>markup</b>` escaped on the PDP, `<script>`/`onerror`/`javascript:` stripped from page HTML (AS §2, §5); every storefront POST gated centrally (`index.php`, S1 review) — 419 without token, 403 foreign Origin (SF step 3). |
-| 5.13 | Upload validation | DONE | MIME sniff + GD re-encode, SVG-as-PNG 422, 6 MB cap, 40 MP / memory budget, 413 branch (AS §2, S1 review). Payment proofs images-only (Q-08). |
-| 5.14 | Block PHP execution in /uploads | DONE\* | `uploads/.htaccess` (RemoveHandler/RemoveType, FilesMatch deny), asserted present by the installer, plus a live probe on step 4 that could only report "could not verify" from the CLI server (`04-finish.png`). Never exercised on Apache/LiteSpeed. |
-| 5.15 | Never expose errors in production | PARTIAL | `display_errors` off for `APP_ENV=production` (`bootstrap.php:133`) and in `.user.ini`; `X-Powered-By` unset (`.htaccess:69–70`); custom error handler logs. Proven only under `php -S` where `.user.ini`/`.htaccess` are ignored — `X-Powered-By: PHP/8.2.28` is still visible locally (S1). `OBS`: Hostinger's CDN **replaces the PHP-sent Content-Security-Policy** with `upgrade-insecure-requests` only, so the CSP the plan specified does not reach browsers on the live host; undecided. |
-| 5.16 | Runs on the real host (Hostinger, LiteSpeed, `.htaccess`) | NOT DONE (as a recorded run) | A human deployed the build to Hostinger on 2026-09-28 (`OBS`) and found: CSP stripped by hcdn; hPanel's extractor drops top-level dot-files; the installer key box sat outside its form (fixed `c220904`). **No route table, screenshot, installer report or smoke from that host is in the repository**, and the ZIP layout `OBS` says was adopted (wrapped in `public_html/`) is not what the 23:16 ZIP contains. Every `.htaccess`, `.user.ini` and LiteSpeed behaviour therefore remains read, not exercised, as far as the evidence goes. |
-| 5.17 | Stock decremented on order, can't go negative | DONE | Locked transaction, oversell 409 with the 06b wording, stock 3 → 0 then second session refused (SF step 4; S2 (d)/(d′)). Cart clamps to stock with "Only 3 left" (SF step 3). |
-| 5.18 | Prices always recalculated server-side | DONE | `price_token` / `price_total` on the form; every total in S2 §4 and SF step 3 recomputed by the API; idempotent re-submit (C-61) returns the same receipt (S2 (c)). |
-| 5.19 | Seed 12 perfumes (sky-themed), 5 collections, WELCOME10 10 % above Rs. 3,000 | DONE | 12 `products` inserts (Azure Oud, Cirrus, Aurora Bloom, …), 5 collections, WELCOME10 percent 10 / min 3,000 / 500 uses / 1 per phone (`db/seed.sql:95–179`); counts confirmed on MySQL and MariaDB (SF step 7). Two extra coupons (`EIDSALE500` expired, `FIRST50` exhausted) ship as examples. |
-| 5.20 | SQL runs on MySQL 8+ **and** MariaDB 10.4+ | PARTIAL | Proven on MySQL 9.3 (every run) and MariaDB **10.11** with `--show-warnings` silent (SF step 7, HO §7). MariaDB 10.4 itself was never installed or tested; the brief's floor is unproven. |
+| 4.1 | Secure login: `password_hash`, session regeneration, CSRF on every form, login rate limiting | DONE | The session id changes at login; logout destroys it; replaying the old id goes back to login; admin pages send `Cache-Control: no-store` (AR §5; LIVE header on `/admin/login`). A POST with no token is refused (AR §9). Wrong passwords: from the 6th on the same username each attempt is slowed by about 2 s; after 10 from one IP that IP gets 429. The error message never reveals whether the username exists (C-51, AR §5, §9). LIVE: `/admin/login` sends `X-Frame-Options: DENY`. |
+| 4.2 | Fully mobile-friendly, so orders can be managed from a phone | DONE | **Final build, 2026-10-01:** a Playwright sweep of 33 admin screens (dashboard, orders list and detail, invoice, packing slip, products, collections, coupons, reviews, messages, subscribers, pages, scent families, all seven settings tabs, tools, activity, password) at 375 px (touch) and 1440 px: all 200, 0 horizontal overflow, 0 console or network errors, no bounce to login, no collapsed checkbox. Screenshots of every screen at 375 px: `docs/shots/stage5/admin/` (33 distinct images). Tap targets measured on 18 of those screens at 375 px: 560 of 560 controls are at least 44 px tall on touch screens (prose links and the off-screen skip link excluded; row cards count as one stretched target). The sweep found and fixed the invoice and packing slip overflowing a phone by 44 px and 10 px. |
+| 4.3 | Dashboard: revenue today and this month, order counts by status, low-stock alerts, latest orders, best sellers | DONE | The figures matched a hand count in SQL (Rs. 187,950 / 3 orders today, pending 20, confirmed 3, cancelled 2, best seller Azure Oud 21). The low-stock alert names Eclipse Velvet 100 ml (sold out) and Saffron Zenith 50 ml (3 left) (AR §4, §5). `docs/launch/shots-fresh-install-zip/20-admin-dashboard.png`. |
+| 4.4 | Products: add, edit, delete; multiple images with auto-resize (JPG/PNG/WEBP only); sizes with price, sale price, stock and SKU; notes; gender; scent family; featured and new toggles; active/hidden; SEO title and description | DONE | Created with two sizes, two uploads resized into thumb/card/zoom in WebP and JPEG; the active, new and featured switches each changed the storefront; delete removed the rows and the files; a rename writes a slug redirect and the old URL 301s; empty alt text is refused (AR §5). SEO title and description were posted and stored (`docs/launch/admin-smoke.md` line 23). A file with `<?php` inside is re-encoded and never executes (AR §9). |
+| 4.5 | Collections CRUD | DONE | Create with an image, reorder with `sort_order`, delete (AR §5). |
+| 4.6 | Orders: list with filters and search; detail; status chain Pending → Confirmed → Packing → Shipped → Delivered / Cancelled; courier + tracking; view payment proof; mark paid; print invoice and packing slip; restore stock on cancel; one-click WhatsApp; CSV export | DONE | Every part is covered in AR §4–§5: the filters, search that jumps straight to an order, the full chain, courier TCS with tracking, the proof streamed only to a logged-in admin, mark paid with `paid_at`, invoice and a price-free packing slip, stock restored exactly once, "Parcel received back", 8 `wa.me` links per order, and a CSV with a BOM and `=` formulas neutralised. Order-detail screenshots from the final ZIP: `docs/launch/shots-fresh-install-zip/22`, `25`, `26`, `27`, `28-*.png`. |
+| 4.7 | Coupons: percent or fixed, minimum order, usage limit, expiry | DONE | `ACCEPT15` created, redeemed on `SF-260929-8T5H`, disabled and edited; FIRST50 stays "Used up" (AR §3, §5). |
+| 4.8 | Review moderation, contact messages, newsletter subscribers with CSV export | DONE | Approve and reject change the product page; messages list and detail with "mark replied" and a WhatsApp reply; the subscriber list and CSV; the unsubscribe token works (AR §5). **Note:** the site never sends a newsletter itself. The owner exports the list to a mailing tool. |
+| 4.9 | Settings: store info, logo, phone/WhatsApp/email, social links, announcement text, hero text, shipping fee and free-shipping threshold, delivery time, turn each payment method on or off, bank/JazzCash/Easypaisa details, meta description | PARTIAL | **Exercised:** the announcement, hero text and subheading, shipping fee and threshold, and delivery time all show on the next request; switching each of the four methods off removes exactly that one; the payment details (AR §5, §6); the WhatsApp number (normalised to `+92…`); meta-description length validation; "No changes to save" on all 7 tabs (`docs/launch/admin-smoke.md` line 89). **Never exercised in any recorded run:** uploading an image setting (logo, favicon, OG image, hero images, the six Instagram tiles), whose code is `settings_image_store()` in `admin/controllers/settings.php:210`; saving the social links (Instagram, Facebook, TikTok, YouTube); and saving a new meta description, as opposed to having a too-long one refused. |
+| 4.10 | Admin account: change password | DONE | The old password stops working and the new one works (AR §5). Recovery without email: `app/tools/reset-password.php` (C-64, HO §1). |
 
----
-
-## 6. How to work / deliverables (brief lines 75–85)
+## 5. Quality requirements (brief lines 66–78 and 90–92)
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| 6.1 | Plan first (folder structure, schema, page list), wait for approval | DONE | `docs/plan/PLAN.md` + 14 spec units + `08-decisions-register.md`; committed `753f2b4` before any site code (`a89a0d8`). |
-| 6.2 | Build in stages: core + DB → storefront → checkout → admin → polish | DONE (polish is the open stage) | S1 (core), S2 (storefront + checkout), admin build notes + AS (admin). "Polish" is the stage `OBS` feeds into; it has not run. |
-| 6.3 | After each stage: run locally, fix errors, desktop + mobile screenshots | DONE | S1 (curl only, no shots — stage-1 pages were placeholders), S2 (50 shots), launch tour (24 + 12 shots), fresh-install (12 shots). |
-| 6.4 | Test orders with every payment method | DONE | COD and bank transfer placed repeatedly in earlier runs; JazzCash and Easypaisa placed 2026-09-29 (§3.5d/e, `docs/launch/shots-commerce/`). |
-| 6.5 | Test every admin function | PARTIAL | 86 checks, 0 failing (AS), plus on 2026-09-29: proof viewer, mark paid, refund, confirm, cancel with stock restore, bulk cancel-unpaid POST (CANCEL word, 1 cancelled + stock restored), `cron.php` (key 200, wrong key 404). Still never pressed in a recorded run: reject proof, "parcel received back", make HTTPS permanent (needs a live certificate), maintenance mode, remove-sample-data POST with the right word, regenerate-images batch — the last three change shared state on the dev database and were deliberately left. |
-| 6.6 | ZIP ready to upload to Hostinger | DONE (with the layout caveat) | `dist/skyfragrances-20260928-1906.zip` 14,062,456 bytes, 565 files = the 1816 build + `app/tools/reset-password.php`; `dist/public_html/` re-unpacked from it with `.htaccess` and `.user.ini` present; manifest check 0 missing / 0 forbidden / 10 `.htaccess`. The flat-vs-wrapped layout question (§9.1) is unchanged. |
-| 6.7 | Non-developer guide: database in hPanel, upload, install.php, SSL, go live | PARTIAL | `docs/GO-LIVE-GUIDE.md` (≈950 lines, 12 parts + quick reference); all 22 gaps from `GR` pass 1 and all 16 from pass 2 applied (labels now match the screens; day-one checklist rewritten; SSL / CDN / cron / Search Console / password-refill gaps closed; Part 10 recovery rewritten around the C-64 tool). Still: never trialled by a non-developer, **no hPanel screenshots** (HO §9.4), and Part 4 describes the flat extraction the `OBS` note says loses dot-files. |
-| 6.8 | Push-to-deploy (beyond the brief) | DONE\* | `.github/workflows/deploy.yml` (`9728844`, `5544877`): FTP upload on push to `main`; inert until the FTP secrets exist; never run. |
+| 5.1 | Mobile-first, fully responsive, tested at 375 px | DONE | Storefront: 12 paths at 375 px with no horizontal overflow and no console or network errors (`docs/shots/stage5/report.json`). `dev-tools/a11y.mjs`: tap targets of at least 44 px on 12 pages with 0 failures; the 8 px spacing rule was not measured (AR §8). For the admin, see 4.2. |
+| 5.2 | Fast: lazy-loaded images | DONE | Every `<img>` on `/`, `/shop`, `/collections`, `/cart` and the product page has width, height and alt; below-the-fold images are lazy; the LCP image is `loading=eager fetchpriority=high` (AR §10). |
+| 5.3 | Fast: minimal JS | DONE | Phones load no GSAP, Lenis or WebGL (HO §6). The site's own scripts are 0.3–6.2 KB gzipped each. Desktop adds GSAP 72 KB, ScrollTrigger 44 KB and Lenis 19 KB (minified, before gzip), which the client asked for in the motion brief. TBT is 0 ms on every Lighthouse run (§7). |
+| 5.4 | Lighthouse 90+ | DONE | **Live host, 2026-10-01:** Performance 99 on `/`, `/shop` and `/product/azure-oud`. On `/` and the product page: Accessibility 100, Best Practices 100, SEO 100. Locally, on the production-equivalent server, 96–98 (LH), and 98 / 98 / 98 for the ZIP as installed. All with the motion layer on. Method and caveats in §7. |
+| 5.5 | SEO: unique titles and meta, Open Graph, Product JSON-LD, `sitemap.xml`, `robots.txt`, clean URLs, alt text | DONE | 40 pages crawled: titles 25–54 characters, descriptions 72–151, no duplicates; canonical and OG on every page; `AggregateOffer` in PKR matching the page price; `aggregateRating` only once a review is approved; the sitemap is valid XML with exactly the catalogue; `robots.txt` points at it (AR §9). LIVE: SEO 100. **Not done:** Google's Rich Results Test and a real WhatsApp link preview. Both can now be run against the live URL. |
+| 5.6 | Security: prepared statements, output escaping, CSRF tokens, upload validation, no PHP execution in `/uploads`, errors never shown in production | DONE | AR §9: `<script>` renders as text everywhere; a POST without a token is refused; uploads are checked by magic bytes and re-encoded; `/uploads/*.php` is denied; production mode shows a branded 500 page with a reference id and no path, SQL or trace. **Live-host caveats, all in §9:** Hostinger's CDN replaces the site's Content-Security-Policy with `upgrade-insecure-requests` (LIVE header), and the PHP block in `uploads/` has never been tested on LiteSpeed with a real `.php` file. |
+| 5.7 | Stock decremented on order and never negative; prices always recalculated on the server | DONE | 10 runs of two parallel checkouts for the last unit: every time exactly one succeeds and stock never drops below 0. A `stock − 5` on a row holding 3 is refused by the database. A tampered `price_total` is refused with "Your new total is Rs. 8,950 (was Rs. 1)". A price change between page load and Place Order is caught (AR §2–§4). |
+| 5.8 | Seed: 12 sky-themed perfumes, 5 collections, WELCOME10 (10% off above Rs. 3,000) | DONE | 12 products / 24 sizes / 5 collections / 3 coupons on both MySQL and MariaDB; WELCOME10 is refused at Rs. 2,999 and takes exactly 10% at Rs. 3,000 and up (AR §1, §3). The seed adds two limits the brief does not mention: one use per phone and a one-year expiry (Q-25). |
+| 5.9 | Every SQL statement runs on MySQL 8+ and MariaDB 10.4+ | PARTIAL | Proven on **MySQL 9.3** (the installer) and **MariaDB 10.11** (strict `sql_mode`, 0 errors, 0 warnings, and a second import changes nothing) (AR §1, §13). **Never run on MySQL 8.0 or MariaDB 10.4**, the two floors the brief names. The live install worked on whatever Hostinger runs, which no document records. |
+
+## 6. How to work and deliverables (brief lines 80–88)
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| 6.1 | Show the folder structure, schema and page list as a plan first, and wait for approval | DONE | `docs/plan/PLAN.md` plus the 01–08 specs. **Note:** line 3 of `PLAN.md` still reads "Status: awaiting client approval — no code has been written". The approval itself is not recorded in the repository. |
+| 6.2 | Build in stages: core + DB → storefront → checkout → admin → polish | DONE | `docs/stage1-run-report.md` and `docs/stage2-run-report.md`; `docs/build/`; the commerce and admin smoke tests in `docs/launch/`; the polish pass (`docs/a11y-audit.md`, `docs/seo-audit.md`, `docs/security-final.md`, LH). |
+| 6.3 | After each stage run it locally, fix errors, and screenshot desktop and mobile | DONE | `docs/shots/stage2/`, `stage2-final/`, `docs/launch/shots-store/`, `shots-admin/`, `shots-commerce/` and `docs/shots/stage5/`. The stage-5 admin shots were broken and were replaced on 2026-10-01 (§10). |
+| 6.4 | Place test orders with every payment method | DONE | COD, Bank Transfer, JazzCash and Easypaisa each placed end to end and processed in admin (AR §2). Done locally. PLAN stage 6 also asked for the same on the real Hostinger account, and no such run is recorded. |
+| 6.5 | Test every admin function | PARTIAL | AR §5 exercised nearly every screen and action, and the 2026-10-01 sweep loaded all 33 admin screens at 375 and 1440 px (4.2). Not exercised: image uploads in Settings and the social links (4.9). |
+| 6.6 | A ZIP ready to upload to Hostinger | DONE | `dist/skyfragrances-public_html-folder.zip` (13,943,403 bytes, rebuilt 2026-10-01 00:23 with the two fixes of AR §15; 595 files, everything under `public_html/`). The file list is checked against the manifest in `site/dev/zip-manifest.php`: 0 required files missing and 0 forbidden entries, and the motion layer is included. The ZIP was rehearsed by a fresh install (HO §7b). It matches the current working tree (checked for this report). |
+| 6.7 | A simple step-by-step guide for a non-developer: database, upload, `install.php`, SSL, go live | PARTIAL | `docs/GO-LIVE-GUIDE.md` has 12 parts, a day-one checklist, troubleshooting and a quick reference. **Applied 2026-10-01:** every pass-5 finding of `docs/guide-review.md` (4 BLOCKERs, 10 RISKs and the smaller items): Part 0 "Is your shop already installed?", the owner's route to the live admin login (username from the developer, own password via the reset tool), an urgent soft launch, the CDN / Force HTTPS rule for a live shop (decision left to the developer, HO §9 item 13), and a live-aware day-one checklist that no longer causes the nested-folder mistake (GR5 #5). The wrapped-ZIP flow and the install-key step are unchanged. **Still against it:** (c) it has no hPanel screenshots (HO §9 item 4); (d) no non-developer has ever followed it, which is the success test in PLAN stage 6 and 07 C.9. |
 
 ---
 
-## 7. Motion brief — in progress on branch `motion-wip`, not part of the launch build
+## 7. Lighthouse and performance numbers
 
-`docs/motion/00-brief.md` asks for eight concepts. Branch `motion-wip` (one commit `b37bd1f`,
-324 files changed, 5,243 insertions over `main`'s parent) parks the interrupted work. Its own commit
-message: *"Not yet [tested]: the foundation, story and micro sections finished and self-verified;
-hero, cards, quiz, transitions, the integration pass, reviews and fps/Lighthouse checks were cut off
-by the usage limit and must be re-run before this merges."* Nothing below was smoke-tested, reviewed,
-or measured; nothing below ships in the ZIP.
+Every run in this section is the **mobile** form factor, with simulated 4G and a 4× CPU slowdown,
+and **the motion layer on**. None of them entered the kill-switch order in
+`docs/motion/PLAN.md` §6.4.
 
-| Concept (motion brief) | What exists on `motion-wip` | What does not |
+### 7.1 Live host (skyfragrances.com, 2026-10-01 00:06–00:09 Karachi)
+
+**How it was run**
+
+- Lighthouse 13.5.0 from `dev-tools/node_modules`, Chrome for Testing 145, headless.
+- Command: `lighthouse <url> --form-factor=mobile --screenEmulation.mobile --throttling-method=simulate`.
+  The first three runs added `--preset=perf`; the last two ran all categories.
+- **One run per row.** The JSON is in this session's scratchpad and is not kept in the repo; to
+  regenerate it, run the same command against the live site.
+- The live site is served through Hostinger's CDN (`server: hcdn`) and runs `49cd8f1`, which does
+  not include the acceptance-run fixes. None of those fixes touches performance.
+
+| Page | Perf | LCP | FCP | TBT | CLS | Speed Index | Transfer | A11y · BP · SEO |
+|---|---|---|---|---|---|---|---|---|
+| `/` | **99** | 1.6 s | 1.3 s | 0 ms | 0.001 | 2.8 s | 284 KiB | 100 · 100 · 100 |
+| `/shop` | **99** | 1.8 s | 1.2 s | 0 ms | 0.001 | 2.9 s | 282 KiB | not run |
+| `/product/azure-oud` | **99** | 2.1 s | 1.3 s | 0 ms | 0 | 2.4 s | 399 KiB | 100 · 100 · 100 |
+
+Four diagnostics still score below 0.9 on both full runs. None of them affects the score:
+`unminified-css` (the CSS is hand-written and not minified, by the no-build rule),
+`image-delivery-insight`, `network-dependency-tree-insight` and `render-blocking-insight`.
+
+### 7.2 Local, production-equivalent (`docs/lighthouse/summary.md`, 2026-09-29)
+
+The local server is `php -S` behind `dev-tools/gzip-proxy.mjs`, so the HTML is compressed the way
+Hostinger's `mod_deflate` compresses it. "Median of 3" means the median of three runs.
+
+| Page | Before the perf pass | After the perf pass (median of 3) |
 |---|---|---|
-| (1) Intro loader < 2 s, monogram draws, gold fill, dissolves; full first visit, quick later | **Shipped on `main`** (`assets/js/intro.js`, `partials/intro.php`): 2,186 / 1,954 ms first visit desktop/mobile, 403 / 385 ms quick fade, 1,234 ms reduced-motion calm, hero CTA clickable at 2.6 s (SF step 5). | The "< 2 s" target is missed by ~0.2 s on desktop; the loader is the predicted LCP cost (§5.4). Mist-dissolve is a CSS fade, not particles. |
-| (2) Hero scent trails — Three.js light ribbons reacting to mouse/scroll; masked headline | `motion/hero.js` (283 lines), `motion/ribbons-gl.js` (385), `10-hero.css`, six `assets/img/motion/ribbons-*.webp` fallbacks. | Cut off mid-build; no Three.js vendored (a WebGL shader ribbon was written instead); no desktop/mobile check, no fps. |
-| (3) Layered depth parallax of ingredients | Nothing beyond the plan (`PLAN.md` §2.8 marks it cross-cutting). | Not started. |
-| (4) Pinned fragrance story: bottle rotates while notes reveal | `motion/story.js` (254), `30-story.css`, hooks in `views/product.php`. | "Finished and self-verified" by its author only; no review, no 360 px pass. |
-| (5) Collection fanned cards + 3D tilt; mobile snap carousel | `motion/cards.js` (247), `20-cards.css`, `docs/motion/cards.md`. | Cut off; unverified. |
-| (6) Signature-scent quiz with card-flip transitions and reveal | `motion/quiz.js` (259), `50-quiz.css`, `docs/motion/quiz.md`, hooks in `quiz.php` / `quiz-result.php`. | Cut off; unverified. |
-| (7) Micro: magnetic buttons, custom cursor, link underline, mist-spray add-to-cart + fly-to-cart, price tick-up | `motion/micro.js` (495), `40-micro.css`, `cart.js` hook. | "Finished and self-verified" only. |
-| (8) Lenis smooth scroll + mist page transitions | `motion/transitions.js` (257), `60-transitions.css`, `partials/transition-overlay.php`, `vendor/lenis.min.js`. | Cut off; unverified. |
-| Foundation: GSAP + ScrollTrigger + Lenis vendored, one config file, device classes, kill switches | `motion/core.js` (526), `motion/config.js` (extended), `vendor/gsap.min.js`, `ScrollTrigger.min.js`, licences, `00-core.css`, assembled `motion.css` (976 lines), `docs/motion/motion-api.md`, `vendoring.md`. | Byte budget (`PLAN.md` §6.1), Lighthouse ≥ 85 mobile method (§6.2), image work (§6.3) and the kill-switch rehearsal (§6.4) never executed. |
-| Hard rules: 60 fps, Lighthouse mobile ≥ 85, reduced-motion fallback, 360 px test, animations never block buying, no cart/checkout regression | — | **None measured.** The branch also carries admin order/settings fixes and regenerated collection/OG derivatives that are unrelated to motion and will need separating before a merge. |
+| `/` | 98 · LCP 2.3 s | **98** · LCP 2.4 s · FCP 1.1 s |
+| `/shop` | 97 · LCP 2.5 s | **98** · LCP 2.5 s · FCP 1.1 s |
+| `/product/azure-oud` | 97 · LCP 2.6 s | **96–98** · LCP 2.5–2.9 s · FCP 1.1 s |
 
-The register's rule for this branch (HO §6): merge as a separate release with its own smoke run,
-and add the new asset paths to `dev/zip-manifest.php` `required_files`.
+- TBT was 0 ms and CLS 0 or 0.001 on every run.
+- The one render-blocking stylesheet is now `critical.css` (14 KB gzipped), down from 24 KB
+  (`docs/perf/critical-css.md`).
+- Four ways of loading the critical CSS were measured: three were rejected and one shipped. The
+  reports are in `docs/lighthouse/variants/`.
 
----
+### 7.3 The ZIP as installed (`docs/lighthouse/fresh-install-zip/summary.md`, 2026-09-29 11:58)
 
-## 8. What the owner must still supply
+One run per page.
 
-Nothing in the build can stand in for these; each one is either a placeholder in the seed, an
-empty setting, or a credential only the owner has.
+| Page | Server | Perf | LCP | TBT | CLS |
+|---|---|---|---|---|---|
+| `/` | production-equivalent (gzip) | **98** | 2.3 s | 0 ms | 0 |
+| `/shop` | production-equivalent (gzip) | **98** | 2.3 s | 0 ms | 0.001 |
+| `/product/azure-oud` | production-equivalent (gzip) | **98** | 2.5 s | 0 ms | 0 |
+| `/` | raw `php -S`, HTML not compressed | 95 | 2.9 s | 0 ms | 0 |
 
-| Item | Where it goes | State today |
-|---|---|---|
-| **Real bottle photography** (dark ground, 4:5 or larger; ≥ 3 per perfume) | Admin → Products → Photos (auto-crop to 4:5, WebP + JPG derivatives) | Every product image is generated placeholder art; `OBS` calls real photography "the single biggest visual upgrade available and only the owner can supply it". The dev DB also carries blue/multicolour test art from other agents (`shop--desktop.png`). |
-| **Hero images** desktop + mobile, three gender-tile images, six Instagram tiles, optional new logo/favicon/OG image | Settings → Home / Store / SEO | Hero slots empty (type-only hero); gender tiles and Instagram fall back to catalogue images. |
-| **Bank, JazzCash, Easypaisa account details** | Settings → Payments | Eight `REPLACE ME` values ship in the seed (HO §2); the dashboard warns until none remains; a bank-transfer checkout would show `0000-0000000-000 (REPLACE ME)` today (GR gap 5). |
-| **Hostinger MySQL** database name / user / password | Installer screen 2 | — |
-| **SMTP**: `orders@skyfragrances.com` mailbox + password (or any mailbox) | Installer screen 2, later `config.php` → `smtp` | Without it no email is sent (HO §5.5); previews pile up in `storage/logs/mail-preview/` and the outbox. Test-send button exists on screen 3. |
-| **DNS / domain**: skyfragrances.com attached to the hosting plan, A record pointing at Hostinger, SSL issued, hPanel "Force HTTPS" **off** | hPanel → Websites / Domains / Security → SSL | Guide Part 1 Steps 0–3. `www` → apex handled by `.htaccess`. |
-| **SPF + DKIM** records for the domain | hPanel → Emails → DNS | Guide Part 6 Step 2; until set, WhatsApp is the real confirmation channel (Q-19). |
-| **Admin username + 12-char password**, WhatsApp number, contact email, store name | Installer screen 3 | No admin account exists until then. |
-| Contact phone, business address, business hours, real Instagram/Facebook URLs, TikTok/YouTube | Settings → Contact & Social / Store | Empty or assumed handles (`https://instagram.com/skyfragrances`). |
-| Copy review: About, FAQ, Shipping, Returns, Privacy, Terms, announcement, hero, newsletter text | Admin → Pages / Settings | Launch placeholder copy ships (the FAQ promises "dispatched within one working day" and a 48-hour exchange window — confirm both). |
-| Real perfume prices, or removal of the 12 samples once ≥ 4 real ones exist | Products / Tools → Remove sample data | Seeded Rs. 3,950–13,950 (Q-03). Home rails hide below 4 live products (HO §5.2). |
-| Google Search Console verification; optional analytics tag | Settings → SEO | Not verified; no analytics ships (C-40). |
-| Optional: cron on `cron.php?key=<cron_key>` every 15 min | hPanel → Cron jobs; key in `config.php` | Without it emails go out only while an admin page is being used (≤ 2 per load). |
-| Optional: GitHub secrets `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`, `FTP_SERVER_DIR` | Repository settings | Push-to-deploy stays inert. |
-| Decisions still open from the register: Q-01 random order numbers, Q-02 no tax line on invoices | — | Defaults built in; changing either later is a migration (register §3.1). |
+### 7.4 Acceptance run (AR §10)
 
----
+- Raw `php -S`: `/` scored 94 · 95 · 95 and the product page 92 · 92 · 96.
+- Accessibility 100 and Best Practices 100. SEO 100 once `site_indexable=1`.
+- LCP 2.8–3.3 s.
 
-## 9. Known limitations and open items
+### 7.5 Budgets and levers not applied
 
-### 9.1 Repository and build state
-
-1. **Uncommitted code in the working tree that the ZIP contains.** `site/index.php` (no lower-casing
-   301 for `/order/…`), `site/install.php` (self-addressed reachability probe, `.install-probe` token,
-   `0092` prefix, empty username box, SMTP 465 → SSL, screen-4 screenshot reminder),
-   `site/app/lib/text.php` (`00` prefix), `site/dev/zip-manifest.php`, `.gitignore`; untracked
-   `README.md`, `docs/launch/observations-for-polish.md`, `docs/launch/shots-fresh-install/`, the four
-   `admin_orders_SF_260928_PAQ6` / `admin_products_18` PNGs; from the 2026-09-29 gap run also
-   `site/app/tools/reset-password.php` (new), `site/admin/views/tools.php`, `site/dev/zip-manifest.php`,
-   `docs/launch/lighthouse.md` and `docs/launch/shots-commerce/`. The 1906 ZIP was built from this tree
-   (HO §8, §8b), so **the ZIP is ahead of `main`**. Nothing was committed by any launch agent; the owner of
-   the repository decides.
-2. **ZIP layout vs the hPanel finding.** `OBS` (23:03): hPanel's extractor drops top-level dot-files
-   and "the ZIP now wraps everything in `public_html/`". The ZIP written at 23:16 is flat (0 entries
-   under `public_html/`); `GO-LIVE-GUIDE.md` Part 4 and `HO` §7 describe and rehearse the flat layout.
-   Either the note is stale or the ZIP is wrong for hPanel; if the note is right, extracting this ZIP
-   loses `.htaccess` and `.user.ini` and the shop shows Hostinger's 404 on every pretty URL until the
-   `dist/htaccess-upload/` files are uploaded and renamed (the guide's fallback box).
-3. **`docs/launch/guide-review.md`** describes the `1816` build it reviewed; its pass-3 status note
-   records that the guide now names `1906`.
-4. **Shared dev database** `skyfragrances_dev`: the `admin` password hash no longer matches the
-   documented value (HO §9.1); `rate_limits` rows keyed on the shared `ip_hash` were left in place;
-   `admin_users.known_devices` holds four smoke-session hashes; it carries test orders, products,
-   collection and page edits from several agents — never reuse it as a seed source (`OBS`).
-5. `dist/old-builds/` keeps every superseded ZIP (`0802` … `1816`, the `update-2026-09-28` pack),
-   `update-pack/`, `admin-ui-fix/`, `public_html-READY-TO-UPLOAD/` and `public_html 2/`; the guide
-   names the ones most likely to be uploaded by mistake and tells the owner to ignore the folder.
-
-### 9.2 Unverified on the target platform
-
-6. No recorded Hostinger run (§5.16). The three `OBS` findings are the only signal from the live
-   host; nothing shows the installer's screen 1–4 output, the HTTPS redirect, the uploads block,
-   `.user.ini` limits or the CSP on that host.
-7. The CSP the plan specified is replaced by Hostinger's CDN (`OBS`); the decision (accept, or move
-   `script-src` to a `<meta http-equiv>`) is open.
-8. MariaDB proven at 10.11 only; 10.4 never tested (§5.20). Homebrew's MySQL 9 client cannot
-   connect to MariaDB — use `mariadb` or phpMyAdmin (SF step 7).
-9. No Lighthouse score (§5.4); the intro loader is the predicted LCP cost.
-10. No email has ever been delivered (§3.6b); PHPMailer over `smtp.hostinger.com` untested.
-11. The guide was never trialled by a non-developer and has no hPanel screenshots (§6.7).
-12. Admin actions never pressed in a recorded run (§6.5), including cancel-with-stock-restore and
-    mark-as-paid — the two money-relevant ones.
-13. JazzCash and Easypaisa orders never placed (§3.5d/e).
-14. The price-range filter's UI is unproven and the two desktop listing shots disagree about it (§3.2b).
-15. The screenshot tour force-reveals `.sf-reveal` content, so it cannot catch reveal bugs like the one
-    fixed in `0f714ea`; `OBS` asks for a no-force pass that has not been added.
-16. The acceptance runs drove forms with hand-built curl POSTs; the installer key-box bug was found
-    only by a human in a browser (`OBS`). Only the fresh-install rehearsal used real browser form
-    submission.
-
-### 9.3 Deliberate scope decisions the owner should know (register §3–4, HO §5)
-
-17. Password recovery is the C-64 File-Manager tool (`app/tools/reset-password.php`, copied to the
-    root when needed, nonce-gated, self-deleting); the phpMyAdmin hash paste stays in guide Part 10 as
-    the fallback.
-18. One admin account, no roles; admin session bound to the browser user-agent; 120 min idle / 12 h.
-19. Home rails hide below 4 active products; `/shop` lists everything regardless.
-20. `sitemap.xml` is 404 and pages are `noindex` on any host that is not skyfragrances.com.
-21. Sub-folder installs refused (C-71); hPanel "Force HTTPS" must stay off; HSTS off (Q-23).
-22. `install.php` self-deletes only on the production host; update ZIPs re-ship `install.php`,
-    `.htaccess`, `robots.txt` and the sample images (HO §5.12) — delete `install.php` again after
-    every update.
-23. Orders are never deleted; `delivered` / `cancelled` are terminal, no undo.
-24. Cart caps: 10 per size, 20 lines; one outstanding transfer order per phone/IP (C-58); coupon
-    guesses 10/h per IP; checkout 10 per 10 min per IP.
-25. Payment proofs: images only (no PDF), re-encoded to JPEG, purged 90 days after delivery /
-    cancellation (C-65); receipt hides address/phone 30 days after (C-59).
-26. Coupons: percent/fixed only, no free-shipping type (Q-12). Quiz questions not editable in admin.
-    No back-in-stock capture (C-67). No verified-purchase chip (C-41). No Google Maps or analytics
-    (C-40). No Urdu/RTL (Q-21). No admin-entered phone orders (Q-11).
-27. Price filter is a fixed band list, not free min/max. Track lookups count every attempt equally
-    (06b's 1/5 weighting not built).
-28. `.user.ini` sets `session.cookie_secure=1` — correct on https; a plain-http Apache copy cannot
-    keep an admin login (HO §5.13).
-
-### 9.4 Cosmetic / minor, seen while reviewing the screenshots
-
-29. Full-page mobile captures paint fixed elements mid-page: the cart mini checkout bar over the
-    Order summary heading (`cart--mobile.png`), a second "Filter & sort" button between card rows
-    (`shop--mobile.png`, `for_her--mobile.png`), the admin bottom tab bar and the "Save" bars
-    (`shots-admin/*--mobile.png`, `admin_settings--desktop.png`, `admin_orders_SF_260928_PAQ6--desktop.png`).
-    This is how Playwright renders `position: fixed` in a full-page shot; not checked in a live
-    viewport, so not confirmed as a defect either way.
-30. `about--*.png` shows another agent's "Stage4 heading / Hello world" body, not the shipped copy
-    (§3.6e). Every store shot also carries "STAGE4 ANNOUNCEMENT BANNER TEXT", "Stage4 tagline",
-    "Mon-Sat 10am-8pm (stage4)", "owner@skyfragrances.test", the "Smoke Test Oud" and "Stage4 Test
-    Perfume Edited" products and a "Stage4 Collection Edited" with 0 fragrances — dev data, not seed.
-31. Mobile "View all new arrivals" CTA sits flush under the last card row (S2 §6, not fixed).
-32. `build-zip.php` names the ZIP with UTC time (`1816` = 23:16 Karachi) (HO §9.9).
-33. `PHP Warning: Module "imagick" is already loaded` on every local run is this machine's
-    `php.ini`, not the site.
+- The B.2.7 budgets were **not re-run** by the acceptance pass (AR §10, the "NOT RE-RUN" row).
+- The 14 KB *raw* budget for inlined critical CSS was superseded: the file is 83 KB raw and 14 KB
+  gzipped, and it is linked rather than inlined (register §5).
+- Levers the perf pass left open (LH "Still open"):
+  - a 900 px product image, so the phone's LCP image drops from 52 KB to about 20 KB;
+  - a desktop-only `motion.css` (6.5 KB gzipped, which still blocks rendering on phones);
+  - inlining `gate.js`;
+  - a cookie for the announcement-bar dismissal, which today shifts the layout on every later page
+    in the same session;
+  - font subsetting (about 20 KB), which waits for client approval.
 
 ---
 
-## 10. Evidence index
+## 8. What the owner must still supply or decide
 
-| Artefact | Path |
-|---|---|
-| Client brief | `docs/plan/00-brief.md` |
-| Decisions register (overrides every spec) | `docs/plan/08-decisions-register.md` |
-| Stage 1 run + review fixes | `docs/stage1-run-report.md`, `docs/stage1-review-{hosting,security}.md` |
-| Stage 2+3 run + reviews | `docs/stage2-run-report.md`, `docs/stage2-review-{commerce,design,mobile}.md`, `docs/shots/stage2*/` |
-| Stage 4 admin build notes | `docs/admin-catalogue.md`, `docs/admin-marketing-screens.md`, `docs/admin-settings-tools.md`, `docs/build/admin-orders.md` |
-| Launch smoke, storefront | `docs/launch/storefront-smoke.md`, `docs/launch/shots-store/` (24 PNG + `report.json`) |
-| Launch smoke, admin | `docs/launch/admin-smoke.md`, `docs/launch/shots-admin/` (12 PNG + `report.json`) |
-| Fresh-install rehearsal from the ZIP | `docs/HANDOVER.md` §7, `docs/launch/shots-fresh-install/` (12 PNG + `evidence.json`) |
-| Live-host observations (the only Hostinger signal) | `docs/launch/observations-for-polish.md` |
-| Intro loader timing shots | `docs/shots/intro/` |
-| Owner guide + its review | `docs/GO-LIVE-GUIDE.md`, `docs/launch/guide-review.md`, `docs/HANDOVER.md` |
-| Deployable build | `dist/skyfragrances-20260928-1906.zip`, `dist/public_html/`, dot-file fallback `dist/htaccess-upload/` (superseded builds and the update pack under `dist/old-builds/`) |
-| Commerce + admin actions run (JazzCash, Easypaisa, proof, paid, refund, cancel, bulk cancel, cron) | `docs/HANDOVER.md` §8b, `docs/launch/shots-commerce/` (7 PNG + `results.json`) |
-| Lighthouse | `docs/launch/lighthouse.md` |
-| ZIP manifest / builder | `site/dev/zip-manifest.php`, `dev-tools/build-zip.php` |
-| Push-to-deploy | `.github/workflows/deploy.yml` |
-| Motion layer (not shipped) | branch `motion-wip` (`b37bd1f`), `docs/motion/` |
+### 8.1 Urgent: the shop is public tonight (GR5 #1–#4)
+
+1. **The admin username** for the live shop, from whoever installed it. Then set your own
+   password with `app/tools/reset-password.php` (guide Part 10, "Forgotten admin password").
+   Nobody else should ever know that password.
+2. **Either** real payment details **or** switch those methods off. The seed ships these
+   placeholders: `bank_name`, `bank_account_title`, `bank_account_number`, `bank_iban`,
+   `jazzcash_account_title`, `jazzcash_number`, `easypaisa_account_title` and
+   `easypaisa_number` (HO §2). The seeded IBAN placeholder is 37 characters against a 34-character
+   limit, so the Payments tab shows a red counter until you replace it.
+3. **Hide the sample perfumes and turn indexing off** (Settings → Advanced) until the real
+   catalogue is in.
+4. **A decision, made with the developer, on Hostinger's CDN and Force HTTPS.** Both are on in
+   production, although the guide says they must be off. The CDN is what strips the site's CSP
+   (§9 item 3).
+
+### 8.2 Content only the owner has
+
+5. **Product photographs**, one set per perfume: portrait, JPG or PNG (not HEIC), ideally a
+   bottle on a dark background. The upload crops every photo to 4:5 (Q-17). This is the biggest
+   visual upgrade left (1.5).
+6. **The real catalogue**: names, sizes, prices, sale prices, stock, SKUs, notes, longevity and
+   sillage, season and occasion, collections. At least 4 live perfumes are needed before
+   *Tools → Remove sample data*; below that the home rows hide (HO §5 item 2). The seeded prices
+   (Rs. 3,950–13,950) are placeholders (Q-03).
+7. **Images for Settings**: optional hero images for desktop and mobile, and six Instagram tile
+   images with their links. Confirm the logo, favicon and OG image or replace them.
+8. **Contact and social details**:
+   - Confirm `instagram_url`, `instagram_handle` and `facebook_url`, which are guesses at
+     `skyfragrances`.
+   - Fill in `contact_phone`, `address_line` and `business_hours`, plus `tiktok_url` and
+     `youtube_url` if you use them.
+   - The live footer shows `admin@skyfragrances.com`; confirm that is the address customers
+     should see.
+9. **A read of the legal and policy pages.** `/shipping`, `/returns`, `/privacy`, `/terms` and
+   `/faq` are seeded launch copy, not legal advice. The privacy page promises that payment proofs
+   are deleted after 90 days, and the purge tool keeps that promise (C-65).
+
+### 8.3 Email and DNS
+
+10. **SMTP**: the password of the `orders@skyfragrances.com` mailbox, set in `config.php` → `smtp`
+    (guide Part 10). Until it is set, no order email reaches anyone (3.6b), and WhatsApp is the
+    real confirmation channel.
+11. **DNS**: the domain already resolves to Hostinger with a valid certificate (LIVE). Pass 5
+    found SPF, DKIM, MX and DMARC records in place (GR5 verdict). Nothing more is needed unless the
+    host changes. HSTS is one `.htaccess` line for the developer to add once the certificate has
+    been stable for a while (Q-23).
+12. **Optional**: a Google Search Console verification code (Settings → SEO), and a 15-minute
+    cron on `cron.php` so emails do not wait for an admin page load (HO §5 item 6).
+
+### 8.4 Questions still open in the register
+
+Each was built to a default, and each can still change.
+
+- **Q-01:** random order numbers (`SF-260929-6SDM`) or sequential ones for an accountant.
+- **Q-02:** whether an FBR sales-tax line is needed on invoices. None is built.
+- **Q-25:** keep the one-per-phone limit and the one-year expiry on WELCOME10?
+- **Motion (`docs/motion/technical-fixes.md`, "Not applied"):** whether the desktop intro should
+  replay at most once every 7 days, and whether fonts may be subset with the italic dropped.
+
+### 8.5 Commit approval
+
+13. **Approval to commit and push** the uncommitted acceptance-run changes (AR §11): 11 files
+    under `site/`, plus build tooling and docs. A push to `main`
+    deploys to the live site automatically.
+
+---
+
+## 9. Known limitations
+
+### 9.1 On the live site today
+
+1. **The live site is public, indexable and orderable with sample products.** `robots` says
+   `index,follow`, `/sitemap.xml` lists 40 addresses including `/product/azure-oud`, and the home
+   page shows the 12 sample perfumes with placeholder art (LIVE; GR5 #3).
+2. **The live code is behind the ZIP.** Production runs `49cd8f1`; the acceptance fixes are in the
+   working tree and the ZIP but were never committed or pushed. Until they are, live has:
+   - no COD fallback when every method is unusable;
+   - no red dashboard banner for placeholder payment details;
+   - a cart cookie that dies when the browser closes (instead of lasting 3 days);
+   - a sold-out default size that leaves no-JavaScript visitors on a dead button;
+   - a sitemap that still lists `/track` (confirmed LIVE).
+3. **Hostinger's CDN replaces the site's Content-Security-Policy with `upgrade-insecure-requests`**
+   (LIVE header on `/` and `/admin/login`). So the script, frame and form restrictions the site
+   sets are not reaching browsers. The other headers do arrive, for example `X-Frame-Options: DENY`
+   and `Referrer-Policy`.
+4. **Behind the CDN, every visitor may appear to come from one CDN address** (GR5 #4). The rules
+   keyed on the visitor's IP could then treat different customers as one:
+   - the per-IP rate limits;
+   - the rule that blocks a second transfer order while one awaits verification (C-58);
+   - the 10-failure admin login lock.
+
+   Whether `trusted_proxies` covers the CDN's whole edge range has not been checked.
+5. **Every push resets the HTTPS redirect to temporary.** `deploy.yml` rsyncs `.htaccess` with its
+   `R=302` line, so the permanent flip is undone and Settings → Advanced shows "Temporary (302)"
+   again (GR5 #14). On the live site today this is hidden, because Hostinger's own edge does the
+   301.
+6. **No order email has ever been delivered in any run** (3.6b).
+
+### 9.2 Built, with a known flaw
+
+7. ~~**Checkout proof preview**: the thumbnail of the chosen payment screenshot never appears (CSP
+   blocks `blob:`)~~ — fixed 2026-10-01 in `app/lib/response.php`, which also covers the admin
+   product-photo uploader (AR §15, HO §8d).
+8. **Visual observations from the stage-5 shots, not confirmed on a real phone:**
+   - the hero plate's straight bottom edge across the subheading;
+   - ~~mobile breadcrumbs cut mid-word~~ — fixed 2026-10-01, they now end in "…" (AR §15);
+   - card meta cut with "…" at 375 px ("50ML · 1…" in `shop--mobile.png`).
+9. **Announcement dismissal** is kept in `sessionStorage`, so the header jumps up by the bar's
+   height on every later page in that session (LH "Still open").
+10. **Motion accessibility:** there is no "Pause animations" control for hero movement longer than
+    5 seconds (WCAG 2.2.2). The only mitigation is that the plates stop after 2 cycles
+    (`docs/motion/technical-fixes.md`, "Not applied"). `docs/a11y-audit.md` also lists the quiz
+    announcement and the reduced-motion veil as open; `technical-fixes.md` and AR §10 show both
+    fixed since.
+11. **The motion layer differs from the motion brief in three ways, each a documented plan
+    decision** (`docs/motion/PLAN.md` §8):
+    - hand-written WebGL instead of Three.js;
+    - a particle "mist gathers into the monogram" intro instead of a stroke draw, because no vector
+      monogram exists;
+    - ingredient parallax limited to desktop hero and story, because no ingredient art exists.
+12. **Perf levers left open:** a 900 px product image, a desktop-only `motion.css`, inlining
+    `gate.js`, and font subsetting (§7.5).
+13. **The seeded IBAN placeholder is longer than the field allows** (37 characters against 34).
+
+### 9.3 Deliberately not in this version
+
+These come from the register and HO §5.
+
+14. **Password recovery is a File-Manager tool, not an email link.** There is one admin account
+    and no staff roles (Q-10). The admin session is tied to the browser, so a different browser
+    means logging in again.
+15. **No cron is needed.** Emails go out when an admin page loads, at most 2 per load.
+    `cron.php` is optional.
+16. **The shop does not do these things:**
+    - Orders are never hard-deleted, and "Delivered" is final (Q-26).
+    - No back-in-stock alerts (Q-27).
+    - No free-shipping coupon type (Q-12).
+    - No orders entered by the admin (Q-11).
+    - No Urdu or right-to-left layout (Q-21).
+    - No live Instagram feed.
+    - No newsletter sending (the list is exported instead).
+17. **Hosting limits:**
+    - Sub-folder installs are refused (C-71).
+    - `/sitemap.xml` returns 404 while indexing is off.
+    - `.user.ini` sets secure cookies, so an admin on plain http will not stay logged in.
+    - HSTS is off (Q-23).
+
+### 9.4 Never tested
+
+18. **Databases:** MySQL 8.0 and MariaDB 10.4 (5.9).
+19. **Uploads and install on Hostinger:** the phpMyAdmin import, and the hPanel File-Manager
+    upload and extract (2.5).
+20. **Live-host acceptance checks** (AR §1): two orders from different networks recording
+    different IP hashes, the http→https self-check that flips 302 to 301, the host-mismatch banner,
+    and the contact-form cap under rotating IPs.
+21. **Checks needing a public URL:** Google's Rich Results Test and a real WhatsApp link preview.
+22. **Admin tap targets** at 44 px; only the storefront was measured.
+23. **The go-live guide** has never been followed by a non-developer and has no hPanel
+    screenshots (6.7).
+
+---
+
+## 10. Problems in the evidence found during this review
+
+1. **The stage-5 admin screenshots were all the login page. Resolved 2026-10-01:** the folder now holds 33 real 375 px screenshots from a logged-in sweep (4.2).
+   - `md5` of the 28 PNGs in `docs/shots/stage5/admin/` gives exactly two hashes:
+     `fb67a35a…` for all 14 desktop files (35,300 bytes each) and `39f53196…` for all 14 mobile
+     files (77,433 bytes each). Both images are "Admin sign in".
+   - `admin/report.json` still records every path as HTTP 200 with no overflow, because the tour
+     followed the redirect to `/admin/login`.
+   - So AR §5's last row ("15 admin screens … 0 horizontal overflow") and the admin part of AR §8
+     and §12 are **not supported** by these files. AR §11 fix 12 (`TOUR_UA`) was meant to reuse an
+     admin session. The shots show it did not.
+2. **The tour never captured an order-detail page.** `admin/report.json` lists the path
+   `/admin/orders/` (the order number is empty), and that shot overwrote `admin_orders--*.png`.
+   The only order-detail screenshots of the final code are the desktop ones from the ZIP
+   rehearsal: `docs/launch/shots-fresh-install-zip/22`, `25`–`28`.
+3. **The stage-5 product-page shots predate a fix.** They were taken at 11:11, and
+   `app/controllers/product.php` (AR §11 fix 6) is dated 11:22. They therefore show the sold-out
+   default size the fix removed.
+4. **`docs/guide-review.md` changed while this report was written.** It went from pass 4 to
+   pass 5, dated 2026-10-01 00:08. This report cites pass 5 as it stood then.
+5. **The previous `COMPLETION-REPORT.md` (2026-09-28) is superseded.** Its motion statement
+   ("counts toward no brief item") and its Lighthouse row (76–77 mobile) described a build that no
+   longer exists.
+
+**Re-shoot command for the admin screenshots, once a working admin cookie is available:**
+
+```
+node dev-tools/tour.mjs <url> docs/shots/stage5/admin /admin /admin/orders /admin/orders/<number> …
+```
+
+After it runs, check that the md5 values differ from file to file before trusting the shots.

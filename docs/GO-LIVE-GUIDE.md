@@ -4,21 +4,47 @@ This guide takes the shop from a ZIP file to a live website at **https://skyfrag
 only the Hostinger control panel (hPanel) and your phone or laptop browser. No technical knowledge
 is needed. Follow the steps in order; each one tells you what you should see before you move on.
 
-Time needed: about 45 minutes for the technical part (Parts 1–6), then as long as you like for
-adding your perfumes.
+Time needed: about 45 minutes of your own work, plus waiting for the padlock (usually 15 minutes,
+up to 2 hours) and one 5-minute pause in Part 4; then as long as you like for adding your
+perfumes. Do Parts 1–5 on a laptop; the phone is for checking the result.
+
+## Part 0 — Is your shop already installed?
+
+Open **https://skyfragrances.com** on your phone. If you see the Sky Fragrances shop (black page,
+perfumes, a WhatsApp button), the technical setup is already done: skip Parts 1 to 5 completely,
+do not upload anything and do not create a database. Your developer gives you the admin username;
+set your own password with Part 10 → "Forgotten admin password", then continue at "Soft launch"
+in Part 7 and do Part 6 afterwards. Only if you see Hostinger's "coming soon" page or an error do
+you start at Part 1.
+
+On 30 Sep 2026 the shop was already installed and live on skyfragrances.com (12 sample perfumes,
+`/install.php` gone, the admin login page answering). So unless your developer tells you
+otherwise, you are in the first case: the lines marked **LIVE** in the checklist below are yours
+for tonight, and the lines marked **NOT LIVE ONLY** are not.
+
+## Before you start
 
 **Have these ready before you start**
 
 - Your Hostinger login (hpanel.hostinger.com).
+- **The ZIP (only for a new install — not needed if Part 0 found your shop live).** Your developer
+  sends you this one file, `skyfragrances-public_html-folder.zip` (WhatsApp as a document, Google
+  Drive or WeTransfer). Download it with Chrome, or in Safari first switch off Safari → Settings →
+  General → **Open "safe" files after downloading** (otherwise Safari unpacks it silently and
+  throws the ZIP away). On a Mac, click the file once and press ⌘I: the size must read
+  **13,943,403 bytes** and the name must end in `.zip`.
 - **Upload the ZIP, not the folder.** The developer's folder `dist/public_html` and the file
-  `dist/skyfragrances-public_html-folder.zip` (14,062,456 bytes) contain exactly the same 565 files.
-  The ZIP is the one to upload: hPanel unpacks it on the server in seconds and it keeps the two
-  hidden files (`.htaccess`, `.user.ini`) that your Mac hides from you. Use **only** that ZIP.
+  `dist/skyfragrances-public_html-folder.zip` (13,943,403 bytes, built 1 Oct 2026) contain exactly
+  the same 595 files. The ZIP is the one to upload: hPanel unpacks it on the server in seconds and
+  it keeps the two hidden files (`.htaccess`, `.user.ini`) that your Mac hides from you. Use
+  **only** that ZIP. Its name never changes — every new build replaces it in place — so if you
+  are ever sent a newer one, it has the same name and simply overwrites the old copy.
   Ignore anything in `dist/old-builds` and any other ZIP or folder. In particular do not upload
-  `skyfragrances-update-2026-09-28.zip`, any `skyfragrances-public_html-folder.zip`, or the folders
-  `update-pack` and `admin-ui-fix` (all now parked in `dist/old-builds`): everything in them is
-  already inside the 1906 ZIP. They are developer leftovers, not an update
-  for you. Do **not** make your own ZIP
+  `skyfragrances-public_html.zip` (the same files without the folder wrapper — a developer's
+  copy), any `skyfragrances-2026….zip` (the dated build the two named ZIPs are made from), any
+  `skyfragrances-update-2026….zip` (a small "update pack" for a shop that is already live —
+  Part 11), or the folders parked in `dist/old-builds`. They are developer files, not an
+  update for you. Do **not** make your own ZIP
   with Finder → Compress: it wraps everything in an extra folder and adds `__MACOSX`, which is
   exactly the "nested public_html" mistake in Part 4. Keep the ZIP somewhere you can find it,
   for example your Downloads folder, and do **not** unzip it on your computer.
@@ -27,81 +53,52 @@ adding your perfumes.
   your perfume photos (portrait orientation works best — the shop crops every photo to 4:5).
 
 **Day-one checklist.** Print this block and tick each line as you go; every line is explained
-in the part named.
+in the part named. Lines marked **LIVE** are for a shop that is already on skyfragrances.com
+(Part 0); lines marked **NOT LIVE ONLY** are for an empty hosting account and are skipped when
+the shop is live.
 
-- BEFORE: Hostinger login ready; notes app open.
-- BEFORE: The ONE file to upload is `skyfragrances-public_html-folder.zip` (14,062,456 bytes) — not the
-  folder, not `skyfragrances-update-2026-09-28.zip`, not the older `…-1816.zip`, not anything in
-  `old-builds` / `update-pack` / `admin-ui-fix`, not a ZIP you compressed yourself; not unzipped on the computer.
-- BEFORE: Bank, JazzCash, Easypaisa details; WhatsApp number as `0300 1234567`; logo PNG; perfume
-  photos as JPG (not HEIC), portrait.
-- PART 1: Websites → `skyfragrances.com` listed with **Manage** (else Add website → Empty website /
-  upload my own files → existing domain). No WordPress, no Builder.
-- PART 1: `https://skyfragrances.com` shows the Hostinger placeholder WITH a padlock (Security →
-  SSL = Active). Still not Active after 2 hours → Help → live chat, ask for the free SSL. Do not
-  continue without the padlock.
-- PART 1: Security → SSL → **Force HTTPS is OFF** (turned off if it was on).
-- PART 1: Performance → CDN off (and any cache switch off) if the plan shows that page.
-- PART 1: Advanced → PHP Configuration → 8.2 (or 8.3) → Update. Nothing else changed.
-- PART 2: Databases → Management → name `skyfrag`, user `skyadmin`, generated password → Create.
-- PART 2: Written down: full `u…_skyfrag`, full `u…_skyadmin`, password. (The `u…` number is also
-  the hosting username needed for the cron job later.)
-- PART 2: phpMyAdmin NOT opened.
-- PART 3: Emails → (free included plan if asked) → `orders@skyfragrances.com` created, password
-  noted, webmail login tested; SMTP `smtp.hostinger.com` port 587. OR skipping email tonight →
-  leave Mailbox address AND Mailbox password EMPTY on Screen 2.
-- PART 4: File Manager inside `/public_html` (via `domains/skyfragrances.com` if needed); hidden
-  files ON.
-- PART 4: Deleted `default.php` and everything else there.
-- PART 4: Uploaded the ZIP → Extract → destination exactly `/public_html` → deleted the ZIP and any
-  `__MACOSX`.
-- PART 4: `public_html` shows `.htaccess`, `.user.ini`, `admin/ app/ assets/ db/ storage/ uploads/`,
-  `index.php`, `install.php`, `robots.txt`, `cron.php`, `config.sample.php`, `favicon.ico` — no
-  inner `public_html`.
-- PART 4: Force HTTPS in hPanel still OFF. Waited 5 minutes.
-- PART 5: `https://skyfragrances.com/install.php` shows the dark installer. (Blank page / HTTP 500
-  = PHP version, Part 1 Step 2. 404 / coming soon = nested folder or `default.php`, Part 4.)
-- PART 5 Screen 1: no Problem rows; "Pretty web addresses — could not be checked" is normal; a PHP
-  "tested on 8.2 and 8.3" Note = choose 8.3 in hPanel → Continue.
-- PART 5 Screen 2: pressed Continue FIRST, then refreshed File Manager → `storage/.install-key` →
-  pasted the 32 characters; DB name / user / password; Shop address `https://skyfragrances.com`;
-  SMTP filled (587) OR mailbox address and password empty → Test connection and continue. (Red
-  message? Retype the DB password before trying again.)
-- PART 5 Screen 3: my own username (not `admin`); business email (not personal Gmail); 12+
-  character password in a password manager; WhatsApp `03…`; sample data ticked. If SMTP set: email
-  box filled → Send test email → green box → retype the password twice → Create the shop.
-- PART 5 Screen 4: SCREENSHOTS of the whole page; green "deleted itself" panel (or red → Delete
-  install.php for me); opened `/config.php`, `/db/schema.sql`, `/storage/.htaccess`,
-  `/app/bootstrap.php` on the phone — each an error page, never code; `/install.php` now shows the
-  shop's page-not-found.
-- PART 6: Admin → Settings → Advanced → HTTPS redirect = Permanent (301), or pressed **Make HTTPS
-  permanent**.
-- PART 6: `https://www.skyfragrances.com` lands on `https://skyfragrances.com` with the padlock.
-- PART 6: hPanel → Emails shows no "DNS records missing" (or pressed Fix).
-- SOFT LAUNCH: Press **Save** on each Settings tab BEFORE clicking the next tab.
-- SOFT LAUNCH: Settings → Payments: real bank / JazzCash / Easypaisa details, OR those three
-  switched off with only COD on — no REPLACE ME visible → Save Payments.
-- SOFT LAUNCH: Products → tick all → **Hide** (or accept sample orders).
-- SOFT LAUNCH: Settings → Advanced → **Let search engines index the shop**: OFF until real perfumes
-  exist → Save Advanced.
-- SOFT LAUNCH: Settings → Home: announcement bar changed → Save Home.
-- SOFT LAUNCH: Settings → Contact & Social: WhatsApp, phone, Instagram, Facebook checked → Save
-  Contact & Social.
-- SOFT LAUNCH: Shop opened on the phone: loads, padlock, WhatsApp button opens WhatsApp.
-- PERFUMES: Collections first.
-- PERFUMES: At least 4 real perfumes with status **Live**, each with JPG/PNG/WEBP photos under 6 MB,
-  portrait.
-- PERFUMES: Tools → Remove sample data → Review and remove → typed `DELETE`.
-- PERFUMES: Settings → Advanced → **Let search engines index the shop**: ON → Save Advanced.
-- PERFUMES: One COD + one transfer test order moved through the statuses, then cancelled.
-- PERFUMES: Search Console: URL prefix property → HTML tag → only the code between the quotes
-  pasted into Settings → SEO → **Google site verification code** → Save SEO → Verify → sitemap
-  `https://skyfragrances.com/sitemap.xml` submitted.
-- PERFUMES (optional): Advanced → Cron Jobs → every 15 minutes →
-  `/home/u…/domains/skyfragrances.com/public_html/cron.php` (Type PHP if offered).
-- NEVER: switch Force HTTPS or the CDN on in hPanel; edit `.htaccess`, `.user.ini`, `app/`,
-  `admin/`, `db/`; delete `storage/` or `uploads/`; share `config.php` or the install key; leave
-  `install.php` on the server.
+- FIRST: open `https://skyfragrances.com` on the phone. If the Sky Fragrances shop shows, it is
+  already live: do **not** upload anything, create a database, or touch Force HTTPS or the CDN
+  (Part 0).
+- LIVE: get the admin username from the developer.
+- LIVE: set my own password: File Manager → `domains/skyfragrances.com/public_html/app/tools` →
+  copy `reset-password.php` to `public_html` → open `skyfragrances.com/reset-password.php` →
+  create the named empty file in `storage` → reload → new 12+ character password, saved in a
+  password manager (Part 10 → "Forgotten admin password").
+- LIVE: logged in at `skyfragrances.com/admin`.
+- LIVE: Settings → Payments: real bank / JazzCash / Easypaisa details, or those three off with
+  only COD on. No REPLACE ME left → **Save Payments**.
+- LIVE: Products → tick all → **Hide**.
+- LIVE: Settings → Advanced → **Let search engines index the shop**: OFF → **Save Advanced**.
+- LIVE: Settings → Home: announcement changed → **Save Home**. Settings → Contact & Social:
+  WhatsApp, phone, email, socials checked → **Save**. Press Save on each tab before clicking the
+  next tab.
+- LIVE: phone check: shop loads, padlock shows, WhatsApp button opens my WhatsApp.
+- NOT LIVE ONLY: ZIP from the developer, downloaded with Chrome, 13,943,403 bytes (⌘I), not
+  unzipped; working on a laptop.
+- NOT LIVE ONLY: padlock on `https://skyfragrances.com` (Security → SSL = Active); Force HTTPS
+  OFF; CDN OFF; PHP 8.2 or 8.3 (Part 1).
+- NOT LIVE ONLY: database `skyfrag` and user `skyadmin` created; full `u…_` names and password
+  written down; mailbox `orders@skyfragrances.com` created (or skipping email tonight) (Parts 2–3).
+- NOT LIVE ONLY: File Manager → **domains → skyfragrances.com** (address ends in
+  `/domains/skyfragrances.com`), hidden files ON → rename `public_html` to `public_html-old`
+  (Part 4).
+- NOT LIVE ONLY: upload the ZIP HERE → Extract → path ends in `/domains/skyfragrances.com` →
+  fresh `public_html` appears → delete the ZIP. It must contain `.htaccess` and `.user.ini`, and
+  no inner `public_html`. Wait 5 minutes.
+- NOT LIVE ONLY: `/install.php` → Screen 1 has no Problem rows → Screen 2: key from
+  `storage/.install-key`, database details, `https://skyfragrances.com` → Screen 3: own username
+  (not `admin`), business email, password typed twice, WhatsApp `03…` → **Create the shop**
+  (Part 5).
+- NOT LIVE ONLY: Screen 4: screenshot the whole page; green "deleted itself" panel;
+  `/config.php` shows the shop's page-not-found; then do the LIVE list from Settings → Payments
+  onward; HTTPS redirect = Permanent (Part 6); delete `public_html-old`.
+- LATER: at least 4 real perfumes Live (JPG, portrait, under 6 MB) → Tools → Remove sample data
+  (type `DELETE`) → indexing ON → one COD and one transfer test order, then cancel → Search
+  Console + sitemap (Parts 7–9). Optional cron:
+  `/home/u561152958/domains/skyfragrances.com/public_html/cron.php` every 15 minutes (Part 8).
+- NEVER: edit `.htaccess`, `.user.ini`, `app/`, `admin/` or `db/`; delete `storage/` or
+  `uploads/`; share `config.php`; run `install.php` on a shop that has orders.
 
 **How hPanel is laid out.** After you log in, click **Websites** in the top menu, find
 `skyfragrances.com` and press **Manage** (or **Admin panel**). That opens the website dashboard.
@@ -160,6 +157,11 @@ skyfragrances.com." They do it while you wait. Do not buy a certificate.
 
 ### Step 3. Three things NOT to touch in hPanel
 
+**Security → SSL → Force HTTPS and Performance → CDN:** on a fresh install, turn both off as
+described below. If your shop is already live and working (Part 0), leave both exactly as they
+are and do not change them yourself — the live shop runs with both switched on, and whether they
+stay on is your developer's decision.
+
 - **Security → SSL → Force HTTPS.** Look at the switch. If it is **on** (green), turn it
   **off** now and confirm. If it is already off, leave it. The shop forces https:// by itself,
   in the correct way for Hostinger's servers; Hostinger's switch writes a second, competing rule
@@ -167,8 +169,9 @@ skyfragrances.com." They do it while you wait. Do not buy a certificate.
   Part 4 — if it turned itself back on, turn it off again.
 - Do not install WordPress, the Website Builder, or any "LiteSpeed Cache" or "optimisation"
   plugin on this domain. The shop is not WordPress and those tools would break it.
-- **Performance → CDN** (and any **cache** switch on that page, if your plan shows one) must be
-  **off** for now. The shop serves its own pages and photos quickly enough; Hostinger's CDN can mix
+- **Performance → CDN** — Hostinger's CDN (copies of your site kept on servers around the world)
+  — (and any **cache** switch on that page, if your plan shows one) must be **off** for now on a
+  fresh install. The shop serves its own pages and photos quickly enough; Hostinger's CDN can mix
   customers' carts up and confuses the shop's fraud protection. A developer can enable it later
   with the right settings.
 
@@ -230,7 +233,8 @@ your domain. Create it before running the installer so the installer can test it
    | Password | the mailbox password |
 
    If the screen shows different values, write those down instead and use them in Part 5.
-4. Optional but recommended: open **webmail** (the link is in the same Emails section) and log
+4. Optional but recommended: open **webmail** (Hostinger's website for reading the mailbox, like
+   Gmail in a browser; the link is in the same Emails section) and log
    in once with the new address and password, so you know they work.
 
 If your email is hosted somewhere else (for example Google Workspace), use *that* provider's
@@ -244,19 +248,20 @@ address it does not host.
 ### Step 1. Open File Manager
 
 1. Left menu → **Files → File Manager**. It opens in a new tab.
-2. You land in a folder view. Double-click **public_html**. If you do not see it, open
-   **domains** → **skyfragrances.com** → **public_html** instead. The address bar at the top of
-   File Manager should now end in `/public_html`. This folder is the website: whatever is inside
-   it is what the internet sees at skyfragrances.com.
-3. Turn on hidden files. Look for the settings icon (a gear, usually top-right) and switch on
-   **Show hidden files** (sometimes called "dotfiles"). Files whose names start with a dot, such
-   as `.htaccess`, are invisible until you do this — and you need to see them in a moment.
+2. You land in a folder view. Open **domains** → **skyfragrances.com**. Always go this way, even
+   if you also see a `public_html` at the top level. The address bar must now end in
+   `/domains/skyfragrances.com`, and you should see a folder called `public_html` in the list.
+   That `public_html` folder is the website: whatever is inside it is what the internet sees at
+   skyfragrances.com.
 
-### Step 2. Clear the placeholder
+### Step 2. Turn on hidden files
 
-Inside `public_html` you will probably find a file called `default.php` (Hostinger's "website
-coming soon" page), sometimes a `.htaccess` too. Select everything already inside `public_html`
-and delete it (right-click → **Delete**). The folder should be empty.
+Look for the settings icon (a gear, usually top-right) and switch on **Show hidden files**
+(sometimes called "dotfiles"). Files whose names start with a dot, such as `.htaccess`, are
+invisible until you do this — and you need to see them in a moment.
+
+You do not need to empty the old `public_html` (it holds Hostinger's `default.php` "coming soon"
+page): Step 3 puts the whole folder aside in one go.
 
 ### Step 3. Upload the ZIP — one level above public_html
 
@@ -265,19 +270,22 @@ Use the file named **`skyfragrances-public_html-folder.zip`**. It contains a fol
 hidden files (`.htaccess`, `.user.ini`) that sit at the top of a ZIP, but keeps them when they
 are inside a folder — so the shop is packed one folder deep on purpose.
 
-1. In File Manager go **up one level** from `public_html` (click the folder path at the top, or
-   the `..` entry). You should now see the `public_html` folder itself in the list.
+1. Stay in `domains/skyfragrances.com` (the address bar ends in `/domains/skyfragrances.com`).
+   You see the `public_html` folder itself in the list.
 2. Right-click `public_html` → **Rename** → `public_html-old`. (Nothing is lost; you delete it
-   once the shop works.)
+   once the shop works.) If hPanel refuses to rename it, open `public_html` instead, select
+   everything inside (hidden files on), **Delete**, go back up, and continue with point 3 — in
+   that case the ZIP is extracted over the empty `public_html` and there is no `public_html-old`.
 3. Press the **Upload** icon (arrow pointing up, top-right) → **File** → pick
-   `skyfragrances-public_html-folder.zip` and wait for the progress bar (13 MB, about a minute).
+   `skyfragrances-public_html-folder.zip` and wait for the progress bar (14 MB, about a minute).
 
 ### Step 4. Extract it — here, one level above
 
 1. Right-click the ZIP → **Extract**.
-2. The small box shows the folder you are in (the one that contains `public_html-old`). Leave it
-   as it is — do **not** type `public_html` into it. Press **Extract**. A fresh `public_html`
-   folder appears next to `public_html-old` after 10–30 seconds.
+2. Look at the path in the box. It must end in `/domains/skyfragrances.com` (or be empty, or
+   `.`). If it ends with a new name such as `skyfragrances-public_html-folder`, delete that last
+   part. Do **not** type `public_html` into it. Press **Extract**. A fresh `public_html` folder
+   appears next to `public_html-old` after 10–30 seconds.
 3. Right-click the ZIP → **Delete**. If a folder called `__MACOSX` appeared, delete that too.
 4. Double-click the new `public_html` to open it and continue with Step 5.
 
@@ -309,24 +317,21 @@ file. Go back to `public_html`.
 **The one mistake to avoid — "nested public_html".** If instead you see a single folder called
 `public_html` (or `skyfragrances`, or `site`) *inside* `public_html`, the ZIP was extracted one
 level too deep. Fix: open that inner folder, select all its contents, right-click → **Move**,
-set the destination to `/public_html`, confirm, then delete the now-empty inner folder. If you
+set the destination to `/domains/skyfragrances.com/public_html`, confirm, then delete the
+now-empty inner folder. If you
 get this wrong, `https://skyfragrances.com/install.php` shows a plain "404 Not Found" or
 Hostinger's "coming soon" page instead of the dark installer — that is your signal to look for
 the nested folder in File Manager and fix it there. Do not wait for an error from the installer:
 at that moment the installer cannot be reached.
 
-**If `.htaccess` or `.user.ini` are missing**, hidden files are probably still switched off
-(Step 1). If they really are missing, the installer's first screen will say so: upload the two
-files `htaccess.txt` and `user.ini` from the developer's `dist/htaccess-upload` folder into
-`public_html`, then right-click each → **Rename** to `.htaccess` and `.user.ini` (with the
-leading dot) and reload the installer.
+**If `.htaccess` or `.user.ini` are missing** even with hidden files showing (Step 2), the upload
+went wrong: delete the new `public_html`, rename `public_html-old` back to `public_html`, and
+repeat Steps 3–4 with the ZIP. The installer warns you about a missing `.htaccess`, but not about
+a missing `.user.ini` — so check for both yourself here. Do not create either file by hand.
 
-**If you uploaded the folder instead of the ZIP.** Open `public_html` in File Manager with
-hidden files showing. If `.htaccess` and `.user.ini` are missing: upload the two files
-`htaccess.txt` and `user.ini` from the developer's `dist/htaccess-upload` folder into
-`public_html`, then right-click each → **Rename** to `.htaccess` and `.user.ini` (with the
-leading dot). The installer's Screen 1 will then say "Protection file .htaccess — present". Any
-*other* missing file means the upload was incomplete — delete everything and use the ZIP.
+**If you uploaded the folder instead of the ZIP**, the two hidden files are almost certainly
+missing. Do the same: delete the new `public_html`, rename `public_html-old` back, and repeat
+Steps 3–4 with the ZIP.
 
 Wait about five minutes before Part 5 (make a cup of tea). Hostinger re-reads the shop's
 `.user.ini` settings file every five minutes; if you open the installer sooner, Screen 1 may show
@@ -353,20 +358,22 @@ A table of checks. Each row is marked **OK**, **Note** or **Problem**.
   *Security checks* on Screen 4 may say "skipped" and the HTTPS redirect may stay temporary,
   both of which this guide handles by hand (Screen 4 bullets and Part 6 Step 1). Read any
   *other* Note and do what it says later (for example "test /shop in your browser after
-  installing").
+  installing"). A Note "Client IP detection — requests arrive through a proxy" is normal on
+  Hostinger; there is nothing to do.
 - **Problem** rows stop the installer. Each one says in plain words what to do. The common ones:
 
   | Problem row | What to do |
   |---|---|
   | PHP version … needs PHP 8.2 | Part 1, Step 2. Then reload. |
-  | Folder storage/… cannot be created or written | In File Manager right-click the folder → **Permissions** → set to 755 → reload. |
+  | Folder storage/… cannot be created or written | In File Manager right-click the folder → **Permissions** → set to 755 (a three- or four-digit number that says who may read or change a file; type it exactly as written) → reload. |
   | Protection file .htaccess missing | Hidden files were dropped. Re-upload and re-extract the ZIP (Part 4). |
   | Nested public_html | The ZIP was extracted one level too deep — see the fix in Part 4, Step 5. |
   | Sub-folder install | The files are not directly inside `public_html`. Move them up (same fix). |
   | Upload size limits / PHP memory limit | Advanced → PHP Configuration → PHP Options: `memory_limit` at least 128M, `upload_max_filesize` and `post_max_size` at least 6M. Hostinger's defaults already satisfy this. |
 
-  You may also see a **Note** saying `default.php` is still in public_html — delete it in File
-  Manager (Part 4, Step 2). A Note saying the PHP version is *tested on 8.2 and 8.3* means Part 1
+  You may also see a **Note** saying `default.php` is still in public_html — the new files were
+  extracted on top of the old folder; delete `default.php` in File Manager (Part 4, Step 5).
+  A Note saying the PHP version is *tested on 8.2 and 8.3* means Part 1
   Step 2 was skipped or Hostinger put you on 8.4; go back and choose 8.3, then reload.
 
 When there are no Problem rows, press **Continue**.
@@ -400,7 +407,7 @@ Then fill in the rest of the form from your notes (Part 2 and Part 3):
 | Database username | your `u…_skyadmin` value, exactly |
 | Database password | the database password |
 | **Shop address** | Leave the pre-filled value. It should read `https://skyfragrances.com`. The installer fixes the spelling if you typed `www.` |
-| **Email sending (optional)** | To send order emails: SMTP host `smtp.hostinger.com` (already filled), SMTP port `587` (or `465` if Hostinger's screen shows that — the installer picks the encryption from the port), Mailbox address `orders@skyfragrances.com`, Mailbox password (Part 3), Sender name `Sky Fragrances`. **To skip email for now: leave Mailbox address and Mailbox password empty.** The pre-filled host is then ignored, the shop saves order emails on the server instead of sending them, and a developer can add the mailbox later (Part 10). Do not enter a host with only half the details. |
+| **Email sending (optional)** | To send order emails: SMTP host `smtp.hostinger.com` (already filled), SMTP port `587` (or `465` if Hostinger's screen shows that — the installer picks the encryption from the port), Mailbox address `orders@skyfragrances.com`, Mailbox password (Part 3), Sender name `Sky Fragrances`. **To skip email for now: leave Mailbox address and Mailbox password empty.** The pre-filled host is then ignored, the shop saves order emails on the server instead of sending them, and a developer can add the mailbox later (Part 10). Do not enter a host with only half the details. The screen itself says "leave the host empty" — that works too. Either way is fine; just do not fill in only some of the four boxes. |
 
 Press **Test connection and continue**. Nothing is saved until the database answers.
 
@@ -443,8 +450,9 @@ If you entered a mailbox on Screen 2 there is a second button, **Send test email
 above**. Fill in **Your email address** first, then press it: a green box confirms it was sent. It goes **to the address in "Your
 email address"** on this screen — if that is `orders@skyfragrances.com`, open Hostinger webmail
 (Part 3, point 4) to look for it; otherwise check your inbox and spam on your phone. A red box
-means the mailbox password or host is wrong; press **Back**, then **Change database details**, and
-re-enter the email settings.
+means the mailbox password or host is wrong. Press **Back**, then **Change database details**. On
+that screen type the database password again (from your notes, Part 2) as well as the mailbox
+password — both boxes are empty — then press **Test connection and continue**.
 
 After the test (and after any red message on this screen) both password boxes are empty again.
 Type the admin password twice more before pressing **Create the shop**; everything else you typed
@@ -486,13 +494,18 @@ Below the panel:
 - **Security checks** — the installer asked your own website whether its private files are
   hidden. Rows marked **Note** could not be checked from the server: open each address it names
   on your phone (for example `https://skyfragrances.com/config.php`). Each must show an **error
-  page**, never file contents. If any shows readable code, stop and call the developer.
+  page**, never file contents. The shop's own black "page not found" page, with the logo and
+  menu, is the correct result. The only wrong result is a page full of code or text starting
+  with `<?php`. If any shows readable code, stop and call the developer.
 - **Next steps** — a short list; this guide covers all of them.
 
 Finally, open **https://skyfragrances.com/install.php** in a new tab. It must show the shop's
 "page not found" page. If it shows the installer again saying **"already installed — delete
 install.php"**, press its **Delete install.php for me** button (or delete the file in File
 Manager). The installer will never re-run against a finished installation, but the file must go.
+
+Once the shop opens and you can log in at `/admin`, delete `public_html-old` in
+`domains/skyfragrances.com` (File Manager → right-click → **Delete**).
 
 ---
 
@@ -507,14 +520,16 @@ Once the padlock shows, make it permanent:
 1. Open **https://skyfragrances.com/admin** and log in (Part 7 explains the panel; this is one
    button).
 2. Left menu → **Settings** → the **Advanced** tab. Find **HTTPS redirect**. If it shows
-   **Permanent (301)** you are done. If it shows **Temporary (302)**, press **Make HTTPS
+   **Permanent (301)** you are done (301 is simply the technical name for a permanent
+   redirect). If it shows **Temporary (302)**, press **Make HTTPS
    permanent** and confirm. The button first checks that `https://skyfragrances.com` answers with
    a valid certificate and refuses if it does not — in that case wait an hour and try again.
 3. The same status is shown on the **Tools** page.
 4. Once, on your phone, open `https://www.skyfragrances.com`. It must land on
    `https://skyfragrances.com` with the padlock — the shop removes the `www.` itself.
 
-Remember Part 1, Step 3: hPanel's own **Force HTTPS** switch (Security → SSL) must stay **off**.
+Remember Part 1, Step 3: on a fresh install hPanel's own **Force HTTPS** switch (Security → SSL)
+must stay **off**; on a shop that was already live (Part 0) leave it exactly as it is.
 
 After a month of stable https, ask the developer to add the HSTS line (a header that makes
 browsers remember to use https:// for your shop for a year, so they never even try http://) to
@@ -522,8 +537,11 @@ browsers remember to use https:// for your shop for a year, so they never even t
 
 ### Step 2. Let email arrive in inboxes (SPF and DKIM)
 
-Mail servers accept email from `orders@skyfragrances.com` only if your domain's DNS says
-Hostinger is allowed to send for it. Two records do this: **SPF** and **DKIM**. When your domain
+On skyfragrances.com these records already exist (checked 30 Sep 2026: MX, SPF, DKIM and DMARC
+are all in place). You only need the Gmail test in point 3.
+
+Mail servers accept email from `orders@skyfragrances.com` only if your domain's DNS (the domain's
+address-book entries) says Hostinger is allowed to send for it. Two records do this: **SPF** and **DKIM**. When your domain
 uses Hostinger's nameservers, Hostinger adds them for you — but check:
 
 1. Left menu → **Emails** → **Manage** next to skyfragrances.com. If Hostinger shows a warning
@@ -547,21 +565,32 @@ uses Hostinger's nameservers, Hostinger adds them for you — but check:
 ### Step 1. Log in
 
 1. Open **https://skyfragrances.com/admin**. Enter the username and password you chose on
-   installer Screen 3 (the installer's link to `/admin/login` is the same page).
+   installer Screen 3 (the installer's link to `/admin/login` is the same page). If the developer
+   installed the shop for you, you were given only the username. Set your password first with
+   Part 10 → "Forgotten admin password", then log in here.
 2. The panel remembers the browser you used. If you later log in from a laptop or a different
    phone, you simply log in again there — nothing else is needed.
 3. Five wrong passwords in a row slow the form down; ten lock that connection out for 15
    minutes. The lock clears by itself.
 
 The **Dashboard** shows today's and this month's revenue, orders by status, low-stock alerts,
-the latest orders and best sellers. Two yellow banners are normal on day one:
-*"This store is still showing sample data"* (Part 7, Step 6 removes it) and — if you opened the
-panel from an address different from the site address — a note pointing at Settings → Advanced.
+the latest orders and best sellers. Three banners are normal on day one:
+*"This store is still showing sample data"* (Part 7, Step 6 removes it), a red *"Customers cannot
+pay by Bank Transfer, JazzCash, Easypaisa: the account details are still the REPLACE ME
+placeholders"* (Step 3 clears it, one method at a time as you fill each in) and — if you opened
+the panel from an address different from the site address — a note pointing at Settings →
+Advanced. If `install.php` is still on the server you also see *"install.php is still on the
+server. Delete it now"* until you do (Part 5, Screen 4).
 
-### Soft launch — if you want the address to work before the real perfumes are in
+When you open the shop itself on your phone, the first visit plays a short monogram intro and the
+home page's hero, product cards and story sections animate as you scroll. This is built in; it
+needs nothing from you, it is skipped for visitors who have "reduce motion" switched on in their
+phone settings, and it never delays the **Add to cart** and **Place order** buttons.
 
-You may share the address before everything is ready, but do these four things first (ten
-minutes). Without them a visitor can order a sample perfume that does not exist, the transfer
+### Soft launch — do this tonight
+
+The shop is already public. Do these four things tonight, before anything else in the admin
+panel (ten minutes). Without them a visitor can order a sample perfume that does not exist, the transfer
 checkout shows `0000-0000000-000 (REPLACE ME)` as your account number, and Google starts listing
 "Azure Oud" under your brand.
 
@@ -577,6 +606,8 @@ checkout shows `0000-0000000-000 (REPLACE ME)` as your account number, and Googl
    index the shop: off**. Switch it back on in Part 9.
 4. **Announcement bar** — Settings → Home: change the text to something like *"Launching soon —
    follow us on Instagram for the first drop"* so visitors know the catalogue is coming.
+5. If Google has already listed sample perfumes, they drop out by themselves within a few weeks
+   once the products are hidden and indexing is off. There is nothing else to do.
 
 Then do Parts 7 and 8 at your own pace and, when done, flip indexing on and remove the sample
 data (Step 6).
@@ -726,12 +757,16 @@ number you can read WhatsApp on and, for one order, a Gmail address to check ema
 
 ### Bank transfer, JazzCash and Easypaisa (one order each)
 
+These three choices only appear at checkout once their account details in Settings → Payments no
+longer say `REPLACE ME` (Part 7, Step 3). Until then the checkout offers Cash on Delivery only and
+the Dashboard shows a red banner naming the methods that are hidden — so do Step 3 first.
+
 1. Checkout as above but choose **Bank transfer** (then JazzCash, then Easypaisa). The page
    shows the account details you entered in Settings → Payments and asks for the **Transaction
    ID**, the **Sender name** and a **Payment screenshot**. Upload any image for the test.
 2. The confirmation page says the payment is **awaiting verification**.
-3. In the panel, open the order: the screenshot is shown under **Payment proof**. Press **Mark as
-   paid** once you have checked it in your banking app, then move it through Confirmed →
+3. In the panel, open the order: the screenshot is shown under **Payment proof**. Press **Approve
+   payment — mark as paid** once you have checked it in your banking app, then move it through Confirmed →
    Packing → Shipped → Delivered as before. Two more WhatsApp texts exist here: **Request payment
    proof** and **Payment not verified**.
 4. When a transfer order stays unpaid past the hold time from Settings, the **Orders** page shows
@@ -754,13 +789,14 @@ orders and look at your inbox. **Tools → Emails not yet sent** shows anything 
 failed. If everything stays *waiting*, the mailbox details need checking (Part 10).
 
 If you want the emails to go out even when nobody has the panel open (recommended once real
-orders arrive): left menu → **Advanced → Cron Jobs**. If the **Type** menu offers **PHP**, choose it
+orders arrive), set up a Cron Job (a timer on the server that runs a task on its own every 15
+minutes): left menu → **Advanced → Cron Jobs**. If the **Type** menu offers **PHP**, choose it
 and enter the file path; otherwise choose **Custom** and enter the full command. Interval: **every
 15 minutes** (`*/15 * * * *`). The path is
-`/home/u123456789/domains/skyfragrances.com/public_html/cron.php`, where `u123456789` is the same
-`u…` number hPanel put in front of your database name in Part 2 (also shown as **Username** under
-Hosting → Plan details). For the Custom type the command is `php` followed by a space and that
-path. Press **Save**. No key is needed when it runs this way; if the job is ever set up as a web
+`/home/u561152958/domains/skyfragrances.com/public_html/cron.php`. For the Custom type the command
+is `php /home/u561152958/domains/skyfragrances.com/public_html/cron.php`. (`u561152958` is your
+hosting username — the same `u…` number hPanel puts in front of your database name, also shown as
+**Username** under Hosting → Plan details.) Press **Save**. No key is needed when it runs this way; if the job is ever set up as a web
 address instead, it needs `?key=` with the `cron_key` from `config.php`. If Hostinger emails you
 "PHP Parse error" from the job, switch the Type to **PHP**.
 
@@ -778,20 +814,27 @@ When the developer sends a new `skyfragrances-public_html-folder.zip`, you can r
 site in one go. Three things inside the old folder are **yours** and must be carried over,
 because the new ZIP does not contain them: `config.php` (your database password and the shop's
 secret key), the `storage` folder (the "installed" marker, payment screenshots, sessions) and the
-`uploads` folder (every photo you added in the admin panel). Everything else is code and is
-replaced.
+`uploads` folder (every photo you added in the admin panel). The new ZIP has only empty copies of
+`storage` and `uploads` and no `config.php`. Everything else is code and is replaced.
 
-1. File Manager → go **up one level** from `public_html` (you see the `public_html` folder itself).
+1. File Manager → **domains → skyfragrances.com** (the address bar ends in
+   `/domains/skyfragrances.com`; you see the `public_html` folder itself), hidden files on.
 2. Right-click `public_html` → **Rename** → `public_html-previous`.
 3. **Upload** the new `skyfragrances-public_html-folder.zip` here → right-click → **Extract**
-   (leave the path as it is) → a fresh `public_html` appears. Delete the ZIP.
+   (the path in the box must end in `/domains/skyfragrances.com`, exactly as in Part 4 Step 4) →
+   a fresh `public_html` appears. Delete the ZIP.
+   3b. Open the new `public_html` (hidden files on) and delete its `storage` and `uploads`
+   folders. They are empty copies; yours come across in the next step.
 4. Open `public_html-previous`, turn on **Show hidden files**, and select exactly three items:
    `config.php`, the `storage` folder and the `uploads` folder. Right-click → **Move** →
-   destination `/public_html` → confirm **Replace / Overwrite** if asked.
+   destination `/domains/skyfragrances.com/public_html` → confirm.
 5. Open the new `public_html` and check the three items are there. Delete `install.php` if you
    see it (the shop is already installed; the file refuses to run anyway).
 6. Open `https://skyfragrances.com` — the shop shows your products and you can log in to
-   `/admin` as before. Only then delete `public_html-previous`.
+   `/admin` as before. Only then delete `public_html-previous` (and `public_html-old` from
+   install night, if it is still there).
+7. Open **Settings → Advanced**: if **HTTPS redirect** says *Temporary (302)*, press **Make HTTPS
+   permanent**.
 
 If step 6 shows "Sky Fragrances is not configured yet", `config.php` did not make it across — go
 back to step 4. Never run `install.php` on a shop that already has orders: it offers to replace
@@ -807,7 +850,8 @@ the database.
   shows `<meta name="google-site-verification" content="AbC123…" />` — copy **only the letters
   between the quotes after `content=`**, not the whole line. In the panel open **Settings → SEO**,
   paste it into **Google site verification code**, press **Save SEO**, then press **Verify** in
-  Search Console. Finally open **Sitemaps** there and submit `https://skyfragrances.com/sitemap.xml`.
+  Search Console. Finally open **Sitemaps** there and submit the sitemap (a list of every page, made for Google),
+  `https://skyfragrances.com/sitemap.xml`.
   The sitemap updates itself.
 - **Social previews.** Share a product link on WhatsApp: the image, title and price come from the
   product's photo and SEO fields.
@@ -820,9 +864,9 @@ the database.
 
 | What you see | What it means | What to do |
 |---|---|---|
-| Hostinger's "website coming soon" page or a plain "404 Not Found" instead of the installer | `default.php` is still in `public_html`, or the files are in a sub-folder / nested `public_html` | Part 4, Steps 2 and 5. The installer cannot tell you this itself — it is not reachable at that moment. |
+| Hostinger's "website coming soon" page or a plain "404 Not Found" instead of the installer | `default.php` is still in `public_html`, or the files are in a sub-folder / nested `public_html` | Part 4, Steps 3 to 5. The installer cannot tell you this itself — it is not reachable at that moment. |
 | A completely blank white page, or "HTTP ERROR 500" / "This page isn't working", when opening `install.php` | The account is still on an old PHP version, so the installer cannot even start | Part 1, Step 2: Advanced → PHP Configuration → 8.2 → Update. Wait a minute and reload. |
-| "This form has expired" on any installer screen | You were on the page for a long time or opened it twice | Press **Start again**; nothing was changed. |
+| "This form has expired" on any installer screen | You left an installer screen open for more than about 20 minutes, or opened it twice | Press **Start again**; nothing was lost. If you had already passed Screen 2, **Continue** takes you straight to Screen 3 — that is expected. |
 | "The install key did not match" | Wrong or partial key | Copy the whole line from `storage/.install-key` again. |
 | "Could not connect to the database … Access denied" | Wrong database name, user or password | Check Databases → Management; reset the user's password if needed. |
 | "The database is not empty" | You pointed the installer at a database that already has tables | Create a new empty database (Part 2) or, if it is an old copy of this shop you do not need, empty it in phpMyAdmin first. The installer never deletes tables. |
@@ -849,19 +893,21 @@ There is no "forgot password" email by design (the shop must not depend on email
 reset is done with a small tool that ships inside the shop, in ten minutes, and it asks you to
 prove you can reach the server's files before it changes anything:
 
-1. hPanel → **Files → File Manager** → `public_html` → `app` → `tools`. Right-click
-   `reset-password.php` → **Copy** → destination `/public_html` → confirm. (Copy, not move — the
+1. hPanel → **Files → File Manager** → `domains` → `skyfragrances.com` → `public_html` → `app` →
+   `tools`. Right-click `reset-password.php` → **Copy** → destination
+   `/domains/skyfragrances.com/public_html` → confirm. (Copy, not move — the
    original stays in `app/tools` for next time.)
 2. Open **https://skyfragrances.com/reset-password.php** in your browser. It shows a file name
    like `reset-3f9a1c…` (16 letters and numbers).
-3. Back in File Manager open `public_html` → `storage` (hidden files on), press **New file**,
+3. Back in File Manager open `domains/skyfragrances.com/public_html` → `storage` (hidden files
+   on), press **New file**,
    name it exactly as shown, leave it empty and save.
 4. Reload the browser tab. It now shows **Choose a new admin password**: type a new password of
    12+ characters twice and press the button. Your account is unlocked at the same time (any
    lock-out from the wrong guesses is cleared).
 5. The tool deletes itself and the file you created. Reload the address once more: it must show
-   the shop's page-not-found. If it still shows the tool, delete `public_html/reset-password.php`
-   in File Manager by hand. Then log in at `/admin`.
+   the shop's page-not-found. If it still shows the tool, delete
+   `domains/skyfragrances.com/public_html/reset-password.php` in File Manager by hand. Then log in at `/admin`.
 
 Only the browser that first opened the tool can finish the reset; if another device opened it,
 or you took more than an hour, delete `storage/.reset-pending` and the `storage/reset-…` file in
@@ -894,13 +940,19 @@ below or call the developer.
 The email settings live in `public_html/config.php`, a file the installer locks read-only so
 nothing on the site can change it. To edit it:
 
-1. File Manager → `public_html` → right-click `config.php` → **Permissions** → set to `0600`
-   (owner read and write) → save.
+1. File Manager → `domains/skyfragrances.com/public_html` → right-click `config.php` →
+   **Permissions** → set to `0600` (owner read and write; a three- or four-digit number that says
+   who may read or change a file — type it exactly as written) → save.
 2. Right-click `config.php` → **Edit**. Find the block that starts with `'smtp' =>`. Change the
    value after `'pass' =>` (keep the quotes) — and `'host'`, `'user'` if you are adding email
-   for the first time (`smtp.hostinger.com`, `orders@skyfragrances.com`). Save.
+   for the first time (`smtp.hostinger.com`, `orders@skyfragrances.com`). If Hostinger's settings
+   say port 465, also change `'port' => 587` to `'port' => 465` and `'secure' => 'tls'` to
+   `'secure' => 'ssl'`. Save.
 3. Set the permissions back to `0400`.
 4. Place a small test order or open the Dashboard: the waiting emails go out.
+
+If you are not comfortable editing this file, send the new password to your developer instead —
+a single missing comma takes the whole shop offline until it is fixed.
 
 If the site shows a black error page right after you save, you removed a quote mark or comma.
 Press **Edit** again and compare the block with `config.sample.php` in the same folder — every
@@ -913,17 +965,28 @@ mailbox connection and two random security keys. Never share it.
 
 ## Part 11 — Updating the shop later
 
-When the developer sends a new ZIP:
+Normally you do nothing: when the developer changes the shop, the change reaches
+skyfragrances.com by itself within a minute. The two ZIP methods below are only for when the
+developer asks you to use them. (After such an automatic update, Settings → Advanced may show the
+HTTPS redirect as *Temporary (302)* again; press **Make HTTPS permanent** when you see it.)
+
+The developer sends updates in one of two forms. A full `skyfragrances-public_html-folder.zip`
+(the same name as the launch ZIP) is applied with Part 8b. A small **update pack** named
+`skyfragrances-update-YYYYMMDD-HHMM.zip` (about 1.7 MB, code only — no `install.php`, no
+`config.php`, no `storage/`, no `uploads/`, and it carries its own `UPDATE-README.txt` with the
+same steps) is applied like this:
 
 1. **Settings → Advanced → Maintenance mode: on.** Customers see a polite "back shortly" page;
    you can still preview with the preview key.
 2. Back up first (Part 12).
-3. File Manager → `public_html` → **Upload** the new ZIP → right-click → **Extract** into
-   `public_html` (same as Part 4). Existing code files are replaced; your `config.php`, your
+3. File Manager → `domains/skyfragrances.com/public_html` (open it). Upload the update ZIP here →
+   right-click → **Extract** → the box must end in `/public_html` → **Extract**. (This is the
+   opposite of Part 4: the update pack has no folder around it.) Existing code files are replaced; your `config.php`, your
    photos in `uploads/`, and everything in `storage/` are **not** in the ZIP and stay as they
    are. Delete the ZIP afterwards.
-4. The ZIP contains a fresh `install.php`. It refuses to run against an installed shop, but
-   **delete it** anyway (right-click → Delete).
+4. If the ZIP contained a fresh `install.php` (the update pack never does; the full ZIP does), it
+   refuses to run against an installed shop, but **delete it** anyway (right-click → Delete).
+   Delete `UPDATE-README.txt` too if you see it.
 5. Open **Settings → Advanced**: if **HTTPS redirect** says *Temporary (302)* again, press **Make
    HTTPS permanent**. (The new ZIP's files reset it.)
 6. Check the shop on your phone, then **Maintenance mode: off**.
@@ -963,8 +1026,8 @@ To restore, a developer imports the `.sql` in phpMyAdmin and re-uploads `uploads
 
 | Never do this | Why |
 |---|---|
-| Switch on **Force HTTPS** in hPanel | The shop already redirects; two rules can loop. |
-| Switch on **Performance → CDN** or a cache in hPanel | Customers can see each other's cart; the shop's own caching is already on. |
+| Change **Force HTTPS** in hPanel yourself (on a fresh install it stays off; on the live shop leave it exactly as it is — Part 1 Step 3) | The shop already redirects; two rules can loop. |
+| Change **Performance → CDN** or a cache in hPanel yourself (off on a fresh install; on the live shop leave it exactly as it is) | Customers can see each other's cart; the shop's own caching is already on. The developer decides. |
 | Leave `install.php` on the server | It reveals server details. It refuses to re-run, but delete it. |
 | Edit `.htaccess`, `.user.ini` or anything in `app/`, `admin/`, `db/` | These are the shop's engine. Everything you control is in Settings. |
 | Delete `storage/` or `uploads/` | Sessions, payment screenshots and photos live there. |

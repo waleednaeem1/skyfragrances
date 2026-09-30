@@ -16,12 +16,12 @@ No framework, no Composer, no Node, no build step. Upload the ZIP, run `install.
 | `site/db/schema.sql`, `site/db/seed.sql` | Database blueprint and sample data (12 perfumes, 5 collections, 3 coupons). Runs on MySQL 8 and MariaDB 10.4+. |
 | `site/app/` | Storefront code (controllers, views, libraries, PHPMailer). Blocked from the web by `.htaccess`. |
 | `site/admin/` | Admin panel code. |
-| `site/assets/` | One stylesheet per surface (`site.css`, `admin.css`), vanilla JS, fonts, brand images. |
+| `site/assets/` | Stylesheets (`critical.css` + `site.css` for the storefront, `admin.css`, `motion.css` assembled from `css/motion/*.css`), vanilla JS, the motion layer (`js/motion/**`, `js/intro.js`) with its vendored GSAP, ScrollTrigger and Lenis (`js/vendor/`), two variable fonts, brand images. |
 | `site/uploads/` | Product, collection and social-preview images. The ZIP ships only the sample set. |
 | `site/storage/` | Runtime files (sessions, logs, cache, payment screenshots). Empty in the ZIP. |
 | `site/dev/` | Local-only helpers (`router.php` for `php -S`, the ZIP manifest). Never shipped. |
-| `dev-tools/` | `build-zip.php` (makes the deployable ZIP), `tour.mjs` (screenshots), `intro-check.mjs`. Never shipped. |
-| `dist/` | Build output: the current ZIP (`skyfragrances-YYYYMMDD-HHMM.zip`, the time is UTC) and its unpacked twin `dist/public_html/`; superseded builds sit in `dist/old-builds/`. Git-ignored. |
+| `dev-tools/` | `build-zip.php` (makes the deployable ZIPs), `build-update-pack.sh` (code-only update pack), `tour.mjs` (screenshots), `motion-check.mjs`, `intro-check.mjs`, `gzip-proxy.mjs`, `extract-default-copy.php`. Never shipped. |
+| `dist/` | Build output: the dated build `skyfragrances-YYYYMMDD-HHMM.zip` (the time is UTC), its two stable copies `skyfragrances-public_html-folder.zip` (wrapped in `public_html/`, the one the owner uploads) and `skyfragrances-public_html.zip` (flat), the code-only `skyfragrances-update-YYYYMMDD-HHMM.zip`, and the unpacked twin `dist/public_html/`; superseded builds sit in `dist/old-builds/`. Git-ignored. |
 | `docs/` | Plans, specs, review reports and the owner-facing guides (see below). |
 | `brand/` | Logo sources. |
 
@@ -30,7 +30,7 @@ No framework, no Composer, no Node, no build step. Upload the ZIP, run `install.
 - `docs/GO-LIVE-GUIDE.md` — step-by-step Hostinger launch for a non-developer: database, mailbox,
   upload, installer, HTTPS, first hour in the panel, test orders, troubleshooting, updates, backups.
 - `docs/HANDOVER.md` — every credential to set, every placeholder to replace, where each setting
-  lives, known limitations, and what the `motion-wip` branch is.
+  lives, known limitations, the motion layer, and the fresh-install rehearsals.
 
 ## Documents for a developer
 
@@ -40,16 +40,20 @@ No framework, no Composer, no Node, no build step. Upload the ZIP, run `install.
 - `docs/plan/` — the numbered specs (schema, architecture, storefront, design, admin, commerce, seed
   and quality bar).
 - `docs/launch/` — the pre-launch smoke reports and screenshot tours for the storefront and admin,
-  plus `shots-fresh-install/` (screenshots and `evidence.json` from installing the ZIP on a
-  throwaway database, as recorded in `docs/HANDOVER.md` §7).
+  plus `shots-fresh-install/` and `shots-fresh-install-zip/` (screenshots and `evidence.json` from
+  installing the ZIP on a throwaway database, as recorded in `docs/HANDOVER.md` §7 and §7b).
+- `docs/acceptance-report.md` — the 07 B.4 acceptance run, end to end.
+- `docs/motion/` — the motion layer: brief, plan, per-section notes, `run-report.md` with its
+  measured numbers and the kill-switch order in `PLAN.md`. `docs/lighthouse/summary.md` and
+  `docs/perf/critical-css.md` hold the perf pass.
 - `docs/dev-run.md` — how the local servers and screenshot tooling are run.
 
 ## Branches
 
 | Branch | State |
 |---|---|
-| `main` | The launch build: tested storefront, commerce engine, intro loader, admin panel. Build the ZIP from here. |
-| `motion-wip` | Unfinished scroll/motion layer (`core.js`, `motion.css`, section modules). Not part of the launch; do not ship or reference it. |
+| `main` | The launch build: storefront, commerce engine, intro loader, the signature motion layer (merged in `0ff6deb`), admin panel. Build the ZIP from here. |
+| `motion-wip` | The branch the motion layer was finished on. Merged into `main`; kept for history only. |
 
 ## Building the ZIP
 
@@ -58,15 +62,29 @@ php dev-tools/build-zip.php
 ```
 
 Writes `dist/skyfragrances-YYYYMMDD-HHMM.zip` from `site/` using the rules in
-`site/dev/zip-manifest.php`: no `config.php`, no runtime state, no `dev/`, no `.git`, no
-`.DS_Store`, no owner uploads; the sample images, the intro loader, PHPMailer, both SQL files and
-`install.php` are required and the build aborts if any is missing or if a forbidden file slipped
-in. The ZIP has a flat root: its files land directly in `public_html`.
+`site/dev/zip-manifest.php`, then copies it to the two stable names `dist/skyfragrances-public_html.zip`
+(flat root) and `dist/skyfragrances-public_html-folder.zip` (everything under `public_html/`, the
+file the owner uploads — hPanel's extractor keeps dot-files only inside a folder). Rules: no
+`config.php`, no runtime state, no `dev/`, no `.git`, no `.DS_Store`, no owner uploads. Under
+`uploads/` only the sample set ships: `products/sample/**`, `og/sample/**` and the five seed
+collections' art in `collections/` — the build reads the image names out of `db/seed.sql`, derives
+the `-thumb/-card/-zoom` and `-og` files, refuses to finish if any is missing, and refuses if any
+other upload slipped in. The sample images, the motion layer (`motion.css`, `js/motion/*`, the
+vendored GSAP/ScrollTrigger/Lenis), the intro loader, PHPMailer, both SQL files and `install.php`
+are required. Last build: 595 files, 13,928,115 bytes flat / 13,943,403 bytes wrapped.
+
+```bash
+zsh dev-tools/build-update-pack.sh
+```
+
+Writes `dist/skyfragrances-update-YYYYMMDD-HHMM.zip`: `site/` minus `install.php`, `config*.php`,
+`dev/`, `storage/` and `uploads/`, plus an `UPDATE-README.txt`, for extracting inside a live
+`public_html` (guide, Part 11).
 
 To inspect what the owner will upload:
 
 ```bash
-rm -rf dist/public_html && mkdir -p dist/public_html && unzip -q dist/skyfragrances-*.zip -d dist/public_html
+rm -rf dist/public_html && mkdir -p dist/public_html && unzip -q dist/skyfragrances-public_html.zip -d dist/public_html
 ```
 
 ## Running locally
@@ -103,5 +121,7 @@ mariadb -u<user> -p<pass> <db> < site/db/seed.sql
 ## Tests that exist
 
 There is no unit-test suite. Verification is done by lint (`php -l`, `node --check`), the smoke
-runs in `docs/launch/`, the screenshot tour (`dev-tools/tour.mjs`) and a fresh install from the ZIP
-on a throwaway database, as recorded in `docs/HANDOVER.md`.
+runs in `docs/launch/`, the acceptance run (`docs/acceptance-report.md`), the motion harness
+(`dev-tools/motion-check.mjs`, `docs/motion/run-report.md`), the screenshot tour
+(`dev-tools/tour.mjs`) and a fresh install from the ZIP on a throwaway database with a headless
+browser walking `install.php`, the checkout and the admin, as recorded in `docs/HANDOVER.md` §7b.

@@ -445,3 +445,10 @@ p { margin: 0 0 var(--sp-3); }
 @media (max-width: 767px) {
   .adm-field--pair { grid-template-columns: minmax(0, 1fr); }
 }
+@media (pointer: coarse) {
+  .adm-btn--sm, .adm-tile__tools .adm-btn, .adm-chip { min-height: 44px; }
+  .adm-page__back { display: inline-flex; align-items: center; min-height: 44px; }
+  .adm-main details > summary { padding-block: 11px; }
+  .adm-tile__handle { width: 44px; height: 44px; }
+  .adm-list > li > a { display: inline-flex; align-items: center; min-height: 44px; }
+}

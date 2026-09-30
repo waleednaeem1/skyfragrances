@@ -22,7 +22,6 @@ function sitemap_build(): string
         $xml .= sitemap_entry($path, $latestProduct);
     }
     $xml .= sitemap_entry('/scent-finder', $latestSite);
-    $xml .= sitemap_entry('/track', $latestSite);
     $xml .= sitemap_entry('/contact', $latestSite);
     foreach (db_fetch_all('SELECT slug, updated_at, created_at FROM content_pages WHERE is_active = 1 ORDER BY sort_order ASC') as $row) {
         $xml .= sitemap_entry('/' . $row['slug'], $row['updated_at'] ?? $row['created_at']);

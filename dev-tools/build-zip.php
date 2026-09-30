@@ -23,15 +23,50 @@ $excludedBasenames = $manifest['exclude_basenames'];
 $keepInsideExcludedDirs = $manifest['keep_inside_excluded_dirs'];
 $includedPrefixes = $manifest['include_prefixes'] ?? [];
 
+function build_seed_images(string $siteRoot, array $manifest): array
+{
+    $seed = (string) file_get_contents($siteRoot . '/' . $manifest['seed_sql']);
+    $files = [];
+    preg_match_all("#INSERT IGNORE INTO product_images .*?VALUES \\(.*?'(sample/[a-z0-9-]+)\\.webp'#s", $seed, $products);
+    foreach (array_unique($products[1]) as $stem) {
+        $files[] = $manifest['seed_product_dir'] . $stem . '.webp';
+        foreach ($manifest['seed_product_sizes'] as $size) {
+            foreach (['webp', 'jpg'] as $ext) {
+                $files[] = $manifest['seed_product_dir'] . $stem . '-' . $size . '.' . $ext;
+            }
+        }
+        $files[] = $manifest['seed_product_og_dir'] . $stem . '-og.jpg';
+    }
+    preg_match_all("#INSERT IGNORE INTO collections .*?'(collections/[a-z0-9-]+)\\.webp'#s", $seed, $collections);
+    foreach (array_unique($collections[1]) as $stem) {
+        $files[] = $manifest['seed_collection_dir'] . $stem . '.webp';
+        foreach ($manifest['seed_collection_sizes'] as $size) {
+            foreach (['webp', 'jpg'] as $ext) {
+                $files[] = $manifest['seed_collection_dir'] . $stem . '-' . $size . '.' . $ext;
+            }
+        }
+    }
+    return ['files' => array_values(array_unique($files)), 'products' => count(array_unique($products[1])), 'collections' => count(array_unique($collections[1]))];
+}
+
+$seedImages = build_seed_images($siteRoot, $manifest);
+if ($seedImages['products'] === 0 || $seedImages['collections'] === 0) {
+    zip_fail("Could not read the sample image names out of db/seed.sql. Aborting.\n");
+}
+$includedExact = $seedImages['files'];
+
 function build_relative(string $root, string $path): string
 {
     return str_replace('\\', '/', substr($path, strlen($root) + 1));
 }
 
-function build_is_excluded(string $rel, array $exact, array $prefixes, array $basenames, array $keep, array $include = []): bool
+function build_is_excluded(string $rel, array $exact, array $prefixes, array $basenames, array $keep, array $include = [], array $includeExact = []): bool
 {
     if (in_array($rel, $exact, true) || in_array(basename($rel), $basenames, true)) {
         return true;
+    }
+    if (in_array($rel, $includeExact, true)) {
+        return false;
     }
     foreach ($include as $prefix) {
         if (str_starts_with($rel, $prefix) || str_starts_with($prefix, $rel . '/')) {
@@ -79,7 +114,7 @@ $skipped = [];
 foreach ($iterator as $item) {
     $rel = build_relative($siteRoot, $item->getPathname());
     $relDir = $item->isDir() ? $rel . '/' : $rel;
-    if (build_is_excluded($relDir, $excludedExact, $excludedPrefixes, $excludedBasenames, $keepInsideExcludedDirs, $includedPrefixes)) {
+    if (build_is_excluded($relDir, $excludedExact, $excludedPrefixes, $excludedBasenames, $keepInsideExcludedDirs, $includedPrefixes, $includedExact)) {
         if (!$item->isDir()) {
             $skipped[] = $rel;
         }
@@ -186,6 +221,38 @@ foreach ($manifest['required_files'] as $required) {
         zip_fail("ZIP is missing $required. Aborted.\n");
     }
 }
+$missingSeed = array_values(array_diff($seedImages['files'], $names));
+if ($missingSeed !== []) {
+    unlink($zipPath);
+    zip_fail("ZIP is missing sample images that db/seed.sql references:\n  " . implode("\n  ", array_slice($missingSeed, 0, 20)) . (count($missingSeed) > 20 ? "\n  … and " . (count($missingSeed) - 20) . ' more' : '') . "\nAborted.\n");
+}
+$strayUploads = array_values(array_filter($names, static function (string $name) use ($includedPrefixes, $includedExact, $manifest): bool {
+    if (!str_starts_with($name, 'uploads/') || str_ends_with($name, '/')) {
+        return false;
+    }
+    if (in_array($name, $includedExact, true) || in_array(basename($name), $manifest['uploads_allowed_basenames'], true)) {
+        return false;
+    }
+    foreach ($includedPrefixes as $prefix) {
+        if (str_starts_with($name, $prefix)) {
+            return false;
+        }
+    }
+    return true;
+}));
+if ($strayUploads !== []) {
+    unlink($zipPath);
+    zip_fail("ZIP carries uploads that are not part of the sample set:\n  " . implode("\n  ", array_slice($strayUploads, 0, 20)) . "\nAborted.\n");
+}
+$sampleUploads = count(array_filter($names, static function (string $name) use ($includedPrefixes): bool {
+    foreach ($includedPrefixes as $prefix) {
+        if (str_starts_with($name, $prefix) && !str_ends_with($name, '/')) {
+            return true;
+        }
+    }
+    return false;
+}));
+$collectionUploads = count(array_filter($names, static fn (string $name): bool => str_starts_with($name, 'uploads/collections/') && preg_match('#\.(webp|jpg)$#', $name) === 1));
 $htaccessCount = count(array_filter($names, static fn (string $name): bool => basename($name) === '.htaccess'));
 if ($htaccessCount !== $manifest['required_htaccess_count']) {
     unlink($zipPath);
@@ -193,6 +260,7 @@ if ($htaccessCount !== $manifest['required_htaccess_count']) {
 }
 
 echo "Wrote $zipPath\n$added files added, " . count($skipped) . " local files left out.\n";
+echo 'Sample imagery: ' . $seedImages['products'] . ' product stems and ' . $seedImages['collections'] . ' collection stems read from db/seed.sql; ' . count($seedImages['files']) . " seed-referenced files present; $sampleUploads files under the sample prefixes, $collectionUploads collection files.\n";
 foreach (array_slice($skipped, 0, 12) as $rel) {
     echo "  skipped $rel\n";
 }

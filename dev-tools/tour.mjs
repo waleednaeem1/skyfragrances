@@ -5,6 +5,7 @@ const base = process.argv[2] || 'http://127.0.0.1:8088'
 const out = process.argv[3] || 'shots'
 const paths = process.argv.slice(4)
 const cookieArg = process.env.TOUR_COOKIE || ''
+const userAgent = process.env.TOUR_UA || ''
 const viewports = [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 375, height: 812, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
@@ -15,7 +16,7 @@ const browser = await chromium.launch()
 const report = []
 
 for (const vp of viewports) {
-  const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, isMobile: !!vp.isMobile, hasTouch: !!vp.hasTouch, deviceScaleFactor: vp.deviceScaleFactor || 1 })
+  const ctx = await browser.newContext({ viewport: { width: vp.width, height: vp.height }, isMobile: !!vp.isMobile, hasTouch: !!vp.hasTouch, deviceScaleFactor: vp.deviceScaleFactor || 1, ...(userAgent ? { userAgent } : {}) })
   if (cookieArg) {
     const [name, value] = cookieArg.split('=')
     await ctx.addCookies([{ name, value, url: base }])

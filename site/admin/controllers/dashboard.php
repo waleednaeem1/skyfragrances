@@ -2,6 +2,7 @@
 defined('SKYFR') || exit;
 
 require_once APP_ROOT . '/app/lib/outbox.php';
+require_once APP_ROOT . '/app/lib/payments.php';
 
 const DASHBOARD_REVENUE_STATUSES = "('confirmed', 'packing', 'shipped', 'delivered')";
 
@@ -117,6 +118,13 @@ if ($sampleRows === 0 && ($manifest['products'] ?? []) !== []) {
     $sampleRows = (int) db_fetch_column('SELECT COUNT(*) FROM products WHERE deleted_at IS NULL AND slug IN (:' . implode(', :', array_keys($slugParams)) . ')', $slugParams);
 }
 
+$placeholderMethods = [];
+foreach (PAYMENT_MANUAL_METHODS as $manualMethod) {
+    if (setting_bool($manualMethod . '_enabled', false) && payment_account_lines($manualMethod) === []) {
+        $placeholderMethods[] = payment_method_label($manualMethod);
+    }
+}
+
 $panelOrigin = request_origin();
 $siteUrl = settings_site_url();
 $originMismatch = $siteUrl !== '' && request_origin_normalize($siteUrl) !== '' && !hash_equals(request_origin_normalize($siteUrl), $panelOrigin);
@@ -127,6 +135,7 @@ render_admin('dashboard.php', [
     'displayName' => (string) ($admin['display_name'] ?? $admin['username'] ?? ''),
     'installerPresent' => is_file(APP_ROOT . '/install.php'),
     'sampleRows' => $sampleRows,
+    'placeholderMethods' => $placeholderMethods,
     'maintenanceOn' => maintenance_active(),
     'originMismatch' => $originMismatch,
     'panelOrigin' => $panelOrigin,

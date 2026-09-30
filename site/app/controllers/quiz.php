@@ -256,5 +256,5 @@ render($route['view'], [
     'fillers' => $fillers,
     'shareUrl' => $shareUrl,
     'retakeUrl' => url('/scent-finder'),
-    'whatsappUrl' => $whatsappDigits !== '' ? 'https://wa.me/' . $whatsappDigits . '?text=' . rawurlencode('Hi ' . $storeName . ', I took the Scent Finder and would like a recommendation.') : '',
+    'whatsappUrl' => $whatsappDigits !== '' ? 'https://wa.me/' . $whatsappDigits . '?text=' . rawurlencode('Assalam-o-Alaikum. I took the Scent Finder and would like a recommendation.') : '',
 ], $head);

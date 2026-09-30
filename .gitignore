@@ -8,6 +8,7 @@ site/uploads/products/*
 site/uploads/og/*
 !site/uploads/og/sample/
 !site/uploads/collections/
+site/uploads/collections/collection-[0-9]*
 !site/uploads/index.html
 site/storage/.installed
 site/storage/.install-key
