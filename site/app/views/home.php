@@ -21,8 +21,21 @@ $heroCtaUrl = trim((string) ($hero['cta_url'] ?? '/shop'));
 $heroSecondaryUrl = trim((string) ($hero['secondary_url'] ?? '/scent-finder'));
 $heroHref = static fn (string $path): string => preg_match('#^https?://#i', $path) ? $path : url($path === '' ? '/shop' : $path);
 $heroObject = trim((string) setting('hero_object', ''));
-$heroObjectUrl = $heroObject !== '' && !str_contains($heroObject, '..') ? (preg_match('#^https?://#i', $heroObject) ? $heroObject : url('/' . ltrim($heroObject, '/'))) : asset('img/brand/monogram-transparent-256.webp');
+$heroObjectUrl = $heroObject !== '' && !str_contains($heroObject, '..') ? (preg_match('#^https?://#i', $heroObject) ? $heroObject : url('/' . ltrim($heroObject, '/'))) : asset(brand_asset('img/brand/monogram-transparent-256.webp'));
+$lightTheme = storefront_theme() === 'light';
+$plateSuffix = $lightTheme ? '-light' : '';
+$heroPlates = [
+    'data-plate-a' => 'img/motion/ribbons-a' . $plateSuffix . '-540.webp',
+    'data-plate-a-desktop' => 'img/motion/ribbons-a' . $plateSuffix . '-960.webp',
+    'data-plate-b' => 'img/motion/ribbons-b' . $plateSuffix . '-540.webp',
+    'data-plate-b-desktop' => 'img/motion/ribbons-b' . $plateSuffix . '-960.webp',
+];
+if ($lightTheme && array_filter($heroPlates, static fn (string $plateFile): bool => !is_file(APP_ROOT . '/assets/' . $plateFile)) !== []) {
+    $heroPlates = [];
+}
+$whyUsScope = $lightTheme ? 't-night' : 't-light';
 $heroTrust = trim((string) ($hero['trust'] ?? ''));
+$heroTrustParts = array_values(array_filter(array_map('trim', explode(' · ', $heroTrust)), static fn (string $trustPart): bool => $trustPart !== ''));
 $firstSectionId = $collections !== [] ? 'collections' : ($bestSellers !== [] ? 'best-sellers' : 'why-us');
 $trustItems = [
     ['droplet', 'Long-Lasting Fragrance', 'Eau de parfum concentration that stays from the morning commute to the last conversation of the night.'],
@@ -59,9 +72,13 @@ $trustItems = [
 <?php endif; ?>
     </div>
 <?php if ($heroTrust !== ''): ?>
+<?php if ($lightTheme && count($heroTrustParts) > 1): ?>
+    <p class="hero__trust"><span class="hero__trust-text"><?php foreach ($heroTrustParts as $trustIndex => $trustPart): ?><?php if ($trustIndex > 0): ?><span class="hero__trust-sep"> · </span><?php endif; ?><span class="hero__trust-part"><?= e($trustPart) ?></span><?php endforeach; ?></span></p>
+<?php else: ?>
     <p class="hero__trust"><?= e($heroTrust) ?></p>
 <?php endif; ?>
-    <div class="hero__glow" aria-hidden="true" data-plate-a="<?= e(asset('img/motion/ribbons-a-540.webp')) ?>" data-plate-a-desktop="<?= e(asset('img/motion/ribbons-a-960.webp')) ?>" data-plate-b="<?= e(asset('img/motion/ribbons-b-540.webp')) ?>" data-plate-b-desktop="<?= e(asset('img/motion/ribbons-b-960.webp')) ?>"></div>
+<?php endif; ?>
+    <div class="hero__glow" aria-hidden="true"<?php foreach ($heroPlates as $plateAttr => $plateFile): ?> <?= $plateAttr ?>="<?= e(asset($plateFile)) ?>"<?php endforeach; ?>></div>
   </div>
   <a class="hero__cue js-hero-cue" href="#<?= e($firstSectionId) ?>" aria-label="Scroll to the collections"><?php partial('icon.php', ['name' => 'chevron-down', 'size' => 22]); ?></a>
 </section>
@@ -129,7 +146,7 @@ $trustItems = [
   </div>
 </section>
 <?php endif; ?>
-<section class="section t-light" id="why-us" aria-labelledby="why-us-title">
+<section class="section <?= $whyUsScope ?>" id="why-us" aria-labelledby="why-us-title">
   <div class="container">
     <?php partial('section-header.php', ['eyebrow' => 'The Sky Fragrances promise', 'title' => 'Why choose us', 'center' => true, 'titleId' => 'why-us-title']); ?>
     <div class="trust sf-reveal sf-reveal--stagger">

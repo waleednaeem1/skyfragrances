@@ -28,7 +28,7 @@ $trustIcons = [
     'truck' => '<path d="M2.5 7h11v9h-11zM13.5 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.5"/><circle cx="17" cy="17.5" r="1.5"/>',
     'clock' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
 ];
-$stickyThumb = $images !== [] ? $images[0]['thumb'] : asset('img/brand/monogram-transparent-512.png');
+$stickyThumb = $images !== [] ? $images[0]['thumb'] : asset(brand_asset('img/brand/monogram-transparent-512.png'));
 ?>
 <div class="container">
   <nav class="breadcrumb" aria-label="Breadcrumb">

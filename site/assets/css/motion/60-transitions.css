@@ -9,6 +9,9 @@
     --sf-veil-in: 200ms;
     --sf-mist: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(212, 176, 132, 0.14), rgba(212, 176, 132, 0) 70%), #0A0A0A;
   }
+  html[data-theme="light"] {
+    --sf-mist: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(154, 116, 66, 0.10), rgba(154, 116, 66, 0) 70%), #F6F1E8;
+  }
   ::view-transition {
     background: var(--sf-mist);
   }

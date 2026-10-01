@@ -18,16 +18,16 @@
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section {
     position: relative;
     padding: var(--sp-6) var(--sp-5);
-    border: var(--border-hair) solid rgba(212, 176, 132, 0.28);
-    background: linear-gradient(180deg, rgba(212, 176, 132, 0.06), rgba(212, 176, 132, 0) 42%), var(--surface-raised);
-    box-shadow: 0 30px 60px -40px rgba(0, 0, 0, 0.9);
+    border: var(--border-hair) solid var(--quiz-line, rgba(212, 176, 132, 0.28));
+    background: linear-gradient(180deg, var(--tint-ghost-hover, rgba(212, 176, 132, 0.06)), rgba(212, 176, 132, 0) 42%), var(--surface-raised);
+    box-shadow: var(--shadow-deep, 0 30px 60px -40px rgba(0, 0, 0, 0.9));
     backface-visibility: hidden;
   }
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section::before {
     content: "";
     position: absolute;
     inset: 0.5rem;
-    border: var(--border-hair) solid rgba(212, 176, 132, 0.14);
+    border: var(--border-hair) solid var(--quiz-line-faint, rgba(212, 176, 132, 0.14));
     pointer-events: none;
   }
   :is(html.motion--desktop, html.motion--mobile, html.motion--low) .quiz-deck .form__section.is-leaving {
@@ -135,19 +135,19 @@
     inset: 0;
     transform: rotateY(180deg);
     backface-visibility: hidden;
-    border: var(--border-hair) solid rgba(212, 176, 132, 0.42);
-    background: radial-gradient(ellipse 70% 55% at 50% 42%, rgba(212, 176, 132, 0.18), rgba(10, 10, 10, 0) 72%), var(--surface-sunken);
+    border: var(--border-hair) solid var(--quiz-line-strong, rgba(212, 176, 132, 0.42));
+    background: radial-gradient(ellipse 70% 55% at 50% 42%, var(--quiz-line, rgba(212, 176, 132, 0.18)), rgba(10, 10, 10, 0) 72%), var(--surface-sunken);
   }
   html.motion--desktop .quiz-card__frame {
     position: absolute;
     inset: 0.75rem;
-    border: var(--border-hair) solid rgba(212, 176, 132, 0.3);
+    border: var(--border-hair) solid var(--quiz-line, rgba(212, 176, 132, 0.3));
   }
   html.motion--desktop .quiz-card__frame::before {
     content: "";
     position: absolute;
     inset: 0.5rem;
-    border: var(--border-hair) solid rgba(212, 176, 132, 0.14);
+    border: var(--border-hair) solid var(--quiz-line-faint, rgba(212, 176, 132, 0.14));
   }
   html.motion--desktop .quiz-card__sigil {
     font-family: var(--font-display);
@@ -155,7 +155,7 @@
     font-size: clamp(3rem, 7vw, 5.5rem);
     letter-spacing: 0.22em;
     line-height: 1;
-    color: var(--gold-400);
+    color: var(--title-fallback, var(--gold-400));
     background-image: var(--grad-gold);
     -webkit-background-clip: text;
     background-clip: text;
@@ -167,7 +167,7 @@
     position: absolute;
     inset: -14%;
     z-index: -1;
-    background: radial-gradient(ellipse at 50% 50%, rgba(212, 176, 132, 0.55), rgba(212, 176, 132, 0.12) 45%, rgba(10, 10, 10, 0) 70%);
+    background: var(--glow-strong, radial-gradient(ellipse at 50% 50%, rgba(212, 176, 132, 0.55), rgba(212, 176, 132, 0.12) 45%, rgba(10, 10, 10, 0) 70%));
     opacity: 0;
     transform: scale(0.9);
     animation: sf-quiz-glow calc(var(--sf-quiz-turn) + var(--sf-quiz-mist)) var(--sf-ease-out) var(--sf-quiz-hold) both;
@@ -178,9 +178,9 @@
     inset: -6%;
     z-index: 2;
     background:
-      radial-gradient(circle at 30% 60%, rgba(245, 240, 232, 0.5), rgba(245, 240, 232, 0) 45%),
-      radial-gradient(circle at 70% 35%, rgba(212, 176, 132, 0.45), rgba(212, 176, 132, 0) 50%),
-      radial-gradient(circle at 50% 82%, rgba(245, 240, 232, 0.35), rgba(245, 240, 232, 0) 40%);
+      radial-gradient(circle at 30% 60%, var(--mist-a, rgba(245, 240, 232, 0.5)), rgba(245, 240, 232, 0) 45%),
+      radial-gradient(circle at 70% 35%, var(--mist-b, rgba(212, 176, 132, 0.45)), rgba(212, 176, 132, 0) 50%),
+      radial-gradient(circle at 50% 82%, var(--mist-a, rgba(245, 240, 232, 0.35)), rgba(245, 240, 232, 0) 40%);
     opacity: 0.85;
     animation: sf-quiz-mist var(--sf-quiz-mist) var(--sf-ease-out) calc(var(--sf-quiz-hold) + var(--sf-quiz-turn) * 0.5) forwards;
   }

@@ -35,6 +35,7 @@ uniform float uHaloAlpha;
 uniform float uFade;
 uniform float uGain;
 uniform vec4 uPulse;
+uniform float uLight;
 out vec4 outColor;
 void main() {
   float m = sin(vUv.x * uFreq - uTime * uSpeed) * 0.5 + 0.5;
@@ -42,7 +43,12 @@ void main() {
   float head = fract(uTime * uPulse.x + uIdx * 0.25);
   float d = vUv.x - head;
   float pulse = exp(-d * d * uPulse.y);
-  col = min(mix(col, mix(uGold, uAmber, uPulse.z), pulse * 0.5) * (1.0 + pulse * uPulse.w), uAmber * 1.15);
+  vec3 base = mix(col, mix(uGold, uAmber, uPulse.z), pulse * 0.5);
+  if (uLight > 0.5) {
+    col = max(base * (1.0 - pulse * uPulse.w), uAmber * 0.85);
+  } else {
+    col = min(base * (1.0 + pulse * uPulse.w), uAmber * 1.15);
+  }
   float a = smoothstep(0.0, 0.15, vUv.x) * smoothstep(1.0, 0.85, vUv.x) * pow(sin(vUv.y * 3.14159265), 1.8);
   a *= uFade * mix(1.0, uHaloAlpha, uHalo) * uGain;
   outColor = vec4(col * a, a);
@@ -219,6 +225,7 @@ function spread(range, i, n) {
 
 export default function createRibbons(canvas, cfg, options) {
   const opts = options || {};
+  const light = opts.blend ? opts.blend === 'over' : document.documentElement.dataset.theme === 'light';
   const gl = canvas.getContext('webgl2', { alpha: true, antialias: true, premultipliedAlpha: true, depth: false, stencil: false, powerPreference: 'low-power', preserveDrawingBuffer: !!opts.preserve });
   if (!gl) {
     return null;
@@ -228,6 +235,7 @@ export default function createRibbons(canvas, cfg, options) {
   const sprite = cfg.sprite || { opacity: 0.35, y: 0, scale: 2.6 };
   const gold = hexToRgb((rc.colors && rc.colors.gold) || '#C29C6E');
   const amber = hexToRgb((rc.colors && rc.colors.amber) || '#E0A45C');
+  const spriteColor = sprite.color ? hexToRgb(sprite.color) : [(gold[0] + amber[0]) / 2, (gold[1] + amber[1]) / 2, (gold[2] + amber[2]) / 2];
   const breathe = rc.breathe || { amp: 0.06, freq: 1.4, speed: 0.7 };
   const pulse = rc.pulse || { speed: 0.06, spread: 40, mix: 0.5 };
   const halo = rc.halo || { scale: 2.6, alpha: 0.16 };
@@ -235,7 +243,7 @@ export default function createRibbons(canvas, cfg, options) {
   const radii = rc.radii || [];
   const tubular = rc.tubular || 72;
   const radial = rc.radial || 6;
-  const ribbonProgram = program(gl, RIBBON_VERT, RIBBON_FRAG, ['uProj', 'uView', 'uRadius', 'uTime', 'uIdx', 'uBreathe', 'uScale', 'uOffset', 'uGold', 'uAmber', 'uSpeed', 'uFreq', 'uHalo', 'uHaloAlpha', 'uFade', 'uGain', 'uPulse']);
+  const ribbonProgram = program(gl, RIBBON_VERT, RIBBON_FRAG, ['uProj', 'uView', 'uRadius', 'uTime', 'uIdx', 'uBreathe', 'uScale', 'uOffset', 'uGold', 'uAmber', 'uSpeed', 'uFreq', 'uHalo', 'uHaloAlpha', 'uFade', 'uGain', 'uPulse', 'uLight']);
   const spriteProgram = program(gl, SPRITE_VERT, SPRITE_FRAG, ['uProj', 'uView', 'uSize', 'uScale', 'uOffset', 'uAt', 'uColor', 'uOpacity']);
   const ribbons = paths.map((points, i) => {
     const mesh = buildTube(points, tubular, radial);
@@ -265,7 +273,11 @@ export default function createRibbons(canvas, cfg, options) {
   gl.bindVertexArray(null);
   gl.disable(gl.DEPTH_TEST);
   gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE);
+  if (light) {
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  } else {
+    gl.blendFunc(gl.ONE, gl.ONE);
+  }
   gl.clearColor(0, 0, 0, 0);
   const state = { w: 1, h: 1, dpr: 1, proj: perspective(cam.fov, 1, 0.1, 40), scale: 1, ox: 0, oy: 0, lost: false, disposed: false };
   let lostHandler = null;
@@ -319,7 +331,7 @@ export default function createRibbons(canvas, cfg, options) {
         gl.uniform1f(sp.u.uScale, state.scale);
         gl.uniform2f(sp.u.uOffset, state.ox, state.oy);
         gl.uniform2f(sp.u.uAt, 0, sprite.y || 0);
-        gl.uniform3f(sp.u.uColor, (gold[0] + amber[0]) / 2, (gold[1] + amber[1]) / 2, (gold[2] + amber[2]) / 2);
+        gl.uniform3f(sp.u.uColor, spriteColor[0], spriteColor[1], spriteColor[2]);
         gl.uniform1f(sp.u.uOpacity, (sprite.opacity || 0.35) * fade);
         gl.bindVertexArray(quad.vao);
         gl.drawArrays(gl.TRIANGLES, 0, 6);
@@ -336,6 +348,7 @@ export default function createRibbons(canvas, cfg, options) {
       gl.uniform3f(rp.u.uAmber, amber[0], amber[1], amber[2]);
       gl.uniform4f(rp.u.uPulse, pulse.speed, pulse.spread, pulse.mix, typeof pulse.gain === 'number' ? pulse.gain : 0.5);
       gl.uniform1f(rp.u.uGain, rc.gain || 1.35);
+      gl.uniform1f(rp.u.uLight, light ? 1 : 0);
       gl.uniform1f(rp.u.uFade, fade);
       gl.uniform1f(rp.u.uHaloAlpha, halo.alpha);
       ribbons.forEach((r) => {

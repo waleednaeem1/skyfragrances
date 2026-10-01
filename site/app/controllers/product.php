@@ -38,7 +38,7 @@ function product_image_variant(int $productId, string $filename, string $size, s
     if (is_file(APP_ROOT . $original)) {
         return url($original);
     }
-    return asset('img/placeholder-4x5.svg');
+    return asset(brand_asset('img/placeholder-4x5.svg'));
 }
 
 function product_image_srcset(int $productId, string $filename, string $ext): string

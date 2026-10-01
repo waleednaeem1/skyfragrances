@@ -11,7 +11,16 @@ function hexToRgb(hex) {
   return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)).join(' ');
 }
 
-function familyHues(cfg, root) {
+function deepen(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) {
+    return hex;
+  }
+  const ink = [62, 41, 20];
+  return '#' + rgb.split(' ').map((v, i) => Math.round(Number(v) * 0.65 + ink[i] * 0.35).toString(16).padStart(2, '0')).join('');
+}
+
+function familyHues(cfg, root, light) {
   const table = (cfg.hues && cfg.hues.families) || {};
   const family = String(root.getAttribute('data-story-family') || '').toLowerCase();
   let picked = table[family];
@@ -24,6 +33,9 @@ function familyHues(cfg, root) {
     const override = root.getAttribute('data-motion-hue-' + key);
     if (override) {
       base[key] = override;
+    }
+    if (light && base[key]) {
+      base[key] = deepen(base[key]);
     }
   });
   return base;
@@ -206,7 +218,7 @@ export default function init(root, SF) {
     return null;
   }
   const cfg = motion.config.story;
-  const hues = familyHues(cfg, root);
+  const hues = familyHues(cfg, root, motion.config.theme === 'light');
   const tiers = Array.from(root.querySelectorAll('.pyramid__tier'));
   let instance = null;
 

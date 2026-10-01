@@ -94,10 +94,16 @@
     inset: -10% -30%;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(242, 230, 210, 0.5) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
-    mix-blend-mode: soft-light;
     opacity: 0;
     transform: translate3d(-70%, 0, 0);
+  }
+  html.motion--desktop [data-cards-state="spread"] [data-motion-card] .product-card__media::before {
+    background: var(--sheen-card, linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(242, 230, 210, 0.5) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%));
+    mix-blend-mode: var(--sheen-card-blend, soft-light);
+  }
+  html.motion--desktop [data-cards-state="spread"] .collection-card::after {
+    background: linear-gradient(105deg, rgba(242, 230, 210, 0) 34%, rgba(242, 230, 210, 0.16) 46%, rgba(242, 230, 210, 0.5) 50%, rgba(242, 230, 210, 0.16) 54%, rgba(242, 230, 210, 0) 66%);
+    mix-blend-mode: soft-light;
   }
   html.motion--desktop [data-cards-state="spread"] [data-motion-card].is-sweeping .product-card__media::before,
   html.motion--desktop [data-cards-state="spread"] .collection-card.is-sweeping::after {
@@ -131,7 +137,7 @@
         margin-inline: auto;
         overflow: hidden;
         border-radius: 1px;
-        background: rgba(212, 176, 132, 0.18);
+        background: var(--track, rgba(212, 176, 132, 0.18));
       }
       html.motion--mobile .rail:has(+ .sf-rail-progress),
       html.motion--low .rail:has(+ .sf-rail-progress) {
@@ -147,7 +153,7 @@
         position: absolute;
         inset: 0;
         border-radius: 1px;
-        background: linear-gradient(90deg, var(--gold-600), var(--gold-300) 50%, var(--gold-600));
+        background: var(--fill-accent, linear-gradient(90deg, var(--gold-600), var(--gold-300) 50%, var(--gold-600)));
         transform-origin: 0 50%;
         transform: scaleX(var(--sf-rail-thumb));
         animation: sf-rail-track linear both;

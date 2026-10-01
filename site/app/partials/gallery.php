@@ -4,7 +4,7 @@ $images = is_array($images ?? null) ? $images : [];
 $badges = is_array($badges ?? null) ? $badges : [];
 $productName = (string) ($productName ?? 'Product');
 $sizesAttr = '(min-width: 1024px) 58vw, 100vw';
-$monogram = asset('img/brand/monogram-transparent-512.png');
+$monogram = asset(brand_asset('img/brand/monogram-transparent-512.png'));
 ?>
 <?php if ($images === []): ?>
 <div class="gallery gallery--single js-gallery">

@@ -40,7 +40,7 @@ if (!function_exists('product_card_image_set')) {
     function product_card_image_src(?array $set, string $preferred = 'card', string $ext = 'jpg'): string
     {
         if ($set === null) {
-            return asset('img/placeholder-4x5.svg');
+            return asset(brand_asset('img/placeholder-4x5.svg'));
         }
         foreach (array_unique([$preferred, 'card', 'zoom', 'thumb']) as $size) {
             $candidate = $set['sizes'][$size][$ext] ?? $set['sizes'][$size]['jpg'] ?? $set['sizes'][$size]['webp'] ?? null;
@@ -48,7 +48,7 @@ if (!function_exists('product_card_image_set')) {
                 return $candidate;
             }
         }
-        return $set['base'] ?? asset('img/placeholder-4x5.svg');
+        return $set['base'] ?? asset(brand_asset('img/placeholder-4x5.svg'));
     }
 
     function product_card_image_srcset(?array $set, string $ext, array $only = []): string

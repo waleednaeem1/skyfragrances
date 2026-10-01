@@ -1,7 +1,7 @@
 <?php
 defined('SKYFR') || exit;
 
-const SETTINGS_TABS = ['store' => 'Store', 'contact' => 'Contact & Social', 'home' => 'Home', 'shipping' => 'Shipping', 'payments' => 'Payments', 'seo' => 'SEO', 'advanced' => 'Advanced'];
+const SETTINGS_TABS = ['store' => 'Store', 'appearance' => 'Appearance', 'contact' => 'Contact & Social', 'home' => 'Home', 'shipping' => 'Shipping', 'payments' => 'Payments', 'seo' => 'SEO', 'advanced' => 'Advanced'];
 const SETTINGS_IMAGE_RULES = [
     'logo_path' => ['max' => 1200, 'cover' => null],
     'favicon_path' => ['max' => 512, 'cover' => null],
@@ -23,6 +23,7 @@ function settings_definitions(): array
         'footer_blurb' => ['store', 'textarea', 'Footer blurb', ['maxlength' => 240, 'rows' => 3]],
         'currency_prefix' => ['store', 'text', 'Currency prefix', ['maxlength' => 6, 'required' => true]],
         'timezone' => ['store', 'readonly', 'Timezone', ['help' => 'All dates in the panel and in emails use Pakistan time.']],
+        'site_theme' => ['appearance', 'choice', 'Storefront theme', ['options' => ['dark' => 'Dark', 'light' => 'Light'], 'help' => 'Dark is the default and the original look. Light switches the whole shop, for every visitor, straight after you save. The admin panel keeps its own look. With Light, a light and airy homepage photo looks best.']],
         'contact_phone' => ['contact', 'phone', 'Phone number', ['help' => 'Shown to customers exactly as typed.']],
         'whatsapp' => ['contact', 'phone', 'WhatsApp number', ['help' => 'Saved as +92XXXXXXXXXX so the chat links work.']],
         'contact_email' => ['contact', 'email', 'Contact email', ['help' => 'Customers see this and replies go here.']],
@@ -149,6 +150,13 @@ function settings_clean(string $key, array $def, mixed $raw): array
     $value = str_replace(["\r\n", "\r"], "\n", $value);
     $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $value) ?? '';
     $label = $def['label'];
+    if ($def['type'] === 'choice') {
+        $options = $def['options'] ?? [];
+        if ($value === '') {
+            return [(string) (settings_defaults()[$key] ?? array_key_first($options) ?? ''), null];
+        }
+        return array_key_exists($value, $options) ? [$value, null] : [null, $label . ' must be one of: ' . implode(', ', $options) . '.'];
+    }
     if ($value === '') {
         return !empty($def['required']) ? [null, $label . ' is required.'] : ['', null];
     }

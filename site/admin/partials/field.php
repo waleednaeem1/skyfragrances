@@ -6,6 +6,7 @@ $id = (string) ($id ?? preg_replace('/[^a-z0-9_-]+/i', '_', $name));
 $label = (string) ($label ?? '');
 $value = $value ?? '';
 $options = is_array($options ?? null) ? $options : [];
+$swatch = (string) ($swatch ?? '');
 $error = (string) ($error ?? '');
 $help = (string) ($help ?? '');
 $required = !empty($required);
@@ -58,11 +59,11 @@ $inputType = match ($type) { 'money', 'int' => 'text', 'phone' => 'tel', 'email'
 <?php elseif ($type === 'textarea'): ?>
   <textarea class="adm-input adm-textarea" id="<?= e($id) ?>" name="<?= e($name) ?>" rows="<?= e((string) ($rows ?? 4)) ?>"<?= isset($maxlength) ? ' maxlength="' . e((string) $maxlength) . '" data-counter' : '' ?><?= $extra ?>><?= e((string) $value) ?></textarea>
 <?php elseif ($type === 'radio' || $type === 'segment'): ?>
-  <div class="<?= $type === 'segment' ? 'adm-segment' : 'adm-radios' ?>" role="radiogroup" aria-labelledby="<?= e($id) ?>-label">
+  <div class="<?= $type === 'segment' ? 'adm-segment' . ($swatch !== '' ? ' adm-segment--swatch' : '') : 'adm-radios' ?>" role="radiogroup" aria-labelledby="<?= e($id) ?>-label">
 <?php foreach ($options as $optValue => $optLabel): ?>
     <label class="<?= $type === 'segment' ? 'adm-segment__item' : 'adm-radio' ?>">
       <input type="radio" class="<?= $type === 'segment' ? 'adm-segment__input' : 'adm-radio__input' ?>" name="<?= e($name) ?>" value="<?= e((string) $optValue) ?>"<?= (string) $optValue === (string) $value ? ' checked' : '' ?><?= $required ? ' required' : '' ?>>
-      <span class="<?= $type === 'segment' ? 'adm-segment__label' : 'adm-radio__label' ?>"><?= e((string) $optLabel) ?></span>
+      <span class="<?= $type === 'segment' ? 'adm-segment__label' : 'adm-radio__label' ?>"><?php if ($type === 'segment' && $swatch !== ''): ?><span class="adm-swatch adm-swatch--<?= e($swatch . '-' . $optValue) ?>" aria-hidden="true"></span><?php endif; ?><?= e((string) $optLabel) ?></span>
     </label>
 <?php endforeach; ?>
   </div>

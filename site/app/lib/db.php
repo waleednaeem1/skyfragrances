@@ -24,6 +24,7 @@ function db(): PDO
         $pdo->prepare('SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci')->execute();
         $pdo->prepare("SET time_zone = '+05:00'")->execute();
         $pdo->prepare("SET SESSION sql_mode = 'STRICT_ALL_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'")->execute();
+        $pdo->prepare('SET autocommit = 1')->execute();
     } catch (PDOException $exception) {
         $pdo = null;
         log_write('error', 'Database connection failed', [

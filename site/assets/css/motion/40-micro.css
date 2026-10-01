@@ -61,7 +61,7 @@
     margin: calc(var(--sz, 6px) / -2);
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
+    box-shadow: var(--spray-glow, 0 0 6px var(--accent));
     opacity: 0.9;
     transform: translate3d(0, 0, 0) scale(0.6);
     animation: sf-spray var(--sf-burst) var(--sf-ease-silk) var(--d, 0ms) both;
@@ -80,7 +80,7 @@
     object-fit: cover;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shadow-float, 0 2px 10px rgba(0, 0, 0, 0.45));
     pointer-events: none;
     will-change: transform, opacity;
   }
@@ -113,6 +113,7 @@
     height: 100%;
     border-radius: 50%;
     border: 1px solid var(--accent);
+    box-shadow: var(--cursor-outline, none);
     transform: scale(1);
     transition: transform var(--dur-base) var(--sf-ease-out);
   }

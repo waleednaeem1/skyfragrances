@@ -221,7 +221,7 @@ function bootstrap_define_site_url(bool $settingsLoaded): void
     define('SITE_URL', $settingsLoaded ? settings_site_url() : rtrim((string) config('base_url', ''), '/'));
 }
 
-foreach (['text', 'money', 'url', 'db', 'settings', 'session', 'csrf', 'flash', 'request', 'response', 'ratelimit', 'view', 'upload', 'image', 'mail', 'auth', 'https', 'maintenance', 'housekeeping'] as $bootstrapLib) {
+foreach (['text', 'money', 'url', 'db', 'settings', 'theme', 'session', 'csrf', 'flash', 'request', 'response', 'ratelimit', 'view', 'upload', 'image', 'mail', 'auth', 'https', 'maintenance', 'housekeeping', 'copyupgrade'] as $bootstrapLib) {
     require_once APP_ROOT . '/app/lib/' . $bootstrapLib . '.php';
 }
 unset($bootstrapLib);
@@ -246,6 +246,7 @@ if (!$bootstrapSettingsLoaded) {
 }
 bootstrap_define_site_url(true);
 unset($bootstrapSettingsLoaded, $bootstrapSettingsError);
+copy_upgrade_maybe_run();
 
 maintenance_gate();
 

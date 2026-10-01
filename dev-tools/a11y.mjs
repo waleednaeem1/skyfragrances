@@ -1,8 +1,11 @@
 import { chromium } from '/Users/dev/Documents/B2B Projects/rangeaahan/node_modules/playwright/index.mjs';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
-const BASE = process.env.BASE || 'http://127.0.0.1:8103';
-const OUT = process.env.OUT || '/tmp/skyfr-a11y.json';
+const BASE = (process.argv[2] || process.env.BASE || 'http://127.0.0.1:8103').replace(/\/$/, '');
+const EXPECT_THEME = process.env.EXPECT_THEME || '';
+const OUT = process.argv[3] || process.env.OUT || (EXPECT_THEME === 'light' ? '/tmp/skyfr-a11y--light.json' : '/tmp/skyfr-a11y.json');
+const TAB_ORDER_REF = process.env.TAB_ORDER_REF || '';
+const themeIssues = new Map();
 const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
 const PAGES = ['/', '/shop', '/collections', '/for-her', '/product/azure-oud', '/scent-finder', '/cart', '/checkout', '/track', '/contact', '/faq', '/about'];
 const MAX_TABS = 600;
@@ -25,7 +28,8 @@ const HELPERS = `(() => {
   A.srOnly = (el) => { const cs = getComputedStyle(el); return cs.position === 'absolute' && cs.width === '1px' && cs.height === '1px' && cs.overflow === 'hidden'; };
   A.desc = (el) => {
     const id = el.id ? '#' + el.id : '';
-    const cls = el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\\s+/).slice(0, 3).join('.') : '';
+    const kept = el.className && typeof el.className === 'string' ? el.className.trim().split(/\\s+/).filter((c) => c && !/^(is|has)-/.test(c)).slice(0, 3) : [];
+    const cls = kept.length ? '.' + kept.join('.') : '';
     const text = (el.getAttribute('aria-label') || el.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 40);
     return el.tagName.toLowerCase() + id + cls + (text ? ' "' + text + '"' : '');
   };
@@ -105,6 +109,8 @@ async function open(page, path) {
   await page.goto(BASE + path, { waitUntil: 'load' });
   await page.waitForFunction(() => !document.getElementById('sf-intro'), null, { timeout: 9000 }).catch(() => {});
   await page.evaluate(HELPERS);
+  const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+  if (EXPECT_THEME && theme !== EXPECT_THEME) themeIssues.set(path, theme);
   await page.waitForTimeout(150);
 }
 
@@ -346,6 +352,25 @@ async function contrast(page, path, result) {
     const A = window.__a11y;
     const fails = [];
     const unverifiable = [];
+    const overMedia = [];
+    const mediaRects = Array.from(document.querySelectorAll('img, picture, canvas, video')).filter((m) => A.vis(m)).map((m) => ({ m, r: m.getBoundingClientRect() })).filter((o) => o.r.width * o.r.height > 400);
+    A.mediaUnder = (el) => {
+      const r = el.getBoundingClientRect();
+      for (const { m, r: mr } of mediaRects) {
+        if (el.contains(m)) continue;
+        const ix = Math.min(r.right, mr.right) - Math.max(r.left, mr.left);
+        const iy = Math.min(r.bottom, mr.bottom) - Math.max(r.top, mr.top);
+        if (ix <= 0 || iy <= 0 || ix * iy < r.width * r.height * 0.25) continue;
+        let plated = false;
+        for (let n = el; n && !n.contains(m); n = n.parentElement) {
+          const c = getComputedStyle(n);
+          const b = A.parseRgb(c.backgroundColor);
+          if ((b && b.a >= 0.9) || (c.backgroundImage && c.backgroundImage !== 'none')) { plated = true; break; }
+        }
+        if (!plated) return A.desc(m).slice(0, 70);
+      }
+      return '';
+    };
     let checked = 0;
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
     let el;
@@ -368,6 +393,8 @@ async function contrast(page, path, result) {
       const bg = A.background(el);
       if (bg.opacity < 0.02) continue;
       if (bg.image) { unverifiable.push({ desc: A.desc(el), text, over: bg.node }); continue; }
+      const media = A.mediaUnder(el);
+      if (media) { overMedia.push({ desc: A.desc(el), text, over: media, color: cs.color, size, weight }); continue; }
       const fg = A.over({ ...fg0, a: fg0.a * bg.opacity }, bg.color);
       const ratio = A.ratio(fg, bg.color);
       const large = size >= 24 || (size >= 18.66 && weight >= 700);
@@ -375,10 +402,11 @@ async function contrast(page, path, result) {
       checked++;
       if (ratio < need) fails.push({ desc: A.desc(el), text, why: `${ratio.toFixed(2)}:1 (${cs.color} on rgb(${Math.round(bg.color.r)},${Math.round(bg.color.g)},${Math.round(bg.color.b)}), ${size}px/${weight}, opacity ${bg.opacity.toFixed(2)})` });
     }
-    return { fails, unverifiable, checked };
+    return { fails, unverifiable, overMedia, checked };
   });
   found.fails.forEach((f) => result.fail('contrast', path, `${f.desc} "${f.text}" — ${f.why}`));
-  result.note(path, `contrast: ${found.checked} text nodes checked, ${found.unverifiable.length} over images skipped`);
+  result.note(path, `contrast: ${found.checked} text nodes checked, ${found.unverifiable.length} over background images skipped, ${found.overMedia.length} over media listed for manual review`);
+  found.overMedia.forEach((o) => result.review(path, `${o.desc} "${o.text}" (${o.color}, ${o.size}px/${o.weight}) sits over ${o.over}`));
   found.unverifiable.slice(0, 6).forEach((u) => result.note(path, `contrast unverifiable (image behind): ${u.desc} "${u.text}"`));
 }
 
@@ -428,9 +456,14 @@ async function reducedMotion(page, path, result) {
 function makeResult() {
   const failures = [];
   const notes = [];
+  const reviews = [];
+  const tabOrders = {};
   return {
     failures,
     notes,
+    reviews,
+    tabOrders,
+    review(path, message) { reviews.push({ path, message }); },
     fail(kind, path, message) { failures.push({ kind, path, message }); },
     note(path, message) { notes.push({ path, message }); }
   };
@@ -450,7 +483,7 @@ async function run() {
     console.log('==', path);
     await open(dPage, path);
     await staticChecks(dPage, path, result);
-    await tabPass(dPage, path, result);
+    result.tabOrders[path] = await tabPass(dPage, path, result);
     await open(dPage, path);
     await dPage.evaluate(() => window.__a11y.snapshotRest());
     await dialogTest(dPage, path, result, '.js-cart-open', '.js-cart-drawer', 'cart drawer');
@@ -476,12 +509,28 @@ async function run() {
     await reducedMotion(rPage, path, result);
   }
   await browser.close();
+  themeIssues.forEach((theme, path) => result.fail('theme', path, `data-theme is ${theme === null ? 'absent' : '"' + theme + '"'}, expected "${EXPECT_THEME}"`));
+  if (TAB_ORDER_REF) {
+    const ref = JSON.parse(readFileSync(TAB_ORDER_REF, 'utf8')).tabOrders || {};
+    for (const path of pages) {
+      const want = ref[path];
+      const got = result.tabOrders[path] || [];
+      if (!want) { result.note(path, `tab order: no reference in ${TAB_ORDER_REF}`); continue; }
+      const stateless = (d) => String(d || '').replace(/^(\S+)/, (head) => head.split('.').filter((c, i) => i === 0 || !/^(is|has)-/.test(c)).join('.'));
+      const at = want.findIndex((d, i) => stateless(d) !== stateless(got[i]));
+      if (at >= 0 || want.length !== got.length) {
+        const i = at >= 0 ? at : Math.min(want.length, got.length);
+        result.fail('tab-order', path, `tab order differs from reference at stop ${i + 1}: "${want[i] || '(end)'}" vs "${got[i] || '(end)'}" (${want.length} vs ${got.length} stops)`);
+      } else result.note(path, `tab order identical to reference (${got.length} stops)`);
+    }
+  }
   const byKind = {};
   result.failures.forEach((f) => { byKind[f.kind] = (byKind[f.kind] || 0) + 1; });
-  writeFileSync(OUT, JSON.stringify({ base: BASE, pages, failures: result.failures, notes: result.notes, byKind }, null, 2));
+  writeFileSync(OUT, JSON.stringify({ base: BASE, expectTheme: EXPECT_THEME || null, pages, failures: result.failures, notes: result.notes, byKind, manualReview: result.reviews, tabOrders: result.tabOrders }, null, 2));
+  result.reviews.forEach((r) => console.log(`REVIEW [text over media] ${r.path}: ${r.message}`));
   result.failures.forEach((f) => console.log(`FAIL [${f.kind}] ${f.path}: ${f.message}`));
   console.log('---');
-  console.log(`${result.failures.length} failure(s)`, JSON.stringify(byKind));
+  console.log(`${result.failures.length} failure(s)`, JSON.stringify(byKind), `${result.reviews.length} item(s) for manual review`);
   console.log(`report: ${OUT}`);
   process.exit(result.failures.length ? 1 : 0);
 }

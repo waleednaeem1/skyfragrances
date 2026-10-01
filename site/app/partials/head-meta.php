@@ -102,6 +102,7 @@ foreach (['jost-variable.woff2', 'cormorant-garamond-variable.woff2'] as $fontFi
     }
 }
 $googleVerification = (string) setting('google_verification', '');
+$siteTheme = storefront_theme();
 $bodyClasses = preg_split('/\s+/', (string) ($head['body_class'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [];
 $motionPage = array_intersect(['home', 'listing', 'collections', 'product', 'quiz'], $bodyClasses) !== [];
 $isHomePage = in_array('home', $bodyClasses, true);
@@ -129,7 +130,12 @@ if (in_array('home', $bodyClasses, true)) {
 <?php if ($canonicalUrl !== ''): ?>
 <link rel="canonical" href="<?= e($canonicalUrl) ?>">
 <?php endif; ?>
+<?php if ($siteTheme === 'light'): ?>
+<meta name="theme-color" content="#F6F1E8">
+<meta name="color-scheme" content="light">
+<?php else: ?>
 <meta name="theme-color" content="#0A0A0A">
+<?php endif; ?>
 <?php if ($googleVerification !== ''): ?>
 <meta name="google-site-verification" content="<?= e($googleVerification) ?>">
 <?php endif; ?>

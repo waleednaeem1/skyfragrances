@@ -13,6 +13,7 @@
   var timers = [];
   var stopParticles = null;
   var finished = false;
+  var light = root.dataset.theme === 'light';
 
   function clearMode() {
     root.classList.remove('sf-intro-full', 'sf-intro-calm');
@@ -139,14 +140,15 @@
       var end = converge + 300;
       var t0 = performance.now();
       var stopped = false;
-      ctx.fillStyle = 'rgb(214, 180, 136)';
+      ctx.fillStyle = light ? 'rgb(122, 85, 48)' : 'rgb(214, 180, 136)';
+      var dim = light ? 0.75 : 1;
       function frame(now) {
         if (stopped) {
           return;
         }
         var t = now - t0;
         ctx.clearRect(0, 0, w, h);
-        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';
         var fade = t > converge ? Math.max(0, 1 - (t - converge) / 300) : 1;
         for (var j = 0; j < n; j++) {
           var p = list[j];
@@ -157,7 +159,7 @@
             u = 1;
           }
           var e = u >= 1 ? 1 : 1 - Math.pow(2, -10 * u);
-          ctx.globalAlpha = p.o * fade * (0.55 + 0.45 * u);
+          ctx.globalAlpha = p.o * fade * (0.55 + 0.45 * u) * dim;
           ctx.beginPath();
           ctx.arc(p.x0 + (p.x1 - p.x0) * e, p.y0 + (p.y1 - p.y0) * e, p.r, 0, 6.2832);
           ctx.fill();

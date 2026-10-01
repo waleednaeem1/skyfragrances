@@ -87,7 +87,9 @@ function abort_plain(int $status, string $title, string $message): never
     header('Content-Type: text/html; charset=utf-8');
     $safeTitle = htmlspecialchars($title, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
     $safeMessage = htmlspecialchars($message, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
-    echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow"><title>' . $safeTitle . ' | Sky Fragrances</title></head><body style="font-family:Georgia,serif;background:#0a0a0a;color:#f5f0e8;text-align:center;padding:4rem 1rem"><h1 style="color:#d4b084;font-weight:300">' . $safeTitle . '</h1><p>' . $safeMessage . '</p></body></html>';
+    $light = !defined('SKYFR_ADMIN') && function_exists('storefront_theme') && storefront_theme() === 'light';
+    [$ground, $ink, $heading, $scheme] = $light ? ['#F6F1E8', '#1E1812', '#7A5530', '<meta name="color-scheme" content="light">'] : ['#0a0a0a', '#f5f0e8', '#d4b084', ''];
+    echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow">' . $scheme . '<title>' . $safeTitle . ' | Sky Fragrances</title></head><body style="font-family:Georgia,serif;background:' . $ground . ';color:' . $ink . ';text-align:center;padding:4rem 1rem"><h1 style="color:' . $heading . ';font-weight:300">' . $safeTitle . '</h1><p>' . $safeMessage . '</p></body></html>';
     exit;
 }
 

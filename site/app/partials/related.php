@@ -5,7 +5,7 @@ if ($related === []) {
     return;
 }
 $sectionId = (string) ($sectionId ?? 'related');
-$monogram = asset('img/brand/monogram-transparent-512.png');
+$monogram = asset(brand_asset('img/brand/monogram-transparent-512.png'));
 $cardSizes = '(min-width: 1200px) 22vw, (min-width: 768px) 30vw, 62vw';
 $cardSrcset = static function (array $image, string $ext): string {
     $thumb = (string) ($ext === 'webp' ? ($image['thumb_webp'] ?? '') : ($image['thumb'] ?? ''));

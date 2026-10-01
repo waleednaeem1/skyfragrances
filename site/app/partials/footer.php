@@ -48,7 +48,7 @@ foreach ([['cod_enabled', 'Cash on Delivery'], ['bank_enabled', 'Bank Transfer']
   <div class="site-footer__inner container">
     <div class="site-footer__brand">
       <a class="site-footer__logo" href="<?= e(url('/')) ?>">
-        <img src="<?= e(asset('img/brand/lockup-on-black-800.webp')) ?>" alt="<?= e($storeName) ?>" width="120" height="120" loading="lazy" decoding="async">
+        <img src="<?= e(asset(brand_asset('img/brand/lockup-on-black-800.webp'))) ?>" alt="<?= e($storeName) ?>" width="120" height="120" loading="lazy" decoding="async">
       </a>
       <p class="site-footer__tagline"><?= e($storeTagline) ?></p>
 <?php if ($footerBlurb !== ''): ?>

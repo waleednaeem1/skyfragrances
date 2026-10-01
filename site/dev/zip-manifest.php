@@ -52,6 +52,12 @@ return [
         'uploads/products/sample/azure-oud-1-card.webp', 'uploads/og/sample/azure-oud-1-og.jpg', 'uploads/collections/dawn-chorus-card.webp',
         'uploads/index.html',
         'app/tools/reset-password.php',
+        'app/lib/theme.php',
+        'assets/img/brand/monogram-gilt-256.png', 'assets/img/brand/monogram-gilt-256.webp', 'assets/img/brand/monogram-gilt-512.png',
+        'assets/img/brand/lockup-transparent-800.webp', 'assets/img/brand/lockup-gilt-800.png', 'assets/img/brand/lockup-gilt-800.webp',
+        'assets/img/placeholder-4x5-light.svg',
+        'assets/img/motion/ribbons-a-light-540.webp', 'assets/img/motion/ribbons-a-light-960.webp',
+        'assets/img/motion/ribbons-b-light-540.webp', 'assets/img/motion/ribbons-b-light-960.webp',
     ],
     'required_htaccess_count' => 10,
     'forbidden_patterns' => [

@@ -105,7 +105,7 @@ export default function init(root, SF) {
     glow.appendChild(canvas);
     let renderer = null;
     try {
-      renderer = mod.default(canvas, cfg, {});
+      renderer = mod.default(canvas, cfg, { blend: m.config.theme === 'light' ? 'over' : 'add' });
     } catch (error) {
       renderer = null;
     }

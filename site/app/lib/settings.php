@@ -86,6 +86,7 @@ function settings_defaults(): array
         'https_permanent' => '0',
         'site_indexable' => '1',
         'images_webp_enabled' => '1',
+        'site_theme' => 'dark',
         'install_completed_at' => '',
     ];
 }

@@ -4,6 +4,7 @@ import { dirname } from 'node:path'
 
 const base = process.argv[2] || 'http://127.0.0.1:8091'
 const jsonOut = process.argv[3] || ''
+const expectTheme = process.env.EXPECT_THEME || ''
 const PAGES = ['/', '/shop', '/product/azure-oud', '/scent-finder', '/cart', '/checkout']
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 13; Pixel 6a) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36'
 const PROFILES = [
@@ -159,6 +160,7 @@ const motionState = () => {
   const hero = document.querySelector('.hero')
   return {
     html: document.documentElement.className,
+    theme: document.documentElement.getAttribute('data-theme'),
     device: m.device,
     gsap: !!window.gsap,
     three: !!window.THREE || scripts.some((s) => /three/i.test(s)),
@@ -181,13 +183,14 @@ async function checkIntro(browser, profile) {
   await page.goto(base + '/', { waitUntil: 'commit' })
   const early = await page.evaluate(() => new Promise((r) => { const t0 = performance.now(); const poll = () => { const c = document.documentElement.className; if (/sf-intro-/.test(c) || performance.now() - t0 > 1500) r(c); else requestAnimationFrame(poll) }; poll() }))
   const mode = (early.match(/sf-intro-(full|calm|quick)/) || [])[1] || 'none'
+  const theme = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
   await page.waitForLoadState('load')
   const h1 = await page.evaluate(() => { const h = document.querySelector('h1.hero__title'); if (!h) return null; const cs = getComputedStyle(h); return { opacity: cs.opacity, visibility: cs.visibility } })
   const veilShown = await page.evaluate(() => { const el = document.getElementById('sf-intro'); return !!el && getComputedStyle(el).display !== 'none' })
   const done = mode === 'none' ? false : await page.waitForFunction(() => document.documentElement.classList.contains('sf-intro-done') && !document.getElementById('sf-intro'), null, { timeout: 5000 }).then(() => true).catch(() => false)
   const ctaAfter = await page.evaluate(() => { const b = document.querySelector('.hero .btn--primary'); if (!b) return null; const r = b.getBoundingClientRect(); const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!hit && (hit === b || b.contains(hit)) })
   await ctx.close()
-  return { mode, done, veilShown, h1, ctaAfter, errors: errors.slice() }
+  return { mode, theme, done, veilShown, h1, ctaAfter, errors: errors.slice() }
 }
 
 async function addToCart(page) {
@@ -285,6 +288,7 @@ for (const profile of PROFILES) {
     if (intro.h1 && (intro.h1.visibility !== 'visible' || parseFloat(intro.h1.opacity) < 1)) fail(`${profile.name} h1 not painted at load`, JSON.stringify(intro.h1))
     if (intro.ctaAfter === false) fail(`${profile.name} hero CTA not clickable after intro`)
     if (intro.errors.length) fail(`${profile.name} intro errors`, intro.errors.join(' | '))
+    if (expectTheme && intro.theme !== expectTheme) fail(`${profile.name} intro page data-theme`, `${intro.theme} (expected ${expectTheme})`)
   }
   const ctx = await browser.newContext(profile.ctx)
   const page = await ctx.newPage()
@@ -317,6 +321,7 @@ for (const profile of PROFILES) {
       else if (b.afterLoad > 100) fail(`${profile.name} ${path} ${b.label} checked late`, b.afterLoad + 'ms')
     })
     if (errors.length) fail(`${profile.name} ${path} errors`, errors.join(' | '))
+    if (expectTheme && state.theme !== expectTheme) fail(`${profile.name} ${path} data-theme`, `${state.theme} (expected ${expectTheme})`)
     if (!overlay.ok || !overlayAfter.ok) fail(`${profile.name} ${path} overlay`, JSON.stringify(overlay.ok ? overlayAfter : overlay))
     if (profile.mobile) {
       if (!/motion--(mobile|low)/.test(state.html)) fail(`${profile.name} ${path} device class`, state.html)
@@ -330,7 +335,7 @@ for (const profile of PROFILES) {
     if (profile.desktop && path === '/' && state.cue && !state.cue.hidden && state.cue.bottom > state.cue.vh) fail(`${profile.name} hero cue below the fold`, `${state.cue.bottom} > ${state.cue.vh}`)
     if (scroll.fps < 50) fail(`${profile.name} ${path} scroll fps`, `${scroll.fps} fps, p95 ${scroll.p95}ms`)
     if (hover && hover.fps < 50) fail(`${profile.name} ${path} hover fps`, `${hover.fps} fps, p95 ${hover.p95}ms`)
-    rows.push({ profile: profile.name, path, status, errors: errors.length, buy: buy.map((b) => `${b.label}:${!b.present ? 'MISSING' : b.visible && b.clickable ? (b.underIntro ? 'ok(veil)' : 'ok') : 'FAIL'}@${b.afterLoad ?? '-'}ms`).join(' '), scroll, hover, overlay: overlay.ok && overlayAfter.ok, device: state.device, heroState: state.heroState, heavy: state.heavy.join(','), sections: state.sections.join(','), cart: cart ? (cart.ok ? `ok ${cart.before}->${cart.drawer}` : 'FAIL') : (path === '/cart' || path === '/checkout' ? `lines:${state.cartLines}` : '') })
+    rows.push({ profile: profile.name, path, status, theme: state.theme, errors: errors.length, buy: buy.map((b) => `${b.label}:${!b.present ? 'MISSING' : b.visible && b.clickable ? (b.underIntro ? 'ok(veil)' : 'ok') : 'FAIL'}@${b.afterLoad ?? '-'}ms`).join(' '), scroll, hover, overlay: overlay.ok && overlayAfter.ok, device: state.device, heroState: state.heroState, heavy: state.heavy.join(','), sections: state.sections.join(','), cart: cart ? (cart.ok ? `ok ${cart.before}->${cart.drawer}` : 'FAIL') : (path === '/cart' || path === '/checkout' ? `lines:${state.cartLines}` : '') })
   }
   extra[profile.name].nav = await navChain(page, profile)
   await ctx.close()
@@ -338,6 +343,7 @@ for (const profile of PROFILES) {
 await browser.close()
 
 const pad = (v, n) => String(v ?? '').padEnd(n)
+console.log(`theme: ${[...new Set(rows.map((r) => r.theme))].join(', ')}${expectTheme ? ' (expected ' + expectTheme + ')' : ''}`)
 console.log(pad('profile', 13) + pad('path', 20) + pad('st', 4) + pad('err', 4) + pad('scroll fps/p95/long', 21) + pad('hover fps/p95', 15) + pad('ovl', 5) + pad('hero', 16) + pad('cart', 10) + 'buy path')
 for (const r of rows) {
   console.log(pad(r.profile, 13) + pad(r.path, 20) + pad(r.status, 4) + pad(r.errors, 4) + pad(`${r.scroll.fps}/${r.scroll.p95}/${r.scroll.long}`, 21) + pad(r.hover ? `${r.hover.fps}/${r.hover.p95}` : '-', 15) + pad(r.overlay ? 'ok' : 'FAIL', 5) + pad(r.heroState || r.device, 16) + pad(r.cart, 10) + r.buy)

@@ -53,8 +53,8 @@ $cartLabel = $cartCount === 0 ? 'Cart, empty' : 'Cart, ' . $cartCount . ($cartCo
     </nav>
     <a class="site-header__logo" href="<?= e(url('/')) ?>" aria-label="<?= e($storeName) ?> home">
       <picture>
-        <source type="image/webp" srcset="<?= e(asset('img/brand/monogram-transparent-256.webp')) ?>">
-        <img src="<?= e(asset('img/brand/monogram-transparent-256.png')) ?>" alt="<?= e($storeName) ?>" width="256" height="256" decoding="async">
+        <source type="image/webp" srcset="<?= e(asset(brand_asset('img/brand/monogram-transparent-256.webp'))) ?>">
+        <img src="<?= e(asset(brand_asset('img/brand/monogram-transparent-256.png'))) ?>" alt="<?= e($storeName) ?>" width="256" height="256" decoding="async">
       </picture>
     </a>
     <div class="site-header__actions">

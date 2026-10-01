@@ -9,6 +9,7 @@ $inputType = static fn (array $def): string => match ($def['type']) {
     'email' => 'email',
     'phone' => 'phone',
     'textarea' => 'textarea',
+    'choice' => 'segment',
     default => 'text',
 };
 $imagePreview = static function (string $path): string {
@@ -85,6 +86,10 @@ if (isset($def['maxlength'])) {
 }
 if (isset($def['rows'])) {
     $fieldArgs['rows'] = (int) $def['rows'];
+}
+if ($def['type'] === 'choice') {
+    $fieldArgs['options'] = (array) ($def['options'] ?? []);
+    $fieldArgs['swatch'] = $key === 'site_theme' ? 'theme' : '';
 }
 if ($def['type'] === 'int') {
     $fieldArgs['attr'] = ['min' => (string) ($def['min'] ?? 0), 'max' => (string) ($def['max'] ?? 999)];

@@ -77,5 +77,5 @@
       document.head.appendChild(script);
     }
   }
-  window.SF_GATE = { rules: rules, flags: flags, classify: classify, applyClass: applyClass, info: info, intro: mode };
+  window.SF_GATE = { rules: rules, flags: flags, classify: classify, applyClass: applyClass, info: info, intro: mode, theme: root.getAttribute('data-theme') === 'light' ? 'light' : 'dark' };
 })();

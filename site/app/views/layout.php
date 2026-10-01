@@ -23,7 +23,7 @@ $noJsNavLinks = [
 ];
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="<?= e(storefront_theme()) ?>">
 <head>
 <?php partial('head-meta.php', ['head' => $head]); ?>
 <meta name="csrf-token" content="<?= session_status() === PHP_SESSION_ACTIVE ? e(csrf_token()) : '' ?>">

@@ -108,6 +108,12 @@ function pages_snapshot(array $page): array
 
 const PAGES_DEFAULT_COLUMNS = ['title', 'heading', 'body', 'body_format', 'template', 'seo_title', 'seo_description'];
 
+function pages_body_saved(int $pageId, string $body): bool
+{
+    $row = db_fetch('SELECT body FROM content_pages WHERE id = :id', ['id' => $pageId]);
+    return $row !== null && (string) $row['body'] === $body;
+}
+
 function pages_default_row(string $slug): ?array
 {
     $defaults = default_copy()['pages'][$slug] ?? null;
@@ -143,8 +149,15 @@ if ($routeName === 'admin.pages.restore_default') {
         flash('info', $page['title'] . ' already has the default text.');
         redirect('/admin/pages/' . $page['slug'], 303);
     }
-    db_update('content_pages', $data + ['updated_at' => $now], ['id' => (int) $page['id']]);
-    catalogue_log('page', (int) $page['id'], 'page.restore_default', 'Restored the default text on /' . $page['slug'] . ' (' . implode(', ', $changed) . ')', pages_snapshot($page), pages_snapshot($data + $page));
+    db_transaction(static function () use ($data, $now, $page, $changed): void {
+        db_update('content_pages', $data + ['updated_at' => $now], ['id' => (int) $page['id']]);
+        catalogue_log('page', (int) $page['id'], 'page.restore_default', 'Restored the default text on /' . $page['slug'] . ' (' . implode(', ', $changed) . ')', pages_snapshot($page), pages_snapshot($data + $page));
+    });
+    if (!pages_body_saved((int) $page['id'], (string) $data['body'])) {
+        log_write('warning', 'Page restore did not persist', ['slug' => $page['slug']]);
+        flash('error', 'The default text could not be saved on this server, so /' . $page['slug'] . ' still shows the old wording. Please tell your developer.');
+        redirect('/admin/pages/' . $page['slug'], 303);
+    }
     flash('success', 'Default text restored on ' . $data['title'] . '. See it live at ' . settings_site_url() . '/' . $page['slug'] . '.');
     redirect('/admin/pages/' . $page['slug'], 303);
 }
@@ -216,8 +229,15 @@ if ($routeName === 'admin.pages.edit') {
                 flash('info', 'No changes to save.');
                 redirect('/admin/pages/' . $page['slug'], 303);
             }
-            db_update('content_pages', $data + ['updated_at' => $now], ['id' => (int) $page['id']]);
-            catalogue_log('page', (int) $page['id'], 'page.update', 'Updated page /' . $page['slug'] . ' (' . implode(', ', catalogue_changed_fields($before, $after, array_keys($after))) . ')', $before, $after);
+            db_transaction(static function () use ($data, $now, $page, $before, $after): void {
+                db_update('content_pages', $data + ['updated_at' => $now], ['id' => (int) $page['id']]);
+                catalogue_log('page', (int) $page['id'], 'page.update', 'Updated page /' . $page['slug'] . ' (' . implode(', ', catalogue_changed_fields($before, $after, array_keys($after))) . ')', $before, $after);
+            });
+            if (!pages_body_saved((int) $page['id'], (string) $data['body'])) {
+                log_write('warning', 'Page save did not persist', ['slug' => $page['slug']]);
+                flash('error', 'The page could not be saved on this server, so /' . $page['slug'] . ' still shows the old wording. Please tell your developer.');
+                redirect('/admin/pages/' . $page['slug'], 303);
+            }
             flash('success', $data['title'] . ' saved. See it live at ' . settings_site_url() . '/' . $page['slug'] . ($form['is_active'] === 1 ? '' : ' once you make it live') . '.');
             redirect('/admin/pages/' . $page['slug'], 303);
         }

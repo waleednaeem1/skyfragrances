@@ -8,6 +8,7 @@ INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_
 INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('footer_blurb', 'Luxury fragrance, made for Pakistan.', 'store', NULL);
 INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('currency_prefix', 'Rs.', 'store', NULL);
 INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('timezone', 'Asia/Karachi', 'store', NULL);
+INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('site_theme', 'dark', 'appearance', NULL);
 INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('contact_phone', '', 'contact', NULL);
 INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('whatsapp', '', 'contact', NULL);
 INSERT IGNORE INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES ('contact_email', '', 'contact', NULL);
