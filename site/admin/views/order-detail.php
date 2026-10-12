@@ -42,6 +42,9 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
   <?= $badge((string) $order['status'], ['label' => adm_order_status_label((string) $order['status'])]) ?>
   <?= $badge((string) $order['payment_method'], ['label' => payment_method_label((string) $order['payment_method'])]) ?>
   <?= $badge((string) $order['payment_status'], ['label' => $paymentLabel]) ?>
+<?php if ((string) ($order['source'] ?? '') === 'phone'): ?>
+  <?= $badge('phone', ['label' => 'Phone order', 'tone' => 'slate']) ?>
+<?php endif; ?>
 <?php if ($latestProof !== null): ?>
   <span class="adm-muted">&#128206; proof attached</span>
 <?php endif; ?>

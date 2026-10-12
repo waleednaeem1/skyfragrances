@@ -97,7 +97,7 @@ td { padding: 7px 4px; border-bottom: 1px solid var(--line); vertical-align: top
     <div class="doc">
       <h1>Invoice</h1>
       <div class="num"><?= e((string) $o['order_number']) ?></div>
-      <div class="meta">Order date <?= e(adm_order_datetime((string) $o['created_at'])) ?><br>Printed <?= e($printedAt) ?></div>
+      <div class="meta">Order date <?= e(adm_order_datetime((string) $o['created_at'])) ?><br>Printed <?= e($printedAt) ?><?php if ((string) ($o['source'] ?? '') === 'phone'): ?><br>Order taken by phone<?php endif; ?></div>
     </div>
   </header>
   <section class="cols">

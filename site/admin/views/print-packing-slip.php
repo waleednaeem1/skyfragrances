@@ -85,7 +85,7 @@ td { padding: 9px 4px; border-bottom: 1px solid var(--line); vertical-align: mid
     <div class="num">
       <span class="label">Packing slip</span>
       <strong><?= e((string) $o['order_number']) ?></strong>
-      <span class="meta">Placed <?= e(adm_order_datetime((string) $o['created_at'])) ?> · <?= e(payment_method_label((string) $o['payment_method'])) ?></span>
+      <span class="meta">Placed <?= e(adm_order_datetime((string) $o['created_at'])) ?> · <?= e(payment_method_label((string) $o['payment_method'])) ?><?php if ((string) ($o['source'] ?? '') === 'phone'): ?> · Phone order<?php endif; ?></span>
     </div>
   </header>
   <section class="ship">
