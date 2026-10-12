@@ -76,6 +76,7 @@ foreach ($orders as $o) {
     'title' => 'Orders',
     'subtitle' => $total === 0 ? 'No orders yet' : $total . ' ' . ($total === 1 ? 'order' : 'orders') . ' match',
     'actions' => [
+        ['label' => 'New phone order', 'href' => '/admin/orders/new', 'size' => 'sm', 'variant' => 'gold'],
         ['label' => 'Export CSV', 'href' => $exportUrl, 'size' => 'sm'],
     ],
 ]); ?>

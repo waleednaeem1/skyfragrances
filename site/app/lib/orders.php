@@ -224,7 +224,7 @@ function order_insert_header(array $input, array $priced, string $idemKey, strin
         'payment_account_snapshot' => payment_method_is_manual($input['payment_method']) ? payment_account_snapshot($input['payment_method']) : null,
         'ip_hash' => $input['ip_hash'],
         'user_agent' => $input['user_agent'],
-        'source' => 'web',
+        'source' => ($input['source'] ?? 'web') === 'phone' ? 'phone' : 'web',
         'created_at' => $now,
         'updated_at' => $now,
     ];
@@ -325,7 +325,7 @@ function order_place_attempt(array $input, array $cart): array
         $header = order_insert_header($input, $priced, $input['idem_key'], $accessToken, $now);
         order_insert_items($header['id'], $priced, $now);
         stock_decrement_lines($priced['lines']);
-        if (payment_method_is_manual($input['payment_method'])) {
+        if (payment_method_is_manual($input['payment_method']) && ($input['source'] ?? 'web') !== 'phone') {
             $outstanding = order_outstanding_transfer($input['phone_normalized'], (string) $input['ip_hash'], $header['id']);
             if ($outstanding !== null) {
                 throw order_error(ORDER_ERR_TRANSFER_OUTSTANDING, order_outstanding_transfer_message($outstanding));
@@ -405,6 +405,30 @@ function order_place(array $input): array
                 return ['outcome' => 'conflict', 'message' => $message];
             }
             log_write('error', 'order placement failed', ['error' => $e->getMessage(), 'code' => $e->getCode(), 'ip_hash' => $input['ip_hash'] ?? '', 'fingerprint' => pricing_fingerprint(cart_pairs($cart))]);
+            return ['outcome' => 'conflict', 'message' => order_conflict_message($e, $cart)];
+        }
+    }
+}
+
+function order_place_manual(array $input, array $cart): array
+{
+    for ($attempt = 0; ; $attempt++) {
+        try {
+            return order_place_attempt($input, $cart);
+        } catch (Throwable $e) {
+            if (order_is_deadlock($e) && $attempt < ORDER_DEADLOCK_RETRIES) {
+                usleep(100000);
+                continue;
+            }
+            if ($e->getCode() === ORDER_ERR_REPLAY) {
+                $existing = db_fetch('SELECT id, order_number FROM orders WHERE idempotency_key = :key', ['key' => $input['idem_key']]);
+                if ($existing !== null) {
+                    return ['outcome' => 'replay', 'order_id' => (int) $existing['id'], 'order_number' => (string) $existing['order_number']];
+                }
+            }
+            if (!order_error_is_conflict($e)) {
+                log_write('error', 'phone order placement failed', ['error' => $e->getMessage(), 'code' => $e->getCode()]);
+            }
             return ['outcome' => 'conflict', 'message' => order_conflict_message($e, $cart)];
         }
     }
