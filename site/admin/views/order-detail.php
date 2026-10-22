@@ -33,10 +33,11 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     'subtitle' => 'Placed ' . adm_order_datetime((string) $order['created_at']) . ' · ' . (int) $order['item_count'] . ' item' . ((int) $order['item_count'] === 1 ? '' : 's') . ' · ' . money((string) $order['grand_total']),
     'back' => '/admin/orders',
     'back_label' => 'Orders',
-    'actions' => [
+    'actions' => array_values(array_filter([
+        in_array((string) $order['status'], ['delivered', 'cancelled'], true) ? null : ['label' => 'Edit', 'href' => $detailPath . '/edit', 'size' => 'sm'],
         ['label' => 'Invoice', 'href' => $detailPath . '/invoice', 'external' => true, 'size' => 'sm'],
         ['label' => 'Packing slip', 'href' => $detailPath . '/packing-slip', 'external' => true, 'size' => 'sm'],
-    ],
+    ])),
 ]); ?>
 <p class="adm-cluster">
   <?= $badge((string) $order['status'], ['label' => adm_order_status_label((string) $order['status'])]) ?>

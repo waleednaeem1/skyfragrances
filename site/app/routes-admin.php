@@ -28,6 +28,7 @@ return [
     $r('admin.orders.cancel_unpaid', 'GET|POST', '/orders/cancel-unpaid', 'orders.php', 'orders-cancel-unpaid.php', 'admin-orders'),
     $r('admin.orders.new', 'GET|POST', '/orders/new', 'order-new.php', 'order-new.php', 'admin-order-new'),
     $r('admin.orders.show', 'GET', '/orders/{order}', 'order-detail.php', 'order-detail.php', 'admin-order', $o),
+    $r('admin.orders.edit', 'GET|POST', '/orders/{order}/edit', 'order-edit.php', 'order-edit.php', 'admin-order-edit', $o),
     $r('admin.orders.status', 'POST', '/orders/{order}/status', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.payment', 'POST', '/orders/{order}/payment', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.shipping', 'POST', '/orders/{order}/shipping', 'order-detail.php', null, 'admin-order', $o),
