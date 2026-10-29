@@ -198,7 +198,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
         'variant' => ($primaryAction['to'] ?? '') === $target ? 'gold' : 'ghost',
         'post' => $detailPath . '/status',
         'fields' => ['to' => $target],
-        'confirm' => $target === 'delivered' ? "Mark this order as delivered?\nThis cannot be undone. A wrong tap is corrected with a note." : null,
+        'confirm' => $target === 'delivered' ? "Mark this order as delivered?\nIf it was a mistake you can move it back from here." : null,
         'confirm_label' => 'Yes, mark delivered',
     ]); ?>
 <?php endforeach; ?>

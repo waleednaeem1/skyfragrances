@@ -11,13 +11,14 @@ const ORDER_NUMBER_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const ORDER_NUMBER_PATTERN = '/^SF-[0-9]{6}-[A-HJ-NP-Z2-9]{4}$/';
 const ORDER_NUMBER_RETRIES = 5;
 const ORDER_DEADLOCK_RETRIES = 2;
+const ORDER_STATUS_FLOW = ['pending', 'confirmed', 'packing', 'shipped', 'delivered'];
 const ORDER_TRANSITIONS = [
-    'pending' => ['confirmed', 'cancelled'],
-    'confirmed' => ['packing', 'shipped', 'cancelled'],
-    'packing' => ['confirmed', 'shipped', 'cancelled'],
-    'shipped' => ['packing', 'delivered', 'cancelled'],
-    'delivered' => [],
-    'cancelled' => [],
+    'pending' => ['confirmed', 'packing', 'shipped', 'delivered', 'cancelled'],
+    'confirmed' => ['pending', 'packing', 'shipped', 'delivered', 'cancelled'],
+    'packing' => ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'],
+    'shipped' => ['pending', 'confirmed', 'packing', 'delivered', 'cancelled'],
+    'delivered' => ['pending', 'confirmed', 'packing', 'shipped', 'cancelled'],
+    'cancelled' => ['pending', 'confirmed', 'packing', 'shipped', 'delivered'],
 ];
 const ORDER_STOCK_AUTO_RESTORE_FROM = ['pending', 'confirmed', 'packing'];
 const ORDER_CHECKOUT_RATE_MAX = 10;
@@ -462,13 +463,43 @@ function order_transition_allowed(string $from, string $to): bool
 
 function order_transition_requires_reason(string $from, string $to): bool
 {
-    return $to === 'cancelled' || ($from === 'packing' && $to === 'confirmed') || ($from === 'shipped' && $to === 'packing');
+    return $to === 'cancelled';
 }
 
 function order_transition(int $orderId, string $to, array $actor, string $note = '', array $shipping = []): array
 {
     $note = trim($note);
-    $result = db_transaction(static function () use ($orderId, $to, $actor, $note, $shipping): array {
+    try {
+        $result = order_transition_apply($orderId, $to, $actor, $note, $shipping);
+    } catch (Throwable $e) {
+        $conflict = stock_conflict_details($e);
+        if ($conflict === null) {
+            throw $e;
+        }
+        return ['ok' => false, 'message' => 'Not enough stock to reopen this order: one perfume has only ' . (int) $conflict['available'] . ' left. Add stock first, then try again.', 'order' => order_find($orderId)];
+    }
+    if ($result['ok'] && order_transition_is_forward((string) ($result['from'] ?? ''), $to)) {
+        notify_order_status($orderId, $to);
+    }
+    return $result;
+}
+
+function order_transition_is_forward(string $from, string $to): bool
+{
+    if ($to === 'cancelled') {
+        return $from !== 'cancelled';
+    }
+    if ($from === 'cancelled') {
+        return false;
+    }
+    $fromRank = array_search($from, ORDER_STATUS_FLOW, true);
+    $toRank = array_search($to, ORDER_STATUS_FLOW, true);
+    return $fromRank !== false && $toRank !== false && $toRank > $fromRank;
+}
+
+function order_transition_apply(int $orderId, string $to, array $actor, string $note, array $shipping): array
+{
+    return db_transaction(static function () use ($orderId, $to, $actor, $note, $shipping): array {
         $order = db_fetch('SELECT * FROM orders WHERE id = :id FOR UPDATE', ['id' => $orderId]);
         if ($order === null) {
             return ['ok' => false, 'message' => 'Order not found.', 'order' => null];
@@ -494,7 +525,7 @@ function order_transition(int $orderId, string $to, array $actor, string $note =
             $update['tracking_url'] = str_starts_with(strtolower($trackingUrl), 'https://') ? mb_substr($trackingUrl, 0, 255) : null;
             $update['shipped_at'] = $now;
         }
-        if ($from === 'shipped' && $to === 'packing') {
+        if (in_array($from, ['shipped', 'delivered'], true) && in_array($to, ['pending', 'confirmed', 'packing'], true)) {
             $update['shipped_at'] = null;
             $update['courier_name'] = null;
             $update['tracking_number'] = null;
@@ -502,6 +533,16 @@ function order_transition(int $orderId, string $to, array $actor, string $note =
         }
         if ($to === 'delivered') {
             $update['delivered_at'] = $now;
+        } elseif ($from === 'delivered') {
+            $update['delivered_at'] = null;
+        }
+        $retake = $from === 'cancelled' && $order['stock_restored_at'] !== null;
+        if ($from === 'cancelled') {
+            $update['cancelled_at'] = null;
+            $update['cancel_reason'] = null;
+            if ($retake) {
+                $update['stock_restored_at'] = null;
+            }
         }
         $stockSummary = null;
         $couponReverted = false;
@@ -517,7 +558,16 @@ function order_transition(int $orderId, string $to, array $actor, string $note =
         if ($affected !== 1) {
             throw new RuntimeException('order changed concurrently');
         }
-        if (isset($update['stock_restored_at'])) {
+        if ($retake) {
+            $lines = [];
+            foreach (order_items($orderId) as $item) {
+                if ($item['product_size_id'] !== null) {
+                    $lines[] = ['size_id' => (int) $item['product_size_id'], 'qty' => (int) $item['quantity']];
+                }
+            }
+            stock_decrement_lines($lines);
+            $note = trim($note . ($note === '' ? '' : ' — ') . 'Order reopened; stock taken again');
+        } elseif (isset($update['stock_restored_at'])) {
             $stockSummary = stock_restore_summary(stock_return_items(stock_restorable_items($orderId)));
         }
         $historyNote = $note;
@@ -533,10 +583,6 @@ function order_transition(int $orderId, string $to, array $actor, string $note =
         $order = array_merge($order, $update);
         return ['ok' => true, 'message' => 'Order marked ' . $to . '.', 'order' => $order, 'from' => $from, 'stock_summary' => $stockSummary, 'coupon_reverted' => $couponReverted];
     });
-    if ($result['ok']) {
-        notify_order_status($orderId, $to);
-    }
-    return $result;
 }
 
 function order_cancel_unpaid_transfers(?int $hours, array $actor): array

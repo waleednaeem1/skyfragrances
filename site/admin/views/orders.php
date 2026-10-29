@@ -45,6 +45,7 @@ foreach ($orders as $o) {
     if ($o['whatsapp'] !== null) {
         $actions[] = ['label' => 'WhatsApp', 'href' => $o['whatsapp'], 'external' => true];
     }
+    $actions[] = ['label' => 'Edit', 'href' => '/admin/orders/' . $o['order_number'] . '/edit'];
     $actions[] = ['label' => 'Print slip', 'href' => '/admin/orders/' . $o['order_number'] . '/packing-slip', 'external' => true];
     $rows[] = [
         'id' => (int) $o['id'],

@@ -99,7 +99,7 @@ function adm_orders_bulk_transition(array $orders, string $to, string $label): v
     $updated = 0;
     $skipped = [];
     foreach ($orders as $order) {
-        if (!order_transition_allowed((string) $order['status'], $to) || !adm_order_reconciles($order)) {
+        if (!order_transition_allowed((string) $order['status'], $to) || !order_transition_is_forward((string) $order['status'], $to) || !adm_order_reconciles($order)) {
             $skipped[] = $order['order_number'] . ' (' . strtolower(adm_order_status_label((string) $order['status'])) . ')';
             continue;
         }

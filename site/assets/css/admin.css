@@ -457,3 +457,8 @@ p { margin: 0 0 var(--sp-3); }
   .adm-tile__handle { width: 44px; height: 44px; }
   .adm-list > li > a { display: inline-flex; align-items: center; min-height: 44px; }
 }
+.adm-order-line { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-3); }
+@media (max-width: 767px) {
+  .adm-order-line { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .adm-order-line > .adm-field:first-child { grid-column: 1 / -1; }
+}

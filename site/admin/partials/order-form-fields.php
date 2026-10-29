@@ -2,9 +2,11 @@
 defined('SKYFR') || exit;
 $itemsEditable = !empty($itemsEditable);
 $showCoupon = !empty($showCoupon);
+$priceEditable = !empty($priceEditable);
+$paymentStatusOptions = is_array($paymentStatusOptions ?? null) ? $paymentStatusOptions : [];
 $lockNote = (string) ($lockNote ?? '');
 $lockedItems = is_array($lockedItems ?? null) ? $lockedItems : [];
-$fieldLabels = [
+$fieldLabels = ['payment_status' => 'Payment status', 'delivery_fee' => 'Delivery fee', 'discount' => 'Discount', 
     'customer_name' => 'Name', 'customer_phone' => 'Mobile number', 'customer_email' => 'Email', 'city' => 'City',
     'address' => 'Address', 'postal_code' => 'Postal code', 'customer_note' => 'Note', 'payment_method' => 'Payment',
 ];
@@ -56,9 +58,9 @@ foreach ($methods as $method) {
 <?php if ($itemsEditable): ?>
   <div class="adm-form__section" id="lines">
     <h2 class="adm-form__section-title">Perfumes</h2>
-    <p class="adm-field__help">Choose up to <?= (int) ORDER_FORM_LINES ?> lines. Leave a line on "No perfume" to skip it.</p>
+    <p class="adm-field__help"><?= $priceEditable ? 'Change perfumes, quantities or prices. Leave the price empty to use the shop price. Set a line to "No perfume" to remove it.' : 'Choose up to ' . (int) ORDER_FORM_LINES . ' lines. Leave a line on "No perfume" to skip it.' ?></p>
 <?php foreach ($form['lines'] as $i => $line): ?>
-    <div class="adm-field--pair">
+    <div class="<?= $priceEditable ? 'adm-order-line' : 'adm-field--pair' ?>">
       <div class="adm-field">
         <label class="adm-field__label" for="line_size_<?= (int) $i ?>">Line <?= (int) $i + 1 ?></label>
         <select class="adm-input" id="line_size_<?= (int) $i ?>" name="line_size[]"<?= isset($errors['line_' . $i]) ? ' aria-invalid="true"' : '' ?>>
@@ -75,6 +77,12 @@ foreach ($methods as $method) {
         <label class="adm-field__label" for="line_qty_<?= (int) $i ?>">Quantity</label>
         <input class="adm-input" type="number" id="line_qty_<?= (int) $i ?>" name="line_qty[]" min="1" max="<?= (int) CART_MAX_QTY_PER_LINE ?>" step="1" inputmode="numeric" value="<?= (int) $line['qty'] ?>">
       </div>
+<?php if ($priceEditable): ?>
+      <div class="adm-field">
+        <label class="adm-field__label" for="line_price_<?= (int) $i ?>">Price each (Rs.)</label>
+        <input class="adm-input" type="text" id="line_price_<?= (int) $i ?>" name="line_price[]" inputmode="decimal" autocomplete="off" placeholder="Shop price" value="<?= e((string) ($line['price'] ?? '')) ?>">
+      </div>
+<?php endif; ?>
     </div>
 <?php endforeach; ?>
   </div>
@@ -96,6 +104,13 @@ foreach ($methods as $method) {
     <h2 class="adm-form__section-title">Payment</h2>
     <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'select', 'name' => 'payment_method', 'label' => 'How the customer pays', 'value' => $form['payment_method'], 'options' => $methodOptions, 'required' => true, 'error' => $errors['payment_method'] ?? '', 'help' => 'Mark it paid from the order page once the money arrives.']); ?>
+<?php if ($priceEditable): ?>
+      <?php partial_admin('field.php', ['type' => 'select', 'name' => 'payment_status', 'label' => 'Payment status', 'value' => (string) ($form['payment_status'] ?? ''), 'options' => $paymentStatusOptions, 'error' => $errors['payment_status'] ?? '']); ?>
+    </div>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'text', 'name' => 'delivery_fee', 'label' => 'Delivery fee (Rs.)', 'value' => (string) ($form['delivery_fee'] ?? ''), 'error' => $errors['delivery_fee'] ?? '', 'help' => '0 for free delivery.', 'attr' => ['inputmode' => 'decimal', 'autocomplete' => 'off']]); ?>
+      <?php partial_admin('field.php', ['type' => 'text', 'name' => 'discount', 'label' => 'Discount (Rs.)', 'value' => (string) ($form['discount'] ?? ''), 'error' => $errors['discount'] ?? '', 'help' => 'Taken off the perfumes total.', 'attr' => ['inputmode' => 'decimal', 'autocomplete' => 'off']]); ?>
+<?php endif; ?>
 <?php if ($showCoupon): ?>
       <?php partial_admin('field.php', ['type' => 'text', 'name' => 'coupon_code', 'label' => 'Coupon code (optional)', 'value' => $form['coupon_code'], 'maxlength' => 32, 'attr' => ['autocomplete' => 'off']]); ?>
 <?php endif; ?>
