@@ -267,6 +267,18 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php if (!empty($order['delivered_at'])): ?>
   <p class="adm-muted">Delivered <?= e(adm_order_datetime((string) $order['delivered_at'])) ?></p>
 <?php endif; ?>
+<?php if ($courierKey !== null && !empty($order['tracking_number'])): ?>
+  <div class="adm-note">
+<?php if ($courierStatus !== null && !empty($courierStatus['status_text'])): ?>
+    <p><strong><?= e(COURIER_LABELS[$courierKey]) ?>:</strong> <?= e((string) $courierStatus['status_text']) ?><?php if ((string) $courierStatus['status_class'] === 'returned'): ?> <?= $badge('cancelled', ['label' => 'Coming back', 'small' => true]) ?><?php endif; ?></p>
+<?php endif; ?>
+<?php if ($courierStatus !== null && !empty($courierStatus['error'])): ?>
+    <p class="adm-field__error"><?= e((string) $courierStatus['error']) ?></p>
+<?php endif; ?>
+    <p class="adm-muted"><?= $courierStatus === null ? 'Not checked yet. It is checked automatically every few hours while the order is open.' : 'Last checked ' . e(adm_order_datetime((string) $courierStatus['checked_at'])) . '. Checked automatically every few hours while the order is open.' ?></p>
+    <?php partial_admin('button.php', ['label' => 'Check ' . COURIER_LABELS[$courierKey] . ' now', 'variant' => 'ghost', 'size' => 'sm', 'post' => $detailPath . '/courier-check']); ?>
+  </div>
+<?php endif; ?>
 <?php if (!in_array($order['status'], ['delivered', 'cancelled'], true)): ?>
   <form method="post" action="<?= e(url($detailPath . '/shipping')) ?>" class="adm-form" data-guard>
     <?= csrf_field() ?>

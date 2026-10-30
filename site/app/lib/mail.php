@@ -7,6 +7,7 @@ const MAIL_DRAIN_MAX_SENDS = 2;
 const MAIL_DRAIN_BUDGET_SECONDS = 12;
 const MAIL_OUTBOX_BODY_RETENTION_DAYS = 60;
 const MAIL_OUTBOX_LEASE_SECONDS = 60;
+const MAIL_OUTBOX_MAX_AGE_HOURS = 48;
 const MAIL_PREVIEW_DIR = '/storage/logs/mail-preview';
 
 function mail_send(string $template, array $data, string $toEmail, string $toName, string $subject): bool
@@ -286,12 +287,21 @@ function mail_outbox_lease(int $id): bool
     )->rowCount() === 1;
 }
 
+function mail_outbox_expire_stale(): int
+{
+    return db_query(
+        "UPDATE email_outbox SET status = 'expired', last_error = 'Not sent: older than " . MAIL_OUTBOX_MAX_AGE_HOURS . " hours when sending became possible' WHERE status = 'queued' AND created_at < :cutoff",
+        ['cutoff' => date('Y-m-d H:i:s', time() - MAIL_OUTBOX_MAX_AGE_HOURS * 3600)]
+    )->rowCount();
+}
+
 function mail_outbox_drain(int $maxSends = MAIL_DRAIN_MAX_SENDS, int $budgetSeconds = MAIL_DRAIN_BUDGET_SECONDS): array
 {
     $result = ['sent' => 0, 'failed' => 0, 'retried' => 0];
     if (!mail_transport_available()) {
         return $result;
     }
+    mail_outbox_expire_stale();
     $started = microtime(true);
     $rows = db_fetch_all(
         'SELECT id, recipient, subject, body_html, attempts FROM email_outbox WHERE status = :status AND next_try_at <= :now ORDER BY next_try_at ASC, id ASC LIMIT ' . max(1, $maxSends),

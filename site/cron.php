@@ -21,4 +21,7 @@ if (!$cronIsCli && ($cronKey === '' || $cronSent === '' || !hash_equals($cronKey
 
 $cronDrained = mail_outbox_drain(10, 40);
 housekeeping_run();
+require_once APP_ROOT . '/app/lib/couriers.php';
+$cronCouriers = courier_sync_due(40);
+echo 'couriers checked=' . $cronCouriers['checked'] . ' moved=' . $cronCouriers['moved'] . ' failed=' . $cronCouriers['failed'] . PHP_EOL;
 echo 'sent=' . $cronDrained['sent'] . ' retried=' . $cronDrained['retried'] . ' failed=' . $cronDrained['failed'] . PHP_EOL;

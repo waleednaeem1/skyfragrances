@@ -528,3 +528,15 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   KEY idx_rate_limits_lookup (bucket, subject_hash, attempted_at),
   KEY idx_rate_limits_time (attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS order_courier_status (
+  order_id         INT UNSIGNED  NOT NULL,
+  courier          VARCHAR(16)   NOT NULL,
+  tracking_number  VARCHAR(60)   NOT NULL,
+  status_text      VARCHAR(190)  NULL DEFAULT NULL,
+  status_class     VARCHAR(16)   NULL DEFAULT NULL,
+  error            VARCHAR(190)  NULL DEFAULT NULL,
+  checked_at       DATETIME      NOT NULL,
+  changed_at       DATETIME      NULL DEFAULT NULL,
+  PRIMARY KEY (order_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;

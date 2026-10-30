@@ -112,6 +112,32 @@ if ($wordingKeys !== []) {
 }
 partial_admin('action-bar.php', ['buttons' => $actionButtons, 'note' => 'Saves this tab only']);
 ?>
+<?php if ($tab === 'couriers'): ?>
+<div class="adm-card" id="courier-test">
+  <div class="adm-card__head"><h2 class="adm-card__title">Test a courier</h2></div>
+  <p class="adm-muted">Save the key above first, then enter one of your real tracking numbers. This shows exactly what the courier sends back, so you can see the connection works before relying on it.</p>
+  <form method="post" action="<?= e(url('/admin/settings/courier-test')) ?>" class="adm-form">
+    <?= csrf_field() ?>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'select', 'name' => 'courier', 'label' => 'Courier', 'value' => (string) ($courierTest['courier'] ?? 'postex'), 'options' => ['postex' => 'PostEx', 'trax' => 'Trax']]); ?>
+      <?php partial_admin('field.php', ['type' => 'text', 'name' => 'tracking_number', 'label' => 'Tracking number', 'value' => (string) ($courierTest['tracking'] ?? ''), 'maxlength' => 60, 'attr' => ['autocomplete' => 'off', 'autocapitalize' => 'characters']]); ?>
+    </div>
+    <?php partial_admin('button.php', ['label' => 'Test', 'variant' => 'ghost', 'size' => 'sm']); ?>
+  </form>
+<?php if (is_array($courierTest ?? null)): ?>
+  <div class="adm-note">
+<?php if (!empty($courierTest['ok'])): ?>
+    <p><strong>Connected.</strong> Status: <?= e((string) $courierTest['text']) ?> <span class="adm-muted">(<?= e(['delivered' => 'counts as delivered', 'returned' => 'counts as returned', 'in_transit' => 'counts as on the way', 'other' => 'no status change'][(string) ($courierTest['class'] ?? 'other')] ?? '') ?>)</span></p>
+<?php else: ?>
+    <p><strong>Not connected yet.</strong> <?= e((string) ($courierTest['detail'] ?? '')) ?></p>
+<?php endif; ?>
+<?php if (!empty($courierTest['raw'])): ?>
+    <details><summary>What the courier sent back</summary><pre class="adm-mono" style="white-space:pre-wrap;word-break:break-word;max-height:16rem;overflow:auto"><?= e((string) $courierTest['raw']) ?></pre></details>
+<?php endif; ?>
+  </div>
+<?php endif; ?>
+</div>
+<?php endif; ?>
 <?php if ($tab === 'advanced'): ?>
 <div class="adm-card">
   <div class="adm-card__head"><h2 class="adm-card__title">Server</h2></div>

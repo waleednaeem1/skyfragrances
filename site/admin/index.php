@@ -31,8 +31,13 @@ function admin_after_response(): void
     if ($fatal !== null && ($fatal['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_USER_ERROR))) {
         return;
     }
+    $detached = false;
     if (function_exists('fastcgi_finish_request')) {
         fastcgi_finish_request();
+        $detached = true;
+    } elseif (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+        $detached = true;
     } else {
         while (ob_get_level() > 0) {
             @ob_end_flush();
@@ -42,6 +47,10 @@ function admin_after_response(): void
     try {
         mail_outbox_drain();
         housekeeping_maybe_run();
+        if ($detached && auth_user() !== null) {
+            require_once APP_ROOT . '/app/lib/couriers.php';
+            courier_sync_maybe();
+        }
     } catch (Throwable $e) {
         log_write('warning', 'admin after-response hook failed', ['error' => $e->getMessage()]);
     }

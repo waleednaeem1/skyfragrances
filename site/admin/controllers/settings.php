@@ -1,7 +1,7 @@
 <?php
 defined('SKYFR') || exit;
 
-const SETTINGS_TABS = ['store' => 'Store', 'appearance' => 'Appearance', 'contact' => 'Contact & Social', 'home' => 'Home', 'shipping' => 'Shipping', 'payments' => 'Payments', 'seo' => 'SEO', 'advanced' => 'Advanced'];
+const SETTINGS_TABS = ['store' => 'Store', 'appearance' => 'Appearance', 'contact' => 'Contact & Social', 'home' => 'Home', 'shipping' => 'Shipping', 'payments' => 'Payments', 'couriers' => 'Couriers', 'seo' => 'SEO', 'advanced' => 'Advanced'];
 const SETTINGS_IMAGE_RULES = [
     'logo_path' => ['max' => 1200, 'cover' => null],
     'favicon_path' => ['max' => 512, 'cover' => null],
@@ -9,7 +9,7 @@ const SETTINGS_IMAGE_RULES = [
     'hero_image_mobile' => ['max' => 1600, 'cover' => null],
     'og_default_image' => ['max' => 1200, 'cover' => [1200, 630]],
 ];
-const SETTINGS_SECRET_KEYS = ['bank_account_number', 'bank_iban', 'jazzcash_number', 'easypaisa_number', 'maintenance_bypass', 'contact_phone', 'whatsapp', 'contact_email', 'order_notify_email'];
+const SETTINGS_SECRET_KEYS = ['bank_account_number', 'bank_iban', 'jazzcash_number', 'easypaisa_number', 'maintenance_bypass', 'contact_phone', 'whatsapp', 'contact_email', 'order_notify_email', 'postex_api_token', 'trax_api_key'];
 const SETTINGS_WORDING_KEYS = ['hero_trust_line', 'newsletter_heading', 'newsletter_text', 'quiz_band_text', 'cod_note', 'manual_payment_note', 'maintenance_message', 'whatsapp_reply_template', 'contact_reply_time', 'returns_days', 'footer_blurb'];
 
 function settings_definitions(): array
@@ -82,6 +82,8 @@ function settings_definitions(): array
         'og_default_image' => ['seo', 'image', 'Default share image', ['help' => 'Cropped to 1200×630 for WhatsApp and Facebook previews.']],
         'google_verification' => ['seo', 'text', 'Google site verification code', ['maxlength' => 120]],
         'gsc_analytics_id' => ['seo', 'text', 'Analytics ID', ['maxlength' => 40, 'help' => 'Leave blank unless you run analytics.']],
+        'postex_api_token' => ['couriers', 'text', 'PostEx API token', ['maxlength' => 200, 'help' => 'From the PostEx merchant portal, under API integration. With it, PostEx parcels update their orders by themselves.']],
+        'trax_api_key' => ['couriers', 'text', 'Trax API key', ['maxlength' => 200, 'help' => 'From the Trax (Sonic) portal: open your profile, the API key is in the last row. With it, Trax parcels update their orders by themselves.']],
         'low_stock_threshold' => ['advanced', 'int', 'Low-stock alert at', ['min' => 0, 'max' => 999, 'help' => '0 turns the alerts off. Sold-out handling is never off.']],
         'admin_rows_per_page' => ['advanced', 'int', 'Rows per page in lists', ['min' => 10, 'max' => 100]],
         'site_indexable' => ['advanced', 'bool', 'Let search engines index the shop', ['help' => 'Keep off on a preview copy. Turn on once the shop is live at its real address.']],
@@ -316,6 +318,18 @@ if (($route['name'] ?? '') === 'admin.settings.https_permanent') {
     redirect('/admin/settings?tab=advanced', 303);
 }
 
+if (($route['name'] ?? '') === 'admin.settings.courier_test') {
+    require_once APP_ROOT . '/app/lib/couriers.php';
+    $testCourier = (string) request_post('courier', '');
+    $testTracking = trim((string) request_post('tracking_number', ''));
+    if (!isset(COURIER_LABELS[$testCourier]) || $testTracking === '' || mb_strlen($testTracking) > 60) {
+        flash('error', 'Choose PostEx or Trax and enter one of your real tracking numbers.');
+        redirect('/admin/settings?tab=couriers', 303);
+    }
+    $_SESSION['courier_test'] = ['courier' => $testCourier, 'tracking' => $testTracking] + courier_check($testCourier, $testTracking);
+    redirect('/admin/settings?tab=couriers', 303);
+}
+
 if (($route['name'] ?? '') === 'admin.settings.restore_wording') {
     $restoreTab = request_post('tab', '');
     if (!is_string($restoreTab) || !isset(SETTINGS_TABS[$restoreTab])) {
@@ -435,7 +449,14 @@ foreach (SETTINGS_TABS as $slug => $label) {
     $tabs[] = ['label' => $label, 'href' => '/admin/settings?tab=' . $slug, 'active' => $slug === $tab];
 }
 
+$courierTest = null;
+if ($tab === 'couriers' && isset($_SESSION['courier_test']) && is_array($_SESSION['courier_test'])) {
+    $courierTest = $_SESSION['courier_test'];
+    unset($_SESSION['courier_test']);
+}
+
 render_admin('settings.php', [
+    'courierTest' => $courierTest,
     'tab' => $tab,
     'tabLabel' => SETTINGS_TABS[$tab],
     'tabs' => $tabs,

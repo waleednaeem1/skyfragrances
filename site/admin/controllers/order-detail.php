@@ -9,6 +9,12 @@ $routeName = (string) ($route['name'] ?? '');
 if ($routeName === 'admin.orders.proof') {
     adm_order_stream_proof($order);
 }
+require_once APP_ROOT . '/app/lib/couriers.php';
+if ($routeName === 'admin.orders.courier_check' && request_method() === 'POST') {
+    $courierResult = courier_sync_order($order);
+    flash($courierResult['ok'] ? 'success' : 'error', $courierResult['message']);
+    redirect('/admin/orders/' . $order['order_number'] . '#shipping', 303);
+}
 if (request_method() === 'POST') {
     adm_order_handle_post($route, $order);
 }
@@ -60,7 +66,12 @@ foreach ($messages as $key => $message) {
 $lastStatusMail = outbox_order_mail_status($orderId, 'status-update');
 $legalTargets = ORDER_TRANSITIONS[(string) $order['status']] ?? [];
 
+$courierKey = courier_key_for((string) ($order['courier_name'] ?? ''));
+$courierStatus = $courierKey === null ? null : courier_status_for((int) $order['id']);
+
 render_admin('order-detail.php', [
+    'courierKey' => $courierKey,
+    'courierStatus' => $courierStatus,
     'order' => $order,
     'items' => $items,
     'history' => $history,

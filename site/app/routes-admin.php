@@ -29,6 +29,7 @@ return [
     $r('admin.orders.new', 'GET|POST', '/orders/new', 'order-new.php', 'order-new.php', 'admin-order-new'),
     $r('admin.orders.show', 'GET', '/orders/{order}', 'order-detail.php', 'order-detail.php', 'admin-order', $o),
     $r('admin.orders.edit', 'GET|POST', '/orders/{order}/edit', 'order-edit.php', 'order-edit.php', 'admin-order-edit', $o),
+    $r('admin.orders.courier_check', 'POST', '/orders/{order}/courier-check', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.status', 'POST', '/orders/{order}/status', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.payment', 'POST', '/orders/{order}/payment', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.shipping', 'POST', '/orders/{order}/shipping', 'order-detail.php', null, 'admin-order', $o),
@@ -84,6 +85,7 @@ return [
     $r('admin.settings', 'GET|POST', '/settings', 'settings.php', 'settings.php', 'admin-settings'),
     $r('admin.settings.https_permanent', 'POST', '/settings/https-permanent', 'settings.php', null, 'admin-settings'),
     $r('admin.settings.restore_wording', 'POST', '/settings/restore-wording', 'settings.php', null, 'admin-settings'),
+    $r('admin.settings.courier_test', 'POST', '/settings/courier-test', 'settings.php', null, 'admin-settings'),
 
     $r('admin.tools', 'GET', '/tools', 'tools.php', 'tools.php', 'admin-tools'),
     $r('admin.tools.remove_sample_data', 'GET|POST', '/tools/remove-sample-data', 'tools.php', 'tools-confirm.php', 'admin-tools'),
