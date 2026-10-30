@@ -33,6 +33,31 @@ partial_admin('page-header.php', ['title' => 'Tools', 'subtitle' => 'Housekeepin
     <p class="adm-note"><?= $webp ? 'WebP available' : 'JPEG only on this server' ?></p>
   </div>
 </div>
+<div class="adm-card" id="mail-test">
+  <div class="adm-card__head"><h2 class="adm-card__title">Send a test email</h2></div>
+  <p class="adm-muted">Sends one email straight away and shows exactly what the mail server says. The password itself is never shown.</p>
+  <ul class="adm-list">
+    <li><span>Mailbox</span><span class="adm-mono"><?= e($smtp['user'] !== '' ? $smtp['user'] : 'not set') ?></span></li>
+    <li><span>Server</span><span class="adm-mono"><?= e($smtp['host'] . ':' . $smtp['port'] . ' · ' . ($smtp['secure'] !== '' ? strtoupper($smtp['secure']) : 'no encryption')) ?></span></li>
+    <li><span>Password</span><span><?= $smtp['pass_length'] > 0 ? e((string) $smtp['pass_length']) . ' characters saved' : 'not saved' ?></span></li>
+  </ul>
+<?php foreach ($smtp['flags'] as $flag): ?>
+  <p class="adm-field__error">Problem: <?= e($flag) ?>.</p>
+<?php endforeach; ?>
+  <form method="post" action="<?= e(url('/admin/tools/mail-test')) ?>" class="adm-form">
+    <?= csrf_field() ?>
+    <?php partial_admin('field.php', ['type' => 'email', 'name' => 'to', 'label' => 'Send the test to', 'value' => (string) ($mailTest['to'] ?? $mailTestTo), 'required' => true]); ?>
+    <div class="adm-cluster"><?php partial_admin('button.php', ['label' => 'Send test email', 'variant' => 'ghost']); ?></div>
+  </form>
+<?php if (is_array($mailTest ?? null)): ?>
+  <div class="adm-note">
+    <p><strong><?= !empty($mailTest['ok']) ? 'Sent.' : 'Not sent.' ?></strong> <?= e((string) $mailTest['detail']) ?></p>
+<?php if (!empty($mailTest['server'])): ?>
+    <p class="adm-muted">Mail server said: <span class="adm-mono"><?= e((string) $mailTest['server']) ?></span></p>
+<?php endif; ?>
+  </div>
+<?php endif; ?>
+</div>
 <?php if ($outboxFailed !== []): ?>
 <div class="adm-card adm-card--danger">
   <div class="adm-card__head"><h2 class="adm-card__title">Emails that could not be sent</h2></div>

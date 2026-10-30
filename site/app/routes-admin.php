@@ -89,6 +89,7 @@ return [
 
     $r('admin.tools', 'GET', '/tools', 'tools.php', 'tools.php', 'admin-tools'),
     $r('admin.tools.remove_sample_data', 'GET|POST', '/tools/remove-sample-data', 'tools.php', 'tools-confirm.php', 'admin-tools'),
+    $r('admin.tools.mail_test', 'POST', '/tools/mail-test', 'tools.php', null, 'admin-tools'),
     $r('admin.tools.purge', 'GET|POST', '/tools/purge', 'tools.php', 'tools-confirm.php', 'admin-tools'),
     $r('admin.tools.regenerate_images', 'GET|POST', '/tools/regenerate-images', 'tools.php', 'tools-progress.php', 'admin-tools'),
 

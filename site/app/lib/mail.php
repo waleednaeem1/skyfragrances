@@ -211,6 +211,59 @@ function mail_build(string $toEmail, string $toName, string $subject, string $ht
     return $mailer;
 }
 
+function mail_smtp_summary(): array
+{
+    $pass = (string) config('smtp.pass', '');
+    $flags = [];
+    if ($pass === '') {
+        $flags[] = 'the password is empty';
+    }
+    if (preg_match('/REPLACE_ME|MAILBOX PASSWORD/i', $pass)) {
+        $flags[] = 'the password is still the placeholder text, not the real password';
+    }
+    if ($pass !== trim($pass)) {
+        $flags[] = 'the password starts or ends with a space';
+    }
+    if (str_contains($pass, '\\')) {
+        $flags[] = 'the password contains a backslash, which config.php can change; avoid backslashes';
+    }
+    $raw = is_readable(APP_ROOT . '/config.php') ? (string) file_get_contents(APP_ROOT . '/config.php') : '';
+    if (preg_match("/'smtp'.*?'pass'\\s*=>\\s*\"[^\"]*\\$/s", $raw)) {
+        $flags[] = 'the password in config.php is in double quotes and contains a $ sign, which PHP can change; put it in single quotes';
+    }
+    return [
+        'host' => (string) config('smtp.host', ''),
+        'port' => (int) config('smtp.port', 0),
+        'secure' => (string) config('smtp.secure', ''),
+        'user' => (string) config('smtp.user', ''),
+        'pass_length' => mb_strlen($pass),
+        'flags' => $flags,
+    ];
+}
+
+function mail_smtp_test(string $toEmail): array
+{
+    if (!mail_transport_available()) {
+        return ['ok' => false, 'detail' => 'Email sending is not set up: the SMTP host in config.php is empty.', 'server' => ''];
+    }
+    $replies = [];
+    try {
+        $html = '<p>This is a test from the Sky Fragrances admin. If you can read it, order emails are working.</p>';
+        $mailer = mail_build($toEmail, '', 'Test email from Sky Fragrances', mail_wrap($html, 'Test email'), 'This is a test from the Sky Fragrances admin. If you can read it, order emails are working.', ['', '']);
+        $mailer->SMTPDebug = PHPMailer\PHPMailer\SMTP::DEBUG_SERVER;
+        $mailer->Debugoutput = static function (string $line) use (&$replies): void {
+            if (str_starts_with($line, 'SERVER -> CLIENT:')) {
+                $replies[] = trim(substr($line, 17));
+            }
+        };
+        $mailer->send();
+        return ['ok' => true, 'detail' => 'Sent to ' . $toEmail . '. Check that inbox, including spam.', 'server' => ''];
+    } catch (Throwable $e) {
+        $server = implode(' / ', array_slice(array_filter($replies, static fn (string $reply): bool => preg_match('/^[45]\d\d/', $reply) === 1), -2));
+        return ['ok' => false, 'detail' => isset($mailer) && $mailer->ErrorInfo !== '' ? $mailer->ErrorInfo : $e->getMessage(), 'server' => mb_substr($server, 0, 300)];
+    }
+}
+
 function mail_transport_selftest(): array
 {
     if (!mail_transport_available()) {

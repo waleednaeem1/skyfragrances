@@ -526,6 +526,17 @@ function tools_regen_handle(array $head): never
 
 $routeName = (string) ($route['name'] ?? 'admin.tools');
 
+if ($routeName === 'admin.tools.mail_test') {
+    $testTo = trim((string) request_post('to', ''));
+    if (filter_var($testTo, FILTER_VALIDATE_EMAIL) === false) {
+        flash('error', 'Enter the email address the test should go to.');
+        redirect('/admin/tools#mail-test', 303);
+    }
+    $_SESSION['mail_test'] = ['to' => $testTo] + mail_smtp_test($testTo);
+    tools_log('tool.mail_test', 'Test email to ' . $testTo . ': ' . ($_SESSION['mail_test']['ok'] ? 'sent' : 'failed'), ['ok' => $_SESSION['mail_test']['ok']]);
+    redirect('/admin/tools#mail-test', 303);
+}
+
 if ($routeName === 'admin.tools.regenerate_images') {
     tools_regen_handle($head);
 }
@@ -580,7 +591,16 @@ if ($routeName !== 'admin.tools' || request_method() !== 'GET') {
 
 $outbox = mail_outbox_counts();
 $sample = tools_sample_preview();
+$mailTest = null;
+if (isset($_SESSION['mail_test']) && is_array($_SESSION['mail_test'])) {
+    $mailTest = $_SESSION['mail_test'];
+    unset($_SESSION['mail_test']);
+}
+
 render_admin('tools.php', [
+    'mailTest' => $mailTest,
+    'smtp' => mail_smtp_summary(),
+    'mailTestTo' => (string) (setting('order_notify_email', '') ?: setting('contact_email', '') ?: config('smtp.user', '')),
     'storage' => tools_storage(),
     'outbox' => $outbox,
     'outboxFailed' => $outbox['failed'] > 0 ? db_fetch_all("SELECT id, recipient, subject, last_error, attempts, next_try_at FROM email_outbox WHERE status = 'failed' ORDER BY id DESC LIMIT 5") : [],
