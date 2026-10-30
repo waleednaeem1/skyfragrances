@@ -90,7 +90,6 @@ render_admin('order-detail.php', [
     'holdDays' => adm_order_hold_days($order),
     'legalTargets' => $legalTargets,
     'primaryAction' => adm_order_primary_action($order),
-    'contactFrozen' => adm_order_contact_frozen($order),
     'lastStatusMailFailed' => $lastStatusMail === 'failed',
     'couriers' => ADM_ORDER_COURIERS,
     'isManual' => payment_method_is_manual((string) $order['payment_method']),

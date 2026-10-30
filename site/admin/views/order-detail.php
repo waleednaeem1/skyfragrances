@@ -34,7 +34,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     'back' => '/admin/orders',
     'back_label' => 'Orders',
     'actions' => array_values(array_filter([
-        in_array((string) $order['status'], ['delivered', 'cancelled'], true) ? null : ['label' => 'Edit', 'href' => $detailPath . '/edit', 'size' => 'sm'],
+        ['label' => 'Edit', 'href' => $detailPath . '/edit', 'size' => 'sm'],
         ['label' => 'Invoice', 'href' => $detailPath . '/invoice', 'external' => true, 'size' => 'sm'],
         ['label' => 'Packing slip', 'href' => $detailPath . '/packing-slip', 'external' => true, 'size' => 'sm'],
     ])),
@@ -235,28 +235,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php if ($previousOrders !== []): ?>
   <p class="adm-muted">Previous: <?php foreach ($previousOrders as $i => $prev): ?><?= $i > 0 ? ', ' : '' ?><a href="<?= e(url('/admin/orders/' . $prev['order_number'])) ?>"><?= e((string) $prev['order_number']) ?></a><?php endforeach; ?></p>
 <?php endif; ?>
-<?php if (!$contactFrozen): ?>
-  <details>
-    <summary class="adm-muted">Correct customer details</summary>
-    <form method="post" action="<?= e(url($detailPath . '/notes')) ?>" class="adm-form" data-guard>
-      <?= csrf_field() ?>
-      <input type="hidden" name="action" value="contact">
-      <?php partial_admin('field.php', ['type' => 'text', 'name' => 'customer_name', 'label' => 'Name', 'value' => $order['customer_name'], 'required' => true, 'maxlength' => 120]); ?>
-      <div class="adm-field--pair">
-        <?php partial_admin('field.php', ['type' => 'phone', 'name' => 'customer_phone', 'label' => 'Phone', 'value' => $order['customer_phone'], 'required' => true, 'maxlength' => 24]); ?>
-        <?php partial_admin('field.php', ['type' => 'email', 'name' => 'customer_email', 'label' => 'Email', 'value' => (string) ($order['customer_email'] ?? ''), 'maxlength' => 190]); ?>
-      </div>
-      <?php partial_admin('field.php', ['type' => 'textarea', 'name' => 'address', 'label' => 'Address', 'value' => $order['address'], 'required' => true, 'rows' => 3, 'maxlength' => 400]); ?>
-      <div class="adm-field--pair">
-        <?php partial_admin('field.php', ['type' => 'text', 'name' => 'city', 'label' => 'City', 'value' => $order['city'], 'required' => true, 'maxlength' => 80]); ?>
-        <?php partial_admin('field.php', ['type' => 'text', 'name' => 'postal_code', 'label' => 'Postal code', 'value' => (string) ($order['postal_code'] ?? ''), 'maxlength' => 12]); ?>
-      </div>
-      <?php partial_admin('button.php', ['label' => 'Save customer details', 'variant' => 'ghost', 'size' => 'sm']); ?>
-    </form>
-  </details>
-<?php else: ?>
-  <p class="adm-note">Customer details are frozen — the parcel is already labelled.</p>
-<?php endif; ?>
+  <p><a class="adm-btn adm-btn--ghost adm-btn--sm" href="<?= e(url($detailPath . '/edit')) ?>">Edit customer details</a></p>
 </section>
 
 <section class="adm-card" id="shipping">
@@ -279,7 +258,6 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     <?php partial_admin('button.php', ['label' => 'Check ' . COURIER_LABELS[$courierKey] . ' now', 'variant' => 'ghost', 'size' => 'sm', 'post' => $detailPath . '/courier-check']); ?>
   </div>
 <?php endif; ?>
-<?php if (!in_array($order['status'], ['delivered', 'cancelled'], true)): ?>
   <form method="post" action="<?= e(url($detailPath . '/shipping')) ?>" class="adm-form" data-guard>
     <?= csrf_field() ?>
     <div class="adm-field--pair">
@@ -298,7 +276,6 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     <p><a class="adm-btn adm-btn--ghost adm-btn--sm" href="<?= e($whatsapp['shipped']['href']) ?>" target="_blank" rel="noopener">Send tracking on WhatsApp</a></p>
 <?php endif; ?>
   </form>
-<?php endif; ?>
 </section>
 
 <section class="adm-card" id="timeline">

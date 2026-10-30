@@ -343,10 +343,6 @@ function adm_order_post_shipping(array $order): never
         adm_order_flash_result($result, 'Order marked Shipped. Send the tracking on WhatsApp below.');
         redirect(adm_order_path($order), 303);
     }
-    if (in_array($order['status'], ['delivered', 'cancelled'], true)) {
-        flash('error', 'Courier details cannot be changed on a ' . strtolower(adm_order_status_label((string) $order['status'])) . ' order.');
-        redirect(adm_order_path($order), 303);
-    }
     $before = ['courier_name' => $order['courier_name'], 'tracking_number' => $order['tracking_number'], 'tracking_url' => $order['tracking_url']];
     $after = ['courier_name' => $input['courier_name'] === '' ? null : $input['courier_name'], 'tracking_number' => $input['tracking_number'] === '' ? null : $input['tracking_number'], 'tracking_url' => $input['tracking_url'] === '' ? null : $input['tracking_url']];
     if ($before == $after) {
@@ -363,11 +359,6 @@ function adm_order_post_shipping(array $order): never
     adm_order_log($order, 'order.tracking_set', 'Courier details saved: ' . trim(($after['courier_name'] ?? '—') . ' ' . ($after['tracking_number'] ?? '')), $before, $after);
     flash('success', 'Courier details saved.');
     redirect(adm_order_path($order), 303);
-}
-
-function adm_order_contact_frozen(array $order): bool
-{
-    return in_array($order['status'], ['shipped', 'delivered', 'cancelled'], true);
 }
 
 function adm_order_post_notes(array $order): never
@@ -393,53 +384,8 @@ function adm_order_post_notes(array $order): never
         flash('success', 'Note added.');
         redirect(adm_order_path($order, '#notes'), 303);
     }
-    if ($action !== 'contact') {
-        flash('error', 'Unknown notes action.');
-        redirect(adm_order_path($order), 303);
-    }
-    if (adm_order_contact_frozen($order)) {
-        flash('error', 'Customer details are frozen once the order is shipped. Talk to the courier instead.');
-        redirect(adm_order_path($order), 303);
-    }
-    $name = mb_substr(trim((string) request_post('customer_name', '')), 0, 120);
-    $phone = mb_substr(trim((string) request_post('customer_phone', '')), 0, 24);
-    $email = mb_substr(trim((string) request_post('customer_email', '')), 0, 190);
-    $city = mb_substr(trim((string) request_post('city', '')), 0, 80);
-    $address = mb_substr(trim((string) request_post('address', '')), 0, 400);
-    $postal = mb_substr(trim((string) request_post('postal_code', '')), 0, 12);
-    $errors = [];
-    if (mb_strlen($name) < 2) {
-        $errors[] = 'Name is required.';
-    }
-    $normalized = phone_normalize($phone);
-    if (!preg_match('/^\+92\d{10}$/', $normalized)) {
-        $errors[] = 'Phone must be a Pakistani mobile number, for example 0300 1234567.';
-    }
-    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
-        $errors[] = 'Email address is not valid.';
-    }
-    if ($city === '' || mb_strlen($address) < 5) {
-        $errors[] = 'City and address are required.';
-    }
-    if ($errors !== []) {
-        flash('error', implode(' ', $errors));
-        redirect(adm_order_path($order, '#customer'), 303);
-    }
-    $after = ['customer_name' => $name, 'customer_phone' => $phone, 'phone_normalized' => $normalized, 'customer_email' => $email === '' ? null : $email, 'city' => $city, 'address' => $address, 'postal_code' => $postal === '' ? null : $postal];
-    $before = array_intersect_key($order, $after);
-    $changed = array_keys(array_filter($after, static fn ($v, $k) => (string) ($before[$k] ?? '') !== (string) ($v ?? ''), ARRAY_FILTER_USE_BOTH));
-    if ($changed === []) {
-        flash('info', 'No changes to save.');
-        redirect(adm_order_path($order, '#customer'), 303);
-    }
-    $now = now_karachi();
-    db_transaction(static function () use ($order, $after, $changed, $now): void {
-        db_update('orders', $after + ['updated_at' => $now], ['id' => (int) $order['id']]);
-        order_history_insert((int) $order['id'], 'status', (string) $order['status'], (string) $order['status'], 'Customer details corrected: ' . implode(', ', $changed), adm_actor(), $now);
-    });
-    adm_order_log($order, 'order.contact_edited', 'Customer details corrected: ' . implode(', ', $changed), array_intersect_key($before, array_flip($changed)), array_intersect_key($after, array_flip($changed)));
-    flash('success', 'Customer details updated.');
-    redirect(adm_order_path($order, '#customer'), 303);
+    flash('error', 'Unknown notes action.');
+    redirect(adm_order_path($order), 303);
 }
 
 function adm_order_post_restore_stock(array $order): never
