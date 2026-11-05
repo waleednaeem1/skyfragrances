@@ -420,6 +420,9 @@ p { margin: 0 0 var(--sp-3); }
 
 /* -- §9 · FILTERS -------------------------------------------- */
 .adm-filters { margin-bottom: var(--sp-4); }
+.adm-period { display: flex; align-items: flex-end; gap: var(--sp-2); max-width: 22rem; margin: var(--sp-3) 0 var(--sp-4); }
+.adm-period .adm-field { flex: 1; }
+.admin.is-enhanced .adm-period__submit { display: none; }
 .adm-filters__bar { display: flex; gap: var(--sp-2); position: sticky; top: var(--adm-top-h); z-index: 10; background: var(--adm-bg); padding: var(--sp-2) 0; }
 .adm-filters__search { flex: 1; min-width: 0; }
 .adm-filters__toggle { flex: 0 0 auto; }

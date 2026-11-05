@@ -35,6 +35,10 @@ if (!empty($attention['outbox'])) {
 <?php endif; ?>
 <h1><?= e($greeting) ?><?= $displayName !== '' ? ', ' . e($displayName) : '' ?></h1>
 <p class="adm-muted"><?= e($today) ?></p>
+<form method="get" action="<?= e(url('/admin')) ?>" class="adm-period" data-filters>
+  <?php partial_admin('field.php', ['type' => 'select', 'name' => 'period', 'id' => 'dash-period', 'label' => 'Show figures for', 'value' => $periodKey, 'options' => $periodOptions, 'compact' => true, 'autosubmit' => true]); ?>
+  <button type="submit" class="adm-btn adm-btn--ghost adm-period__submit">Show</button>
+</form>
 <div class="adm-grid">
 <?php foreach ($kpis as $kpi): ?>
   <div class="adm-kpi">
@@ -45,12 +49,22 @@ if (!empty($attention['outbox'])) {
 <?php endforeach; ?>
 </div>
 <p class="adm-note">Revenue counts confirmed, packing, shipped and delivered orders — everything accepted and not cancelled.</p>
-<h2>This month</h2>
-<div class="adm-rail" role="list" aria-label="Orders by status this month">
+<h2><?= e($periodLabel) ?></h2>
+<div class="adm-rail" role="list" aria-label="Orders by status, <?= e($periodLabel) ?>">
 <?php foreach ($statusLabels as $status => $label): ?>
-  <a role="listitem" class="adm-chip<?= $status === 'pending' ? ' adm-chip--gold' : ($statusCounts[$status] === 0 ? ' adm-chip--muted' : '') ?>" href="<?= e(url('/admin/orders?status=' . $status)) ?>"><?= e($label) ?> <span class="adm-num"><?= e((string) $statusCounts[$status]) ?></span></a>
+  <a role="listitem" class="adm-chip<?= $status === 'pending' ? ' adm-chip--gold' : ($statusCounts[$status] === 0 ? ' adm-chip--muted' : '') ?>" href="<?= e(url('/admin/orders?' . http_build_query(['status' => $status, 'from' => $periodRange['from'], 'to' => $periodRange['to']]))) ?>"><?= e($label) ?> <span class="adm-num"><?= e((string) $statusCounts[$status]) ?></span></a>
 <?php endforeach; ?>
 </div>
+<?php if ($yearMonths !== []): ?>
+<div class="adm-card">
+  <div class="adm-card__head"><h2 class="adm-card__title">Month by month</h2></div>
+  <ol class="adm-list">
+<?php foreach ($yearMonths as $month): ?>
+    <li><a href="<?= e(url('/admin' . ($month['period'] !== '' ? '?period=' . $month['period'] : ''))) ?>"><?= e($month['label']) ?></a><span class="adm-right"><?= e($month['count'] . ' order' . ($month['count'] === 1 ? '' : 's')) ?> · <?php partial_admin('money.php', ['value' => money_from_paisa($month['paisa']), 'muted' => true]); ?></span></li>
+<?php endforeach; ?>
+  </ol>
+</div>
+<?php endif; ?>
 <div class="adm-card">
   <div class="adm-card__head"><h2 class="adm-card__title">Needs you</h2></div>
 <?php if ($attentionLines === []): ?>
@@ -129,9 +143,9 @@ partial_admin('table.php', [
 <?php endif; ?>
 </div>
 <div class="adm-card">
-  <div class="adm-card__head"><h2 class="adm-card__title">Best sellers · last 30 days</h2></div>
+  <div class="adm-card__head"><h2 class="adm-card__title">Best sellers · <?= e($bestSellersLabel) ?></h2></div>
 <?php if ($bestSellers === []): ?>
-  <p class="adm-muted">No accepted orders in the last 30 days.</p>
+  <p class="adm-muted">No accepted orders in <?= e($bestSellersLabel === 'last 30 days' ? 'the last 30 days' : $bestSellersLabel) ?>.</p>
 <?php else: ?>
   <ol class="adm-list">
 <?php foreach ($bestSellers as $i => $row): ?>
