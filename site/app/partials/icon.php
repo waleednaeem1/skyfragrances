@@ -12,6 +12,8 @@ $paths = [
     'package' => '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
     'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
     'chevron-right' => '<path d="M9 6l6 6-6 6"/>',
+    'chevron-left' => '<path d="M15 6l-6 6 6 6"/>',
+    'calendar' => '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/>',
     'arrow-right' => '<path d="M5 12h14M13 6l6 6-6 6"/>',
     'check' => '<path d="M5 12l5 5L20 7"/>',
     'star' => '<path d="M12 2.5l2.9 6.2 6.8.8-5 4.7 1.3 6.8L12 17.7 6 21l1.3-6.8-5-4.7 6.8-.8z"/>',

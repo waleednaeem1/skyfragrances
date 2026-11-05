@@ -98,6 +98,22 @@
     if (ev.key === 'Escape' && openSheet) setSheet(openSheet, false);
   });
 
+  function closePopovers(except) {
+    qsa('details[data-popover][open]').forEach(function (popover) {
+      if (popover !== except) popover.removeAttribute('open');
+    });
+  }
+  doc.addEventListener('click', function (ev) {
+    closePopovers(ev.target.closest ? ev.target.closest('details[data-popover]') : null);
+  });
+  doc.addEventListener('keydown', function (ev) {
+    if (ev.key !== 'Escape') return;
+    var open = qs('details[data-popover][open]');
+    if (!open) return;
+    open.removeAttribute('open');
+    qs('summary', open).focus();
+  });
+
   var bottomNav = qs('[data-bottom-nav]');
   if (bottomNav) {
     doc.addEventListener('focusin', function (ev) {
