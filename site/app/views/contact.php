@@ -86,7 +86,7 @@ $fieldClass = static fn (string $key): string => 'field' . (isset($errors[$key])
           </div>
           <div class="<?= e($fieldClass('order_number')) ?>">
             <label class="field__label" for="f-order">Order number <span class="field__optional">optional</span></label>
-            <div class="field__control"><input class="field__input field__input--code" id="f-order" name="order_number" type="text" value="<?= e($old['order_number']) ?>" maxlength="16" placeholder="SF-260925-K7QF" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="err-order"<?= isset($errors['order_number']) ? ' aria-invalid="true"' : '' ?>></div>
+            <div class="field__control"><input class="field__input field__input--code" id="f-order" name="order_number" type="text" value="<?= e($old['order_number']) ?>" maxlength="16" placeholder="SK-001" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="err-order"<?= isset($errors['order_number']) ? ' aria-invalid="true"' : '' ?>></div>
             <p class="field__hint">If your message is about an order, it is on your confirmation page and email.</p>
             <p class="field__error" id="err-order"><?= e($errors['order_number'] ?? '') ?></p>
           </div>

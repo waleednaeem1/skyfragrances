@@ -263,7 +263,7 @@ if ($preset !== '') {
 }
 $filters = adm_orders_filters($get);
 if (adm_orders_search_kind($filters['q']) === 'number') {
-    $hit = order_find_by_number($filters['q']);
+    $hit = order_find_by_number(adm_orders_search_number($filters['q']));
     if ($hit !== null) {
         redirect('/admin/orders/' . $hit['order_number'], 303);
     }

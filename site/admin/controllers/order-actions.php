@@ -517,12 +517,17 @@ function adm_orders_filters(array $get): array
     ];
 }
 
+function adm_orders_search_number(string $q): string
+{
+    return order_number_normalize(preg_match('/^[0-9]{1,6}$/', $q) === 1 ? 'SK-' . $q : $q);
+}
+
 function adm_orders_search_kind(string $q): string
 {
     if ($q === '') {
         return 'none';
     }
-    if (preg_match(ORDER_NUMBER_PATTERN, strtoupper($q))) {
+    if (order_number_is_wellformed(adm_orders_search_number($q))) {
         return 'number';
     }
     if (preg_match('/^[0-9+\-\s]{7,}$/', $q)) {
@@ -575,7 +580,7 @@ function adm_orders_where(array $f, string $nameMode = 'prefix'): array
     $kind = adm_orders_search_kind($f['q']);
     if ($kind === 'number') {
         $where[] = 'o.order_number = :number';
-        $params['number'] = strtoupper($f['q']);
+        $params['number'] = adm_orders_search_number($f['q']);
     } elseif ($kind === 'phone') {
         $normalized = phone_normalize($f['q']);
         if (strlen($normalized) >= 13) {

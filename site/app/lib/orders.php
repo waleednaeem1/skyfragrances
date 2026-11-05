@@ -7,8 +7,7 @@ require_once __DIR__ . '/payments.php';
 require_once __DIR__ . '/forms.php';
 require_once __DIR__ . '/notifications.php';
 
-const ORDER_NUMBER_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const ORDER_NUMBER_PATTERN = '/^SF-[0-9]{6}-[A-HJ-NP-Z2-9]{4}$/';
+const ORDER_NUMBER_PATTERN = '/^(?:SK-[0-9]{3,7}|SF-[0-9]{6}-[A-HJ-NP-Z2-9]{4})$/';
 const ORDER_NUMBER_RETRIES = 5;
 const ORDER_DEADLOCK_RETRIES = 2;
 const ORDER_STATUS_FLOW = ['pending', 'confirmed', 'packing', 'shipped', 'delivered'];
@@ -58,13 +57,35 @@ function order_coupon_error(array $couponError): RuntimeException
     };
 }
 
-function order_number_generate(): string
+function order_number_format(int $sequence): string
 {
-    $suffix = '';
-    for ($i = 0; $i < 4; $i++) {
-        $suffix .= ORDER_NUMBER_ALPHABET[random_int(0, strlen(ORDER_NUMBER_ALPHABET) - 1)];
+    return 'SK-' . str_pad((string) $sequence, 3, '0', STR_PAD_LEFT);
+}
+
+function order_number_normalize(string $number): string
+{
+    $number = strtoupper((string) preg_replace('/\s+/', '', $number));
+    return preg_match('/^SK-?([0-9]{1,7})$/', $number, $m) === 1 ? order_number_format((int) $m[1]) : $number;
+}
+
+function order_sequence_ensure_table(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
     }
-    return 'SF-' . date('ymd') . '-' . $suffix;
+    db_query('CREATE TABLE IF NOT EXISTS order_sequence (
+        name VARCHAR(32) NOT NULL,
+        value INT UNSIGNED NOT NULL,
+        PRIMARY KEY (name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+    $done = true;
+}
+
+function order_number_next(): string
+{
+    db_query("INSERT INTO order_sequence (name, value) VALUES ('order', LAST_INSERT_ID(1)) ON DUPLICATE KEY UPDATE value = LAST_INSERT_ID(value + 1)");
+    return order_number_format((int) db_fetch_column('SELECT LAST_INSERT_ID()'));
 }
 
 function order_number_is_wellformed(string $number): bool
@@ -100,7 +121,7 @@ function order_find(int $id): ?array
 
 function order_find_by_number(string $number): ?array
 {
-    $number = strtoupper(trim($number));
+    $number = order_number_normalize($number);
     if (!order_number_is_wellformed($number)) {
         return null;
     }
@@ -230,7 +251,7 @@ function order_insert_header(array $input, array $priced, string $idemKey, strin
         'updated_at' => $now,
     ];
     for ($attempt = 0; $attempt < ORDER_NUMBER_RETRIES; $attempt++) {
-        $row['order_number'] = order_number_generate();
+        $row['order_number'] = order_number_next();
         try {
             $orderId = db_insert('orders', $row);
             return ['id' => $orderId, 'order_number' => $row['order_number']];
@@ -289,6 +310,7 @@ function order_seen_matches(array $input, array $priced): bool
 
 function order_place_attempt(array $input, array $cart): array
 {
+    order_sequence_ensure_table();
     $pdo = db();
     $pdo->exec('SET TRANSACTION ISOLATION LEVEL READ COMMITTED');
     $pdo->beginTransaction();

@@ -3,7 +3,7 @@ defined('SKYFR') || exit;
 
 const ROUTER_PATTERNS = [
     'slug'  => '[a-z0-9]+(?:-[a-z0-9]+)*',
-    'order' => 'sf-[0-9]{6}-[a-hj-np-z2-9]{4}',
+    'order' => '(?:sk-[0-9]{3,7}|sf-[0-9]{6}-[a-hj-np-z2-9]{4})',
     'num'   => '[1-9][0-9]{0,5}',
     'any'   => '[^/]+',
 ];

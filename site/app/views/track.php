@@ -33,7 +33,7 @@ $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="
       <div class="form__row">
         <div class="field<?= $formHasError ? ' has-error' : '' ?>">
           <label class="field__label" for="f-order">Order number</label>
-          <div class="field__control"><input class="field__input field__input--code" id="f-order" name="order_number" type="text" value="<?= e($orderNumberInput) ?>" required maxlength="16" pattern="[Ss][Ff]-[0-9]{6}-[A-Za-z0-9]{4}" placeholder="SF-260925-K7QF" autocomplete="off" autocapitalize="characters" spellcheck="false" data-msg-pattern="Order numbers look like SF-260925-K7QF." aria-describedby="err-order"<?= $formHasError ? ' aria-invalid="true"' : '' ?><?= $prefilled || $order !== null ? '' : ' data-autofocus' ?>></div>
+          <div class="field__control"><input class="field__input field__input--code" id="f-order" name="order_number" type="text" value="<?= e($orderNumberInput) ?>" required maxlength="16" pattern="[Ss][Kk]-?[0-9]{1,7}|[Ss][Ff]-[0-9]{6}-[A-Za-z0-9]{4}" placeholder="SK-001" autocomplete="off" autocapitalize="characters" spellcheck="false" data-msg-pattern="Order numbers look like SK-001." aria-describedby="err-order"<?= $formHasError ? ' aria-invalid="true"' : '' ?><?= $prefilled || $order !== null ? '' : ' data-autofocus' ?>></div>
           <p class="field__error" id="err-order"></p>
         </div>
         <div class="field<?= $formHasError ? ' has-error' : '' ?>">

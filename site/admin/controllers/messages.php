@@ -2,6 +2,7 @@
 defined('SKYFR') || exit;
 
 require_once __DIR__ . '/catalogue.php';
+require_once APP_ROOT . '/app/lib/orders.php';
 
 const MESSAGES_STATUSES = ['new', 'read', 'replied', 'archived'];
 const MESSAGES_STATUS_LABELS = ['new' => 'New', 'read' => 'Read', 'replied' => 'Replied', 'archived' => 'Archived'];
@@ -40,8 +41,8 @@ function messages_mailto_url(array $message): string
 
 function messages_order_url(array $message): string
 {
-    $number = strtoupper(trim((string) ($message['order_number'] ?? '')));
-    return preg_match('/^SF-\d{6}-[A-HJ-NP-Z2-9]{4}$/', $number) === 1 ? '/admin/orders/' . $number : '';
+    $number = order_number_normalize((string) ($message['order_number'] ?? ''));
+    return order_number_is_wellformed($number) ? '/admin/orders/' . $number : '';
 }
 
 function messages_return_url(): string

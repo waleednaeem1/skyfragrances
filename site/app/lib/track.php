@@ -57,7 +57,7 @@ function track_pad_response(float $startedAt): void
 
 function track_lookup(string $orderNumber, string $phoneNormalized): ?array
 {
-    $orderNumber = strtoupper(trim($orderNumber));
+    $orderNumber = order_number_normalize($orderNumber);
     if (!order_number_is_wellformed($orderNumber) || !preg_match('/^\+92\d{10}$/', $phoneNormalized)) {
         return null;
     }

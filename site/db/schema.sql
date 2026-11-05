@@ -529,6 +529,12 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   KEY idx_rate_limits_time (attempted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS order_sequence (
+  name   VARCHAR(32)   NOT NULL,
+  value  INT UNSIGNED  NOT NULL,
+  PRIMARY KEY (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE IF NOT EXISTS order_courier_status (
   order_id         INT UNSIGNED  NOT NULL,
   courier          VARCHAR(16)   NOT NULL,

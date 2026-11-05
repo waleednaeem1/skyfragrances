@@ -192,6 +192,12 @@ check(stock_restore_order($bankId, $admin)['reason'] === 'already_restored' && s
 
 $numbers = db_fetch_all('SELECT order_number FROM orders WHERE id IN (' . implode(',', array_map('intval', $createdOrders)) . ')');
 check(count(array_unique(array_column($numbers, 'order_number'))) === count($createdOrders), 'order numbers unique');
+$sequence = array_map(static fn (array $row): int => (int) substr((string) $row['order_number'], 3), db_fetch_all('SELECT order_number FROM orders WHERE id IN (' . implode(',', array_map('intval', $createdOrders)) . ') ORDER BY id'));
+check(count(array_filter($numbers, static fn (array $row): bool => preg_match('/^SK-[0-9]{3,}$/', (string) $row['order_number']) === 1)) === count($createdOrders), 'new orders are numbered SK-001 style');
+check($sequence === range($sequence[0], $sequence[0] + count($sequence) - 1), 'order numbers run in sequence with no gaps');
+check(order_number_normalize(' sk 5 ') === 'SK-005' && order_number_normalize('SK5') === 'SK-005' && order_number_normalize('sk-1234') === 'SK-1234', 'typed order numbers are tidied to SK-005');
+check(order_number_is_wellformed('SK-001') && order_number_is_wellformed(order_number_normalize('sf-261104-5djc')) && !order_number_is_wellformed('SK-01') && !order_number_is_wellformed('SF-261104'), 'old and new order numbers are both accepted, partial ones are not');
+check(order_find_by_number(strtolower((string) $numbers[0]['order_number'])) !== null, 'order lookup ignores letter case');
 check((int) db_fetch_column("SELECT COUNT(*) FROM email_outbox WHERE order_id IN (" . implode(',', array_map('intval', $createdOrders)) . ")") >= 1, 'transactional emails queued in the outbox');
 
 foreach ($createdOrders as $id) {

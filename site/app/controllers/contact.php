@@ -13,7 +13,7 @@ if (request_method() === 'POST') {
     foreach ($old as $key => $unused) {
         $old[$key] = trim(request_string($key, ''));
     }
-    $old['order_number'] = strtoupper($old['order_number']);
+    $old['order_number'] = order_number_normalize($old['order_number']);
     $trap = form_trap_status();
     if ($trap === 'bot') {
         form_trap_log('contact', $trap);
@@ -43,7 +43,7 @@ if (request_method() === 'POST') {
         $errors['subject'] = 'Please choose a subject.';
     }
     if ($old['order_number'] !== '' && !order_number_is_wellformed($old['order_number'])) {
-        $errors['order_number'] = 'That order number does not look right. It looks like SF-260925-K7QF.';
+        $errors['order_number'] = 'That order number does not look right. It looks like SK-001.';
     }
     if (mb_strlen($old['message']) < 10 || mb_strlen($old['message']) > 2000) {
         $errors['message'] = 'Please write your message (10 to 2000 characters).';

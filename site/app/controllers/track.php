@@ -4,7 +4,7 @@ defined('SKYFR') || exit;
 require_once APP_ROOT . '/app/lib/track.php';
 
 $orderView = null;
-$orderNumberInput = strtoupper(trim(request_method() === 'POST' ? request_string('order_number', '') : request_query_string('order', '')));
+$orderNumberInput = order_number_normalize(request_method() === 'POST' ? request_string('order_number', '') : request_query_string('order', ''));
 $phoneInput = '';
 $error = null;
 $prefill = $orderNumberInput !== '' && request_method() !== 'POST';
@@ -24,7 +24,7 @@ if (request_method() === 'POST') {
         $error = TRACK_LIMIT_MESSAGE;
     } elseif (!order_number_is_wellformed($orderNumberInput) || !preg_match('/^\+92\d{10}$/', $phoneNormalized)) {
         track_record($phoneNormalized, false);
-        $error = 'Please enter your order number (like SF-260925-K7QF) and the phone number used for the order.';
+        $error = 'Please enter your order number (like SK-001) and the phone number used for the order.';
     } else {
         $order = track_lookup($orderNumberInput, $phoneNormalized);
         track_record($phoneNormalized, $order !== null);
