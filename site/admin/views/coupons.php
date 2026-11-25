@@ -58,6 +58,13 @@ $to = min($total, $page * $per);
     'subtitle' => (int) $counts['active'] . ' active · ' . (int) $counts['scheduled'] . ' scheduled',
     'actions' => [['label' => 'New coupon', 'href' => '/admin/coupons/new', 'variant' => 'gold']],
 ]); ?>
+<section class="adm-card adm-promo">
+  <div>
+    <h2 class="adm-card__title">Thank-you coupon <?php partial_admin('badge.php', ['label' => $reward['enabled'] ? 'On' : 'Off', 'tone' => $reward['enabled'] ? 'green' : 'muted', 'small' => true]); ?></h2>
+    <p class="adm-promo__text"><?= $reward['enabled'] ? e($reward['label']) . ' a customer\'s second order, given automatically after their first website order.' : 'Give every first-time website customer a one-time code for their second order.' ?><?= $reward['issued'] > 0 ? ' ' . e($reward['issued'] . ' given, ' . $reward['used'] . ' used.') : '' ?></p>
+  </div>
+  <?php partial_admin('button.php', ['label' => $reward['enabled'] ? 'Manage' : 'Set up', 'href' => '/admin/coupons/reward', 'variant' => 'ghost']); ?>
+</section>
 <?php partial_admin('filters.php', [
     'action' => '/admin/coupons',
     'search' => ['name' => 'q', 'value' => $filters['q'], 'placeholder' => 'Search by code', 'maxlength' => 40, 'label' => 'Search coupons'],
@@ -70,7 +77,7 @@ $to = min($total, $page * $per);
     'clear_url' => '/admin/coupons',
     'count_text' => $total === 0 ? 'No coupons match' : 'Showing ' . $from . '–' . $to . ' of ' . $total . ' coupons',
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'coupons']); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'coupons']); ?>
 <?php partial_admin('table.php', [
     'caption' => 'Coupons',
     'list_id' => 'coupons-list',
@@ -88,4 +95,4 @@ $to = min($total, $page * $per);
         ? ['title' => 'No coupons yet', 'text' => 'Create a code your customers can apply at checkout.', 'action' => ['label' => 'New coupon', 'href' => '/admin/coupons/new']]
         : ['title' => 'No coupons match', 'text' => 'Try a different status or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/coupons', 'variant' => 'ghost']],
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'coupons']); ?>
+<?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'coupons']); ?>

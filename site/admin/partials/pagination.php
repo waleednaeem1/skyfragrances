@@ -8,6 +8,8 @@ $page = min($page, $pages);
 $query = is_array($query ?? null) ? $query : $_GET;
 $path = (string) ($path ?? request_path());
 $noun = (string) ($noun ?? 'rows');
+$top = !empty($top);
+$showInfo = !$top && (!isset($info) || $info || (int) ceil(max(0, (int) ($total ?? 0)) / max(1, (int) ($per ?? 20))) > 1);
 $link = static function (int $p) use ($query, $path): string {
     $q = $query;
     $q['page'] = $p;
@@ -25,9 +27,11 @@ for ($p = 1; $p <= $pages; $p++) {
     }
 }
 ?>
-<?php if ($total > 0): ?>
+<?php if ($total > 0 && ($showInfo || $pages > 1)): ?>
 <nav class="adm-pager" aria-label="Pagination">
+<?php if ($showInfo): ?>
   <p class="adm-pager__info">Showing <?= e((string) $from) ?>&ndash;<?= e((string) $to) ?> of <?= e((string) $total) ?> <?= e($noun) ?></p>
+<?php endif; ?>
 <?php if ($pages > 1): ?>
   <div class="adm-pager__links">
 <?php if ($page > 1): ?>

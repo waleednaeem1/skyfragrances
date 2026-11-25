@@ -62,6 +62,7 @@ $checkIcon = '<svg class="callout__icon" width="22" height="22" viewBox="0 0 24 
         <a class="btn btn--ghost" href="<?= e($trackUrl) ?>"><span class="btn__label">Track your order</span></a>
       </div>
     </header>
+<?php partial('reward-card.php', ['reward' => $reward ?? null]); ?>
 <?php if ($isCod && !$isCancelled): ?>
     <div class="callout callout--success" role="status"><?php echo $checkIcon; ?><p>Please keep <strong class="price"><?= e((string) ($grandTotalDisplay ?? '')) ?></strong> ready for the courier. Delivery usually takes <?= e($deliveryTime) ?>.</p></div>
 <?php endif; ?>

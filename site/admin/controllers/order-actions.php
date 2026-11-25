@@ -665,3 +665,27 @@ function adm_order_print_payload(array $order, ?array $items = null): array
         'collectAmount' => order_balance($order)['due'] > 0 && ($order['payment_method'] === 'cod' || $order['payment_status'] === 'partial') ? money(money_from_paisa(order_balance($order)['due'])) : null,
     ];
 }
+
+function adm_print_store(): array
+{
+    return [
+        'name' => (string) setting('store_name', 'Sky Fragrances'),
+        'tagline' => (string) setting('store_tagline', 'More Than Just A Scent'),
+        'address' => trim((string) setting('address_line', '')),
+        'phone' => trim((string) setting('contact_phone', '')),
+        'whatsapp' => trim((string) setting('whatsapp', '')),
+        'email' => trim((string) setting('contact_email', '')),
+        'site' => (string) (parse_url(SITE_URL, PHP_URL_HOST) ?: 'skyfragrances.com'),
+        'logo' => is_file(APP_ROOT . '/assets/img/brand/lockup-transparent-800.png') ? asset('img/brand/lockup-transparent-800.png') : '',
+    ];
+}
+
+function adm_print_render(string $view, array $data): never
+{
+    $html = view_capture(APP_ROOT . '/admin/views/' . $view, $data);
+    response_clear_buffers();
+    header('Content-Type: text/html; charset=utf-8');
+    header_no_store();
+    echo $html;
+    exit;
+}

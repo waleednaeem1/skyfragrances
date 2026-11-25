@@ -72,6 +72,9 @@ $courierStatus = $courierKey === null ? null : courier_status_for((int) $order['
 
 $viewOnly = $routeName === 'admin.orders.view';
 render_admin($viewOnly ? 'order-view.php' : 'order-detail.php', [
+    'reward' => reward_for_order((int) $order['id']),
+    'sales' => $order['sales_member_id'] !== null ? team_commission_for_order((int) $order['id']) : null,
+    'sellers' => team_is_owner() ? team_sellers() : [],
     'courierKey' => $courierKey,
     'courierStatus' => $courierStatus,
     'order' => $order,

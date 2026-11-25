@@ -66,7 +66,7 @@ $overviewToCollect = money_paisa((string) ($overview['to_collect'] ?? '0'));
     'count_text' => $total === 0 ? 'No customers match' : null,
     'submit_label' => 'Search',
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'customers', 'query' => $query]); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'customers', 'query' => $query]); ?>
 <?php partial_admin('table.php', [
     'caption' => 'Customers',
     'list_id' => 'customers-list',
@@ -83,4 +83,4 @@ $overviewToCollect = money_paisa((string) ($overview['to_collect'] ?? '0'));
     'rows' => $rows,
     'empty' => ['title' => 'No customers yet', 'text' => $filters['q'] !== '' || $filters['show'] !== '' ? 'Try clearing the search or filters.' : 'Customers appear here after their first order.'],
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'customers', 'query' => $query]); ?>
+<?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'customers', 'query' => $query]); ?>

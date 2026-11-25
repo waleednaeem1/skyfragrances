@@ -83,7 +83,7 @@ $emptyByStatus = [
     'clear_url' => '/admin/reviews' . ($filters['status'] === 'pending' ? '' : '?status=' . $filters['status']),
     'count_text' => $total === 0 ? 'No ' . $statusNoun . ' match' : null,
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'reviews']); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'reviews']); ?>
 <?php partial_admin('table.php', [
     'caption' => 'Reviews',
     'list_id' => 'reviews-list',
@@ -109,4 +109,4 @@ $emptyByStatus = [
         ? $emptyByStatus[$filters['status']]
         : ['title' => 'No reviews match', 'text' => 'Try another product or rating, or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/reviews', 'variant' => 'ghost']],
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'reviews']); ?>
+<?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'reviews']); ?>

@@ -17,7 +17,7 @@ $errorLabel = static function (string $key) use ($labels): string {
         return $labels[$key];
     }
     if (preg_match('/^sizes-(\d+)-(.+)$/', $key, $m)) {
-        return $m[2] === 'display_stock' ? 'Stock shown on the shop' : ucfirst(str_replace('_', ' ', $m[2]));
+        return ['display_stock' => 'Stock shown on the shop', 'cost_price' => 'Cost per bottle'][$m[2]] ?? ucfirst(str_replace('_', ' ', $m[2]));
     }
     if (str_starts_with($key, 'img-alt-')) {
         return 'Photo alt text';
@@ -55,6 +55,9 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
     <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'money', 'name' => $n('price'), 'id' => $id('price'), 'label' => 'Price', 'value' => $size['price'] ?? '', 'required' => true, 'error' => $err($id('price'))]); ?>
       <?php partial_admin('field.php', ['type' => 'money', 'name' => $n('sale_price'), 'id' => $id('sale_price'), 'label' => 'Sale price', 'value' => $size['sale_price'] ?? '', 'help' => 'Blank = not on sale.', 'error' => $err($id('sale_price'))]); ?>
+    </div>
+    <div class="adm-field--pair">
+      <?php if (team_can('statements')) { partial_admin('field.php', ['type' => 'money', 'name' => $n('cost_price'), 'id' => $id('cost_price'), 'label' => 'Cost per bottle', 'value' => $size['cost_price'] ?? '', 'help' => 'What one bottle costs you to make and pack. Used for profit in Statements; customers never see it.', 'error' => $err($id('cost_price'))]); } ?>
     </div>
     <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('stock'), 'id' => $id('stock'), 'label' => 'Stock', 'value' => $size['stock'] ?? '0', 'required' => true, 'error' => $err($id('stock')), 'help' => ($size['stock'] ?? '') !== '' && is_numeric($size['stock']) && (int) $size['stock'] <= 0 ? 'Sold out — customers see SOLD OUT for this size.' : ((($size['low_stock_threshold'] ?? '') !== '' ? (int) $size['low_stock_threshold'] : $threshold) > 0 && is_numeric($size['stock'] ?? '') && (int) $size['stock'] > 0 && (int) $size['stock'] <= (($size['low_stock_threshold'] ?? '') !== '' ? (int) $size['low_stock_threshold'] : $threshold) ? 'Low stock — at or below the alert level.' : '')]); ?>

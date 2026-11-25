@@ -15,7 +15,7 @@ function product_form_defaults(): array
 
 function product_form_size_defaults(): array
 {
-    return ['id' => '', 'size_label' => '', 'size_ml' => '', 'sku' => '', 'price' => '', 'sale_price' => '', 'stock' => '0', 'display_stock' => '', 'low_stock_threshold' => ''];
+    return ['id' => '', 'size_label' => '', 'size_ml' => '', 'sku' => '', 'price' => '', 'sale_price' => '', 'cost_price' => '', 'stock' => '0', 'display_stock' => '', 'low_stock_threshold' => ''];
 }
 
 function product_form_sizes_from_post(): array
@@ -165,6 +165,15 @@ function product_form_validate_sizes(string $productName, array &$sizes, ?int $p
         } else {
             $size['sale_price'] = $sale;
         }
+        $cost = team_can('statements') ? catalogue_money_input($size['cost_price']) : null;
+        if (!team_can('statements')) {
+            $kept = ctype_digit((string) $size['id']) ? db_fetch_column('SELECT cost_price FROM product_sizes WHERE id = :id', ['id' => (int) $size['id']]) : null;
+            $size['cost_price'] = is_string($kept) ? $kept : null;
+        } elseif ($cost === '') {
+            $errors[$prefix . 'cost_price'] = 'Size ' . $n . ': the cost must be a number in rupees, or blank if you do not want to track it.';
+        } else {
+            $size['cost_price'] = $cost;
+        }
         $stock = catalogue_int_input($size['stock'], 0, 4294967295);
         if ($stock === null || $stock === PHP_INT_MIN) {
             $errors[$prefix . 'stock'] = 'Size ' . $n . ': stock must be a whole number, 0 or more.';
@@ -251,7 +260,7 @@ function product_form_save_sizes(int $productId, array $sizes, array $existing):
     foreach ($sizes as $i => $size) {
         $data = [
             'size_label' => $size['size_label'], 'size_ml' => $size['size_ml'] === '' ? null : (int) $size['size_ml'], 'sku' => $size['sku'],
-            'price' => $size['price'], 'sale_price' => $size['sale_price'], 'stock' => (int) $size['stock'], 'display_stock' => $size['display_stock'], 'low_stock_threshold' => $size['low_stock_threshold'],
+            'price' => $size['price'], 'sale_price' => $size['sale_price'], 'cost_price' => $size['cost_price'], 'stock' => (int) $size['stock'], 'display_stock' => $size['display_stock'], 'low_stock_threshold' => $size['low_stock_threshold'],
             'is_default' => (int) $size['is_default'], 'is_active' => 1, 'sort_order' => ($i + 1) * 10, 'updated_at' => $now,
         ];
         if ($size['id'] !== null && isset($existing[$size['id']])) {
@@ -358,7 +367,7 @@ if ($product !== null) {
 }
 $sizes = [];
 foreach ($existingSizes as $sizeRow) {
-    $sizes[] = ['id' => (string) $sizeRow['id'], 'size_label' => $sizeRow['size_label'], 'size_ml' => (string) ($sizeRow['size_ml'] ?? ''), 'sku' => $sizeRow['sku'], 'price' => catalogue_money_field($sizeRow['price']), 'sale_price' => catalogue_money_field($sizeRow['sale_price']), 'stock' => (string) $sizeRow['stock'], 'display_stock' => (string) ($sizeRow['display_stock'] ?? ''), 'low_stock_threshold' => (string) ($sizeRow['low_stock_threshold'] ?? ''), 'is_default' => (int) $sizeRow['is_default']];
+    $sizes[] = ['id' => (string) $sizeRow['id'], 'size_label' => $sizeRow['size_label'], 'size_ml' => (string) ($sizeRow['size_ml'] ?? ''), 'sku' => $sizeRow['sku'], 'price' => catalogue_money_field($sizeRow['price']), 'sale_price' => catalogue_money_field($sizeRow['sale_price']), 'cost_price' => catalogue_money_field($sizeRow['cost_price'] ?? null), 'stock' => (string) $sizeRow['stock'], 'display_stock' => (string) ($sizeRow['display_stock'] ?? ''), 'low_stock_threshold' => (string) ($sizeRow['low_stock_threshold'] ?? ''), 'is_default' => (int) $sizeRow['is_default']];
 }
 if ($sizes === []) {
     $sizes[] = product_form_size_defaults() + ['is_default' => 1];

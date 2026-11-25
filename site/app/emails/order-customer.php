@@ -30,6 +30,15 @@ $note = trim((string) ($order['customer_note'] ?? ''));
 <div style="font-size:13px;color:#6b6257;">Placed <?= e(date_long((string) ($order['created_at'] ?? ''))) ?></div></td></tr></table>
 <?= mail_items_table($items) ?>
 <?= mail_totals_table($order) ?>
+<?php $reward = is_array($data['reward'] ?? null) && !empty($data['reward']['usable']) ? $data['reward'] : null; ?>
+<?php if ($reward !== null): ?>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px dashed #b08d57;background:#faf6ef;margin:24px 0 0;"><tr><td style="padding:18px 16px;text-align:center;">
+<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8a6d3b;">A thank-you for your first order</div>
+<div style="font-size:22px;margin:6px 0 10px;"><?= e((string) $reward['label']) ?> your next order</div>
+<div style="display:inline-block;font-family:Menlo,Consolas,monospace;font-size:18px;letter-spacing:3px;background:#ffffff;border:1px solid #e6dccb;padding:8px 14px;"><?= e((string) $reward['code']) ?></div>
+<div style="font-size:13px;color:#6b6257;margin-top:10px;"><?= e((string) $reward['terms']) ?> Enter the code at checkout.</div>
+</td></tr></table>
+<?php endif; ?>
 <h2 style="margin:24px 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#6b6257;">Payment</h2>
 <?php if ($method === 'cod'): ?>
 <p style="margin:0 0 8px;">Cash on Delivery. Please keep <strong><?= e($total) ?></strong> ready for the courier, who will call before delivering. <?= e((string) setting('cod_note', '')) ?></p>

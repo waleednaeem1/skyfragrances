@@ -59,6 +59,7 @@ $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="
         <p class="order-number"><?= e($order['order_number']) ?></p>
         <p class="text-muted text-small">Placed <?= e($order['placed_at']) ?> · <?= e((string) $order['item_count']) ?> <?= $order['item_count'] === 1 ? 'item' : 'items' ?> · Delivery to <?= e($order['city']) ?></p>
       </header>
+<?php partial('reward-card.php', ['reward' => $order['reward']]); ?>
 <?php if ($order['is_cancelled']): ?>
       <div class="panel panel--sunken">
         <p class="panel__eyebrow"><span class="status-pill status-pill--danger">Cancelled</span></p>

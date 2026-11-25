@@ -12,9 +12,18 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS admin_users (
   id                  INT UNSIGNED        NOT NULL AUTO_INCREMENT,
   username            VARCHAR(64)         NOT NULL,
-  email               VARCHAR(190)        NOT NULL,
+  email               VARCHAR(190)        NULL DEFAULT NULL,
   password_hash       VARCHAR(255)        NOT NULL,
   display_name        VARCHAR(100)        NOT NULL,
+  role                VARCHAR(12)         NOT NULL DEFAULT 'owner',
+  permissions         TEXT                NULL DEFAULT NULL,
+  commission_rate     DECIMAL(5,2) UNSIGNED NULL DEFAULT NULL,
+  job_title           VARCHAR(80)         NULL DEFAULT NULL,
+  phone               VARCHAR(20)         NULL DEFAULT NULL,
+  cnic                VARCHAR(20)         NULL DEFAULT NULL,
+  address             VARCHAR(255)        NULL DEFAULT NULL,
+  joined_on           DATE                NULL DEFAULT NULL,
+  notes               VARCHAR(1000)       NULL DEFAULT NULL,
   is_active           TINYINT UNSIGNED    NOT NULL DEFAULT 1,
   last_login_at       DATETIME            NULL DEFAULT NULL,
   last_login_ip_hash  CHAR(64)            NULL DEFAULT NULL,
@@ -147,6 +156,7 @@ CREATE TABLE IF NOT EXISTS product_sizes (
   sku                 VARCHAR(40)            NOT NULL,
   price               DECIMAL(10,2) UNSIGNED NOT NULL,
   sale_price          DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
+  cost_price          DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
   stock               INT UNSIGNED           NOT NULL DEFAULT 0,
   display_stock       SMALLINT UNSIGNED      NULL DEFAULT NULL,
   low_stock_threshold TINYINT UNSIGNED       NULL DEFAULT NULL,
@@ -317,6 +327,7 @@ CREATE TABLE IF NOT EXISTS quiz_option_scores (
 CREATE TABLE IF NOT EXISTS coupons (
   id               INT UNSIGNED           NOT NULL AUTO_INCREMENT,
   code             VARCHAR(40)            NOT NULL,
+  kind             VARCHAR(16)            NOT NULL DEFAULT 'standard',
   type             VARCHAR(10)            NOT NULL,
   value            DECIMAL(10,2) UNSIGNED NOT NULL,
   min_order_total  DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0.00,
@@ -326,10 +337,14 @@ CREATE TABLE IF NOT EXISTS coupons (
   starts_at        DATETIME               NULL DEFAULT NULL,
   expires_at       DATETIME               NULL DEFAULT NULL,
   is_active        TINYINT UNSIGNED       NOT NULL DEFAULT 1,
+  reward_phone     VARCHAR(16)            NULL DEFAULT NULL,
+  reward_order_id  INT UNSIGNED           NULL DEFAULT NULL,
   created_at       DATETIME               NOT NULL,
   updated_at       DATETIME               NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uk_coupons_code (code),
+  UNIQUE KEY uk_coupons_reward_phone (reward_phone),
+  KEY idx_coupons_kind (kind, created_at),
   KEY idx_coupons_active (is_active, expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
@@ -376,8 +391,16 @@ CREATE TABLE IF NOT EXISTS orders (
   source                   VARCHAR(20)            NOT NULL DEFAULT 'web',
   created_at               DATETIME               NOT NULL,
   updated_at               DATETIME               NOT NULL,
+  sales_member_id          INT UNSIGNED           NULL DEFAULT NULL,
+  commission_rate          DECIMAL(5,2) UNSIGNED  NULL DEFAULT NULL,
+  commission_override      DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
+  commission_note          VARCHAR(255)           NULL DEFAULT NULL,
+  commission_paid_at       DATETIME               NULL DEFAULT NULL,
+  commission_paid_amount   DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
+  commission_paid_by       VARCHAR(64)            NULL DEFAULT NULL,
   PRIMARY KEY (id),
   UNIQUE KEY uk_orders_number (order_number),
+  KEY idx_orders_sales_member (sales_member_id, created_at),
   UNIQUE KEY uk_orders_idempotency (idempotency_key),
   KEY idx_orders_status_created (status, created_at),
   KEY idx_orders_payment (payment_method, payment_status),
@@ -402,6 +425,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   unit_price          DECIMAL(10,2) UNSIGNED NOT NULL,
   sale_price          DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
   unit_price_charged  DECIMAL(10,2) UNSIGNED NOT NULL,
+  unit_cost              DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
   quantity            SMALLINT UNSIGNED      NOT NULL,
   line_total          DECIMAL(10,2) UNSIGNED NOT NULL,
   line_discount       DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0.00,
@@ -545,6 +569,29 @@ CREATE TABLE IF NOT EXISTS order_payments (
   KEY idx_order_payments_order (order_id, voided_at),
   CONSTRAINT fk_order_payments_order_id FOREIGN KEY (order_id)
     REFERENCES orders (id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS expenses (
+  id          INT UNSIGNED           NOT NULL AUTO_INCREMENT,
+  entry_type  VARCHAR(8)             NOT NULL DEFAULT 'expense',
+  category    VARCHAR(40)            NOT NULL,
+  title       VARCHAR(160)           NOT NULL,
+  amount      DECIMAL(12,2) UNSIGNED NOT NULL,
+  entry_date  DATE                   NOT NULL,
+  status      VARCHAR(8)             NOT NULL DEFAULT 'paid',
+  due_date    DATE                   NULL DEFAULT NULL,
+  paid_on     DATE                   NULL DEFAULT NULL,
+  paid_from   VARCHAR(16)            NULL DEFAULT NULL,
+  vendor      VARCHAR(120)           NULL DEFAULT NULL,
+  reference   VARCHAR(80)            NULL DEFAULT NULL,
+  note        VARCHAR(500)           NULL DEFAULT NULL,
+  created_by  VARCHAR(64)            NULL DEFAULT NULL,
+  created_at  DATETIME               NOT NULL,
+  updated_at  DATETIME               NULL DEFAULT NULL,
+  deleted_at  DATETIME               NULL DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY idx_expenses_date (deleted_at, entry_date),
+  KEY idx_expenses_status (deleted_at, status, due_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE IF NOT EXISTS order_sequence (

@@ -21,6 +21,7 @@ session_set_cookie_params([
 
 require dirname(__DIR__) . '/app/bootstrap.php';
 require_once APP_ROOT . '/app/router.php';
+require_once APP_ROOT . '/app/lib/team.php';
 
 header('X-Robots-Tag: noindex, nofollow');
 header_no_store();
@@ -114,6 +115,16 @@ if ($match['status'] === 405) {
 
 if ($route === null) {
     abort($match['status'] === 405 ? 405 : 404);
+}
+
+if (!$isPublicAdminPath && !team_can_route((string) $route['name'])) {
+    if (request_is_ajax()) {
+        json(['ok' => false, 'error' => 'forbidden', 'message' => 'Your account does not have access to this.'], 403);
+    }
+    if ((string) $route['name'] !== 'admin.dashboard') {
+        flash('error', 'Your account does not have access to that page. Ask the owner if you need it.');
+    }
+    redirect(team_home_url(), 303);
 }
 
 $controllerFile = APP_ROOT . '/admin/controllers/' . $route['controller'];

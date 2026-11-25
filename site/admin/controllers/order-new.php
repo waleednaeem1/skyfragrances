@@ -43,6 +43,10 @@ if (request_method() === 'POST') {
             ], $cart);
             if ($result['outcome'] === 'placed' || $result['outcome'] === 'replay') {
                 if ($result['outcome'] === 'placed') {
+                    $salesMember = team_new_order_member($admin, (int) request_post('sales_member_id', 0));
+                    if ($salesMember !== null) {
+                        team_assign_order((int) $result['order_id'], $salesMember, now_karachi());
+                    }
                     db_insert('admin_activity_log', [
                         'admin_id' => isset($admin['id']) ? (int) $admin['id'] : null,
                         'admin_username' => isset($admin['username']) ? mb_substr((string) $admin['username'], 0, 64) : null,
@@ -82,4 +86,7 @@ render_admin('order-new.php', [
     'sizeOptions' => $sizeOptions,
     'methods' => payment_methods_enabled(),
     'cities' => checkout_cities(),
+    'sellers' => team_is_owner() ? array_values(array_filter(team_sellers(), static fn (array $s): bool => (int) $s['is_active'] === 1)) : [],
+    'selfRate' => !team_is_owner() && team_is_seller() ? rtrim(rtrim((string) auth_user()['commission_rate'], '0'), '.') : null,
+    'salesMemberId' => (int) request_post('sales_member_id', 0),
 ], ['title' => 'New phone order', 'body_class' => 'admin t-light admin-order-new has-actionbar']);

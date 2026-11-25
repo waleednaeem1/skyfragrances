@@ -107,6 +107,10 @@ if (!$isNew) {
         flash('error', 'That coupon no longer exists.');
         redirect('/admin/coupons', 303);
     }
+    if ((string) $coupon['kind'] !== 'standard') {
+        flash('info', $coupon['code'] . ' is a thank-you code for one customer. Stop or restart it from this list.');
+        redirect('/admin/coupons/reward', 303);
+    }
 }
 $usedCount = $coupon === null ? 0 : (int) $coupon['used_count'];
 

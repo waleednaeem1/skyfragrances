@@ -101,7 +101,7 @@ if ($route['name'] === 'admin.coupons.toggle') {
     coupons_log($adminId, $adminName, 'coupon.toggle', (int) $coupon['id'], $coupon['code'] . ($next === 1 ? ' activated' : ' deactivated'), ['is_active' => (int) $coupon['is_active']], ['is_active' => $next]);
     flash('success', $coupon['code'] . ($next === 1 ? ' is active again.' : ' is now disabled. Customers can no longer apply it.'));
     $return = (string) request_post('return', '');
-    redirect(preg_match('~^/admin/coupons(?:\?[^#\s]*)?$~', $return) ? $return : '/admin/coupons', 303);
+    redirect(preg_match('~^/admin/coupons(?:/reward)?(?:\?[^#\s]*)?$~', $return) ? $return : '/admin/coupons', 303);
 }
 
 $now = now_karachi();
@@ -120,7 +120,7 @@ if (!in_array($typeFilter, COUPON_TYPES, true)) {
     $typeFilter = '';
 }
 
-$where = [];
+$where = ["kind = 'standard'"];
 $sqlParams = [];
 if ($q !== '') {
     $where[] = 'code LIKE :q';
@@ -154,10 +154,10 @@ $page = min($page, $pages);
 $listSql = 'SELECT id, code, type, value, min_order_total, usage_limit, per_phone_limit, used_count, starts_at, expires_at, is_active, created_at FROM coupons' . $whereSql . ' ORDER BY ' . $orderBy . ' LIMIT ' . $per . ' OFFSET ' . (($page - 1) * $per);
 $coupons = db_fetch_all($listSql, $sqlParams);
 
-$counts = ['all' => (int) db_fetch_column('SELECT COUNT(*) FROM coupons')];
+$counts = ['all' => (int) db_fetch_column("SELECT COUNT(*) FROM coupons WHERE kind = 'standard'")];
 foreach (array_keys($states) as $stateKey) {
     $countParams = [];
-    $counts[$stateKey] = (int) db_fetch_column('SELECT COUNT(*) FROM coupons WHERE ' . coupons_state_sql($stateKey, $countParams), $countParams);
+    $counts[$stateKey] = (int) db_fetch_column("SELECT COUNT(*) FROM coupons WHERE kind = 'standard' AND " . coupons_state_sql($stateKey, $countParams), $countParams);
 }
 
 $rows = [];
@@ -190,7 +190,14 @@ if ($typeFilter !== '') {
     $active[] = ['label' => 'Type: ' . ($typeFilter === 'percent' ? 'Percent' : 'Fixed amount'), 'remove_url' => $removeUrl('type')];
 }
 
+$rewardConfig = reward_settings();
 render_admin('coupons.php', [
+    'reward' => [
+        'enabled' => $rewardConfig['enabled'],
+        'label' => reward_discount_label($rewardConfig['type'], $rewardConfig['value']),
+        'issued' => (int) db_fetch_column('SELECT COUNT(*) FROM coupons WHERE kind = :k', ['k' => REWARD_KIND]),
+        'used' => (int) db_fetch_column('SELECT COUNT(*) FROM coupons WHERE kind = :k AND used_count > 0', ['k' => REWARD_KIND]),
+    ],
     'coupons' => $rows,
     'counts' => $counts,
     'states' => $states,

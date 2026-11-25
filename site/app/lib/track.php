@@ -96,6 +96,7 @@ function track_view_order(array $order): array
     $trackingUrl = trim((string) ($order['tracking_url'] ?? ''));
     return [
         'order_number' => $order['order_number'],
+        'reward' => reward_for_order((int) $order['id']),
         'first_name' => $firstName,
         'status' => $order['status'],
         'status_label' => ucfirst((string) $order['status']),

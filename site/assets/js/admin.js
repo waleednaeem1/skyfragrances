@@ -98,6 +98,18 @@
     if (ev.key === 'Escape' && openSheet) setSheet(openSheet, false);
   });
 
+  function syncShowWhen() {
+    qsa('[data-show-when]').forEach(function (el) {
+      var rule = el.getAttribute('data-show-when').split('=');
+      var field = qs('[name="' + rule[0] + '"]:checked') || qs('select[name="' + rule[0] + '"]');
+      el.hidden = !!field && field.value !== rule[1];
+    });
+  }
+  doc.addEventListener('change', function (ev) {
+    if (ev.target.name) syncShowWhen();
+  });
+  syncShowWhen();
+
   function closePopovers(except) {
     qsa('details[data-popover][open]').forEach(function (popover) {
       if (popover !== except) popover.removeAttribute('open');

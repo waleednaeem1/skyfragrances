@@ -15,6 +15,23 @@ $reviewed = $priced !== null && $problems === [] && $errors === [];
   <input type="hidden" name="price_token" value="<?= e($form['price_token']) ?>">
 
 <?php partial_admin('order-form-fields.php', ['form' => $form, 'errors' => $errors, 'problems' => $problems, 'priced' => $priced, 'sizeOptions' => $sizeOptions, 'methods' => $methods, 'cities' => $cities, 'itemsEditable' => true, 'showCoupon' => true]); ?>
+<?php if ($selfRate !== null): ?>
+  <div class="adm-form__section">
+    <h2 class="adm-form__section-title">Salesperson</h2>
+    <p class="adm-note">This order will be credited to you at your <?= e($selfRate) ?>% share of its profit.</p>
+  </div>
+<?php elseif ($sellers !== []): ?>
+  <div class="adm-form__section">
+    <h2 class="adm-form__section-title">Salesperson</h2>
+<?php
+$sellerOptions = ['0' => 'No salesperson'];
+foreach ($sellers as $seller) {
+    $sellerOptions[(string) $seller['id']] = $seller['display_name'] . ' · ' . rtrim(rtrim((string) $seller['commission_rate'], '0'), '.') . '% of profit';
+}
+partial_admin('field.php', ['type' => 'select', 'name' => 'sales_member_id', 'label' => 'Credit this order to', 'value' => (string) $salesMemberId, 'options' => $sellerOptions, 'help' => 'They earn their share of this order\'s profit. You can change it later from the order.']);
+?>
+  </div>
+<?php endif; ?>
 
 <?php partial_admin('action-bar.php', [
     'note' => $reviewed ? 'Check the total with the customer, then create the order.' : 'Review first to see the total.',

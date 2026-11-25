@@ -284,7 +284,7 @@ function catalogue_size_has_orders(int $sizeId): bool
 function catalogue_product_sizes(int $productId): array
 {
     return db_fetch_all(
-        'SELECT id, size_label, size_ml, sku, price, sale_price, stock, display_stock, low_stock_threshold, is_default, sort_order
+        'SELECT id, size_label, size_ml, sku, price, sale_price, cost_price, stock, display_stock, low_stock_threshold, is_default, sort_order
          FROM product_sizes WHERE product_id = :id AND is_active = 1 ORDER BY sort_order ASC, size_ml ASC, id ASC',
         ['id' => $productId]
     );

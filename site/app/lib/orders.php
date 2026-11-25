@@ -53,7 +53,7 @@ function order_coupon_error(array $couponError): RuntimeException
     return match ($couponError['key']) {
         'phone_limit' => order_error(ORDER_ERR_PHONE_LIMIT, $couponError['code']),
         'exhausted' => order_error(ORDER_ERR_COUPON_EXHAUSTED, $couponError['code']),
-        'expired' => order_error(ORDER_ERR_COUPON_EXPIRED, $couponError['code'] . '|' . $couponError['message']),
+        'expired', 'reward_rule' => order_error(ORDER_ERR_COUPON_EXPIRED, $couponError['code'] . '|' . $couponError['message']),
         default => order_error(ORDER_ERR_COUPON_DROPPED, $couponError['code']),
     };
 }
@@ -301,8 +301,27 @@ function order_insert_header(array $input, array $priced, string $idemKey, strin
     throw new RuntimeException('order number exhausted');
 }
 
+function order_size_costs(array $sizeIds): array
+{
+    $marks = [];
+    $params = [];
+    foreach (array_values(array_unique(array_filter(array_map('intval', $sizeIds)))) as $i => $id) {
+        $marks[] = ':c' . $i;
+        $params['c' . $i] = $id;
+    }
+    if ($marks === []) {
+        return [];
+    }
+    $costs = [];
+    foreach (db_fetch_all('SELECT id, cost_price FROM product_sizes WHERE id IN (' . implode(',', $marks) . ')', $params) as $row) {
+        $costs[(int) $row['id']] = $row['cost_price'];
+    }
+    return $costs;
+}
+
 function order_insert_items(int $orderId, array $priced, string $now): void
 {
+    $costs = order_size_costs(array_column($priced['lines'], 'size_id'));
     $lineTotals = [];
     foreach ($priced['lines'] as $i => $line) {
         $lineTotals[$i] = $line['line_total_paisa'];
@@ -322,6 +341,7 @@ function order_insert_items(int $orderId, array $priced, string $now): void
             'unit_price' => money_from_paisa($line['list_price_paisa']),
             'sale_price' => $line['sale_price_paisa'] === null ? null : money_from_paisa($line['sale_price_paisa']),
             'unit_price_charged' => money_from_paisa($line['unit_price_paisa']),
+            'unit_cost' => $costs[(int) $line['size_id']] ?? null,
             'quantity' => $line['qty'],
             'line_total' => money_from_paisa($line['line_total_paisa']),
             'line_discount' => money_from_paisa($shares[$i] ?? 0),
@@ -395,6 +415,9 @@ function order_place_attempt(array $input, array $cart): array
         }
         order_history_insert($header['id'], 'status', null, 'pending', null, order_actor_system(), $now);
         $pdo->commit();
+        if (($input['source'] ?? 'web') !== 'phone') {
+            reward_issue_after_order($header['id'], $input['phone_normalized'], $now);
+        }
         return ['outcome' => 'placed', 'order_id' => $header['id'], 'order_number' => $header['order_number'], 'access_token' => $accessToken, 'priced' => $priced];
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {

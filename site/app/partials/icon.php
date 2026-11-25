@@ -13,6 +13,8 @@ $paths = [
     'chevron-down' => '<path d="M6 9l6 6 6-6"/>',
     'chevron-right' => '<path d="M9 6l6 6-6 6"/>',
     'chevron-left' => '<path d="M15 6l-6 6 6 6"/>',
+    'chart' => '<path d="M4 20V11M10 20V5M16 20v-8M21 20H3"/>',
+    'wallet' => '<path d="M4 7h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a1 1 0 0 1-1-1V7z"/><path d="M4 7l11-3.5V7M16.5 13.5h.01"/>',
     'grid' => '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/>',
     'users' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.3-5.5 6.5-5.5s5.9 2 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.8c1.7.8 2.8 2.6 3 5.2"/>',
     'user-plus' => '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.3-5.5 6.5-5.5s5.9 2 6.5 5.5M19 8v6M16 11h6"/>',

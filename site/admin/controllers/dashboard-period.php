@@ -37,9 +37,9 @@ function dashboard_custom_query(DateTimeImmutable $from, DateTimeImmutable $to):
     return ['range' => 'custom', 'from' => $from->format('Y-m-d'), 'to' => $to->format('Y-m-d')];
 }
 
-function dashboard_url(array $query): string
+function dashboard_url(array $query, string $base = '/admin'): string
 {
-    return '/admin?' . http_build_query($query);
+    return $base . '?' . http_build_query($query);
 }
 
 function dashboard_span_label(DateTimeImmutable $first, DateTimeImmutable $last): string
@@ -157,24 +157,25 @@ function dashboard_presets(DateTimeImmutable $now): array
     ];
 }
 
-function dashboard_picker(array $period, DateTimeImmutable $now): array
+function dashboard_picker(array $period, DateTimeImmutable $now, string $base = '/admin'): array
 {
     $today = $now->setTime(0, 0);
     $anchor = $period['current'] ? $today : $period['from'];
     $ranges = [];
     foreach (DASHBOARD_RANGES as $range => $label) {
-        $ranges[] = ['label' => $label, 'href' => dashboard_url(dashboard_query($range, dashboard_range_start($range, $anchor))), 'active' => $period['range'] === $range];
+        $ranges[] = ['label' => $label, 'href' => dashboard_url(dashboard_query($range, dashboard_range_start($range, $anchor)), $base), 'active' => $period['range'] === $range];
     }
     $presets = [];
     foreach (dashboard_presets($now) as $preset) {
-        $presets[] = ['label' => $preset['label'], 'href' => dashboard_url($preset['query']), 'active' => $preset['query'] === $period['query']];
+        $presets[] = ['label' => $preset['label'], 'href' => dashboard_url($preset['query'], $base), 'active' => $preset['query'] === $period['query']];
     }
     return [
         'ranges' => $ranges,
         'presets' => $presets,
         'label' => $period['label'],
-        'prev' => $period['prev_query'] === null ? null : dashboard_url($period['prev_query']),
-        'next' => $period['next_query'] === null ? null : dashboard_url($period['next_query']),
+        'prev' => $period['prev_query'] === null ? null : dashboard_url($period['prev_query'], $base),
+        'next' => $period['next_query'] === null ? null : dashboard_url($period['next_query'], $base),
+        'action' => $base,
         'from' => $period['from']->format('Y-m-d'),
         'to' => $period['to']->modify('-1 day')->format('Y-m-d'),
         'max' => $today->format('Y-m-d'),
@@ -198,9 +199,9 @@ function dashboard_totals(DateTimeImmutable $from, DateTimeImmutable $to): array
 function dashboard_delta(int $value, int $previous): array
 {
     if ($previous === 0) {
-        return $value === 0 ? ['text' => 'No change', 'tone' => 'flat'] : ['text' => 'New', 'tone' => 'up'];
+        return $value === 0 ? ['text' => 'No change', 'tone' => 'flat'] : ['text' => 'New', 'tone' => $value > 0 ? 'up' : 'down'];
     }
-    $percent = ($value - $previous) / $previous * 100;
+    $percent = ($value - $previous) / abs($previous) * 100;
     if (abs($percent) < 0.5) {
         return ['text' => 'No change', 'tone' => 'flat'];
     }
@@ -248,18 +249,27 @@ function dashboard_axis_label(int $rupees): string
     return (string) $rupees;
 }
 
+function dashboard_bucket_sql(string $unit, string $column): string
+{
+    return ['hour' => 'HOUR(' . $column . ')', 'day' => 'DATE(' . $column . ')', 'month' => 'DATE_FORMAT(' . $column . ", '%Y-%m')", 'year' => 'YEAR(' . $column . ')'][$unit];
+}
+
 function dashboard_chart(array $period, DateTimeImmutable $now): array
 {
-    $unit = $period['unit'];
-    $expr = ['hour' => 'HOUR(created_at)', 'day' => 'DATE(created_at)', 'month' => "DATE_FORMAT(created_at, '%Y-%m')", 'year' => 'YEAR(created_at)'][$unit];
     $rows = db_fetch_all(
-        'SELECT ' . $expr . ' AS k, COUNT(*) AS c, COALESCE(SUM(grand_total), 0) AS v FROM orders WHERE status IN ' . DASHBOARD_REVENUE_STATUSES . ' AND created_at >= :from AND created_at < :to GROUP BY k',
+        'SELECT ' . dashboard_bucket_sql($period['unit'], 'created_at') . ' AS k, COUNT(*) AS c, COALESCE(SUM(grand_total), 0) AS v FROM orders WHERE status IN ' . DASHBOARD_REVENUE_STATUSES . ' AND created_at >= :from AND created_at < :to GROUP BY k',
         ['from' => $period['from']->format('Y-m-d H:i:s'), 'to' => $period['to']->format('Y-m-d H:i:s')]
     );
     $byKey = [];
     foreach ($rows as $row) {
         $byKey[(string) $row['k']] = ['orders' => (int) $row['c'], 'paisa' => money_paisa((string) $row['v'])];
     }
+    return dashboard_chart_build($period, $now, $byKey, 'Revenue');
+}
+
+function dashboard_chart_build(array $period, DateTimeImmutable $now, array $byKey, string $measure, string $base = '/admin'): array
+{
+    $unit = $period['unit'];
     $step = ['hour' => '+1 hour', 'day' => '+1 day', 'month' => 'first day of next month', 'year' => '+1 year'][$unit];
     $slots = [];
     for ($at = $period['from']; $at < $period['to']; $at = $at->modify($step)) {
@@ -280,9 +290,10 @@ function dashboard_chart(array $period, DateTimeImmutable $now): array
             'month' => $at->format('Y-m'),
             default => $at->format('Y'),
         };
-        $data = $byKey[$key] ?? ['orders' => 0, 'paisa' => 0];
-        $max = max($max, intdiv($data['paisa'], 100));
+        $data = ($byKey[$key] ?? []) + ['orders' => 0, 'paisa' => 0];
+        $max = max($max, intdiv(max(0, $data['paisa']), 100));
         $bars[] = [
+            'key' => $key,
             'paisa' => $data['paisa'],
             'orders' => $data['orders'],
             'value' => money(money_from_paisa($data['paisa'])),
@@ -298,7 +309,7 @@ function dashboard_chart(array $period, DateTimeImmutable $now): array
                 'month' => $at->format('F Y'),
                 default => $at->format('Y'),
             },
-            'href' => $unit === 'hour' ? null : dashboard_url(dashboard_query(['day' => 'day', 'month' => 'month', 'year' => 'year'][$unit], $at)),
+            'href' => $unit === 'hour' ? null : dashboard_url(dashboard_query(['day' => 'day', 'month' => 'month', 'year' => 'year'][$unit], $at), $base),
             'future' => $at > $now,
         ];
     }
@@ -316,7 +327,7 @@ function dashboard_chart(array $period, DateTimeImmutable $now): array
         'bars' => $bars,
         'top_paisa' => $top * 100,
         'ticks' => $ticks,
-        'caption' => 'Revenue by ' . ['hour' => 'hour', 'day' => 'day', 'month' => 'month', 'year' => 'year'][$unit] . ', ' . $period['label'],
-        'unit_label' => ['hour' => 'Hour', 'day' => 'Day', 'month' => 'Month', 'year' => 'Year'][$unit],
+        'caption' => $measure . ' by ' . $unit . ', ' . $period['label'],
+        'unit_label' => ucfirst($unit),
     ];
 }

@@ -32,7 +32,7 @@ $stepLink = static function (?string $href, string $icon, string $label): void {
           <li><a class="adm-dates__preset<?= $preset['active'] ? ' is-active' : '' ?>" href="<?= e(url($preset['href'])) ?>"<?= $preset['active'] ? ' aria-current="true"' : '' ?>><span><?= e($preset['label']) ?></span><?php if ($preset['active']) { partial('icon.php', ['name' => 'check', 'size' => 16]); } ?></a></li>
 <?php endforeach; ?>
         </ul>
-        <form class="adm-dates__custom" method="get" action="<?= e(url('/admin')) ?>">
+        <form class="adm-dates__custom" method="get" action="<?= e(url($picker['action'])) ?>">
           <input type="hidden" name="range" value="custom">
           <p class="adm-dates__title">Custom range</p>
           <div class="adm-dates__fields">

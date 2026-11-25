@@ -166,6 +166,13 @@ function order_edit_save(array $order, array $form, array $lines, string $phoneN
         if ($holdsStock) {
             stock_return_items($editable);
         }
+        $keptCosts = [];
+        foreach ($editable as $item) {
+            if ($item['unit_cost'] !== null) {
+                $keptCosts[(int) $item['product_size_id']] = $item['unit_cost'];
+            }
+        }
+        $currentCosts = order_size_costs(array_column($lines, 'size_id'));
         db_query('DELETE FROM order_items WHERE order_id = :id AND product_size_id IS NOT NULL', ['id' => (int) $order['id']]);
         $fixedSubtotal = 0;
         $fixedCount = 0;
@@ -199,6 +206,7 @@ function order_edit_save(array $order, array $form, array $lines, string $phoneN
                 'unit_price' => money_from_paisa($line['list_paisa']),
                 'sale_price' => $line['sale_paisa'] === null ? null : money_from_paisa($line['sale_paisa']),
                 'unit_price_charged' => money_from_paisa($line['unit_paisa']),
+                'unit_cost' => $keptCosts[$line['size_id']] ?? $currentCosts[$line['size_id']] ?? null,
                 'quantity' => $line['qty'],
                 'line_total' => money_from_paisa($line['total_paisa']),
                 'line_discount' => money_from_paisa($shares[$i] ?? 0),

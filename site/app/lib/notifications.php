@@ -1,6 +1,8 @@
 <?php
 defined('SKYFR') || exit;
 
+require_once __DIR__ . '/rewards.php';
+
 const NOTIFY_CONTACT_AUTOREPLY_HOURLY_CAP = 30;
 const NOTIFY_CONTACT_AUTOREPLY_DEDUPE_SECONDS = 86400;
 const NOTIFY_CONTACT_ADMIN_HOURLY_CAP = 30;
@@ -19,6 +21,7 @@ function notify_order_payload(array $order): array
         'items' => order_items((int) $order['id']),
         'track_url' => SITE_URL . '/track',
         'order_url' => SITE_URL . '/order/' . $order['order_number'] . '?t=' . $order['access_token'],
+        'reward' => reward_for_order((int) $order['id']),
     ];
 }
 

@@ -42,6 +42,24 @@ function make_input(string $phone, string $idem, array $priced, string $method =
     ];
 }
 
+function reward_test_settings(array $values): void
+{
+    foreach ($values as $key => $value) {
+        if ($value === null) {
+            db_query('DELETE FROM settings WHERE setting_key = :k', ['k' => $key]);
+        } else {
+            db_query("INSERT INTO settings (setting_key, setting_value, setting_group, updated_at) VALUES (:k, :v, 'rewards', NOW()) ON DUPLICATE KEY UPDATE setting_value = :v2", ['k' => $key, 'v' => $value, 'v2' => $value]);
+        }
+    }
+    settings_cache_clear();
+    settings_load();
+}
+
+function reward_orphans_delete(): void
+{
+    db_query("DELETE c FROM coupons c LEFT JOIN orders o ON o.id = c.reward_order_id WHERE c.kind = 'second_order' AND o.id IS NULL");
+}
+
 function cleanup_leftovers(): void
 {
     foreach (db_fetch_all("SELECT id, stock_restored_at FROM orders WHERE user_agent = 'commerce-test'") as $left) {
@@ -61,11 +79,18 @@ function cleanup_leftovers(): void
         db_query('DELETE FROM email_outbox WHERE order_id = :id', ['id' => (int) $left['id']]);
         db_query('DELETE FROM orders WHERE id = :id', ['id' => (int) $left['id']]);
     }
+    reward_orphans_delete();
 }
 
 session_ensure();
 $_SESSION['cart'] = null;
 cleanup_leftovers();
+$rewardBefore = [];
+foreach (['reward_enabled', 'reward_type', 'reward_value', 'reward_min_order', 'reward_valid_days'] as $rewardKey) {
+    $rewardRow = db_fetch('SELECT setting_value FROM settings WHERE setting_key = :k', ['k' => $rewardKey]);
+    $rewardBefore[$rewardKey] = $rewardRow === null ? null : (string) $rewardRow['setting_value'];
+}
+reward_test_settings(['reward_enabled' => '0']);
 $createdOrders = [];
 $sizeA = 1;
 $sizeB = 6;
@@ -200,6 +225,60 @@ check(order_number_is_wellformed('SK-001') && order_number_is_wellformed(order_n
 check(order_find_by_number(strtolower((string) $numbers[0]['order_number'])) !== null, 'order lookup ignores letter case');
 check((int) db_fetch_column("SELECT COUNT(*) FROM email_outbox WHERE order_id IN (" . implode(',', array_map('intval', $createdOrders)) . ")") >= 1, 'transactional emails queued in the outbox');
 
+reward_test_settings(['reward_enabled' => '1', 'reward_type' => 'percent', 'reward_value' => '15', 'reward_min_order' => '0.00', 'reward_valid_days' => '30']);
+$rewardPlace = static function (string $phone, ?string $code) use (&$createdOrders): array {
+    cart_clear();
+    cart_add(1, 1);
+    cart_set_coupon($code);
+    $priced = cart_priced(true);
+    $placed = order_place(make_input($phone, bin2hex(random_bytes(16)), $priced));
+    if ((int) ($placed['order_id'] ?? 0) > 0) {
+        $createdOrders[] = (int) $placed['order_id'];
+    }
+    return $placed + ['priced' => $priced];
+};
+$phoneP = '0399 7000001';
+$phoneQ = '0399 7000002';
+$phoneS = '0399 7000003';
+$phoneT = '0399 7000004';
+$a1 = $rewardPlace($phoneP, null);
+$r1 = reward_for_order((int) ($a1['order_id'] ?? 0));
+$r1Row = $r1 === null ? null : db_fetch('SELECT * FROM coupons WHERE code = :c', ['c' => $r1['code']]);
+check($a1['outcome'] === 'placed' && $r1 !== null && $r1['usable'] && preg_match('/^THANKS-[A-HJ-NP-Z2-9]{6}$/', $r1['code']) === 1 && $r1['label'] === '15% off', 'first website order gets a one-time thank-you code: ' . ($r1['code'] ?? 'none'));
+check($r1Row !== null && (int) $r1Row['usage_limit'] === 1 && (int) $r1Row['per_phone_limit'] === 1 && $r1Row['reward_phone'] === phone_normalize($phoneP) && $r1Row['kind'] === 'second_order', 'the code is single-use and tied to the customer phone');
+check($r1Row !== null && $r1Row['expires_at'] === (new DateTimeImmutable(now_karachi()))->modify('+30 days')->format('Y-m-d') . ' 23:59:59', 'the code expires after the set number of days');
+check((notify_order_payload(order_find((int) $a1['order_id']))['reward']['code'] ?? '') === $r1['code'], 'the confirmation email carries the code');
+$wrongPhone = $rewardPlace($phoneQ, $r1['code']);
+check($wrongPhone['outcome'] === 'conflict' && str_contains((string) ($wrongPhone['message']['text'] ?? ''), 'thank-you code works only'), 'another phone number cannot use the code');
+$a2 = $rewardPlace($phoneP, $r1['code']);
+$expectedDiscount = pricing_percent_discount($a2['priced']['subtotal_paisa'], 15);
+check($a2['outcome'] === 'placed' && money_paisa((string) order_find((int) $a2['order_id'])['discount_total']) === $expectedDiscount, 'the second order from the same phone gets 15% off');
+check(used_count($r1['code']) === 1 && reward_for_order((int) $a1['order_id'])['usable'] === false, 'the code is used up after the second order');
+check(reward_for_order((int) $a2['order_id']) === null, 'a second order never earns another code');
+$v3 = coupon_validate(coupon_find($r1['code']), $r1['code'], 895000, now_karachi(), phone_normalize($phoneP));
+check($v3['ok'] === false, 'the code cannot be used on a third order');
+$b1 = $rewardPlace($phoneQ, null);
+$r2 = reward_for_order((int) ($b1['order_id'] ?? 0));
+$b2 = $rewardPlace($phoneQ, null);
+$b3 = $rewardPlace($phoneQ, $r2['code'] ?? 'NONE');
+check($r2 !== null && $b2['outcome'] === 'placed' && $b3['outcome'] === 'conflict' && reward_for_order((int) $b1['order_id'])['usable'] === false, 'a second order placed without the code ends it');
+$c1 = $rewardPlace($phoneS, null);
+$r3 = reward_for_order((int) ($c1['order_id'] ?? 0));
+order_transition((int) $c1['order_id'], 'cancelled', $admin, 'Test cancel');
+$c2 = $rewardPlace($phoneS, $r3['code'] ?? 'NONE');
+check($r3 !== null && $c2['outcome'] === 'conflict', 'cancelling the first order stops the code');
+order_transition((int) $a2['order_id'], 'cancelled', $admin, 'Test cancel');
+check(used_count($r1['code']) === 0 && reward_for_order((int) $a1['order_id'])['usable'] === true, 'cancelling the second order gives the code back');
+reward_test_settings(['reward_enabled' => '0']);
+$d1 = $rewardPlace($phoneT, null);
+check($d1['outcome'] === 'placed' && reward_for_order((int) $d1['order_id']) === null, 'no code is given while the thank-you coupon is off');
+foreach ([$a1, $b1, $b2, $c2, $d1] as $rewardOrder) {
+    if ((int) ($rewardOrder['order_id'] ?? 0) > 0 && order_find((int) $rewardOrder['order_id'])['status'] !== 'cancelled') {
+        order_transition((int) $rewardOrder['order_id'], 'cancelled', $admin, 'Test cleanup');
+    }
+}
+reward_test_settings($rewardBefore);
+
 foreach ($createdOrders as $id) {
     db_query('DELETE FROM email_outbox WHERE order_id = :id', ['id' => $id]);
     db_query('DELETE FROM orders WHERE id = :id', ['id' => $id]);
@@ -210,6 +289,7 @@ foreach ([$proofFile, $secondProofFile, $tmpPng] as $file) {
     }
 }
 db_query('DELETE FROM rate_limits WHERE subject_hash = :s', ['s' => request_ip_hash()]);
+reward_orphans_delete();
 cart_clear();
 check(order_count() === $orders0 && stock_of($sizeA) === $stockA0 && stock_of($sizeB) === $stockB0 && stock_of($sizeC) === $stockC0 && used_count('WELCOME10') === $used0, 'test orders deleted, stock and coupon counters back to start');
 echo ($failures === 0 ? 'ALL PASSED' : $failures . ' FAILURE(S)') . PHP_EOL;

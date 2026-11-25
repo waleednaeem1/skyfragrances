@@ -62,7 +62,7 @@ $exportLabel = 'Export CSV (' . (int) $exportCount . ')';
     'submit_label' => 'Search',
 ]); ?>
 <p class="adm-note">The export honours the filters above and opens cleanly in Excel. Paste the list into whichever mail tool you use — the shop never sends bulk mail itself.</p>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'subscribers']); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'subscribers']); ?>
 <?php partial_admin('table.php', [
     'caption' => 'Newsletter subscribers',
     'list_id' => 'subscribers-list',
@@ -78,4 +78,4 @@ $exportLabel = 'Export CSV (' . (int) $exportCount . ')';
         ? ['title' => 'No subscribers yet', 'text' => 'The newsletter box in the shop footer adds people here.']
         : ['title' => 'No subscribers match', 'text' => 'Try another email or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/subscribers', 'variant' => 'ghost']],
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'subscribers']); ?>
+<?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'subscribers']); ?>

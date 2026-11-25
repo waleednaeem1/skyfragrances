@@ -2840,3 +2840,10 @@
 @layer components {
   .site-header__search-input:focus { box-shadow: 0 1px 0 0 var(--accent); }
 }
+
+@layer components {
+  .reward-card { text-align: center; border-style: dashed; }
+  .reward-card .panel__title { margin-block-end: 0; }
+  .reward-card__code { display: flex; align-items: center; justify-content: center; gap: var(--sp-2); flex-wrap: wrap; }
+  .reward-card__code .order-number { word-break: break-all; }
+}

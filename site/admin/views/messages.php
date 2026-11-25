@@ -75,7 +75,7 @@ $noun = $filters['status'] === 'all' ? 'messages' : $filters['status'] . ' messa
     'count_text' => $total === 0 ? 'No ' . $noun . ' match' : null,
     'submit_label' => 'Search',
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'messages']); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'messages']); ?>
 <?php partial_admin('table.php', [
     'caption' => 'Contact messages',
     'list_id' => 'messages-list',
@@ -93,4 +93,4 @@ $noun = $filters['status'] === 'all' ? 'messages' : $filters['status'] . ' messa
             : ['title' => 'Nothing here', 'text' => 'No ' . $noun . ' yet.'])
         : ['title' => 'No messages match', 'text' => 'Try another name, phone number or word.', 'action' => ['label' => 'Clear search', 'href' => '/admin/messages', 'variant' => 'ghost']],
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'messages']); ?>
+<?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'messages']); ?>

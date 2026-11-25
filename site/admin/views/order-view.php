@@ -64,7 +64,41 @@ $pinned = array_values(array_filter($notes, static fn (array $note): bool => (in
 <?php endif; ?>
       <p class="adm-note">Deliver to</p>
       <p><?= nl2br(e((string) $order['address'])) ?><br><?= e((string) $order['city']) ?><?= !empty($order['postal_code']) ? ' ' . e((string) $order['postal_code']) : '' ?></p>
+<?php if (!empty($reward)): ?>
+      <p class="adm-note">Thank-you code for the next order</p>
+      <p><span class="adm-mono"><?= e((string) $reward['code']) ?></span> · <?= e((string) $reward['label']) ?> · <?= $reward['usable'] ? 'not used yet' : 'no longer usable' ?><?php if ($reward['usable']): ?> · <a href="<?= e('https://wa.me/' . ltrim((string) $order['phone_normalized'], '+') . '?text=' . rawurlencode(reward_message($reward, adm_order_first_name($order)))) ?>" target="_blank" rel="noopener">Send on WhatsApp</a><?php endif; ?></p>
+<?php endif; ?>
     </section>
+<?php $viewer = auth_user(); $seesShare = !empty($sales) && (team_is_owner() || (int) $sales['sales_member_id'] === (int) ($viewer['id'] ?? 0)); ?>
+<?php if (!empty($sales) || team_is_owner()): ?>
+    <section class="adm-card">
+      <div class="adm-card__head"><h2 class="adm-card__title">Salesperson</h2><?php if ($seesShare): ?><?php partial_admin('badge.php', team_state_badge($sales['commission']['state']) + ['small' => true]); ?><?php endif; ?></div>
+<?php if (!empty($sales)): ?>
+      <p class="adm-view__name"><?= e((string) $sales['member_name']) ?></p>
+<?php if ($seesShare): ?>
+      <p><?= e($sales['commission']['rate'] !== null ? rtrim(rtrim($sales['commission']['rate'], '0'), '.') . '%' : '') ?> of <?= e(money(money_from_paisa($sales['commission']['profit']))) ?> profit · share <strong><?= e(money(money_from_paisa($sales['commission']['share']))) ?></strong><?= $sales['commission_paid_at'] !== null ? ' · paid ' . e(date_short((string) $sales['commission_paid_at'])) : '' ?></p>
+<?php endif; ?>
+<?php if (team_is_owner()): ?>
+      <p><a href="<?= e(url('/admin/team/share/' . $order['order_number'] . '?return=' . rawurlencode('/admin/orders/' . $order['order_number'] . '/view'))) ?>">Share details and payment</a></p>
+<?php endif; ?>
+<?php else: ?>
+      <p class="adm-muted">No salesperson on this order.</p>
+<?php endif; ?>
+<?php if (team_is_owner() && $sellers !== [] && (empty($sales) || $sales['commission_paid_at'] === null)): ?>
+      <form method="post" action="<?= e(url('/admin/orders/' . $order['order_number'] . '/salesperson')) ?>" class="adm-cluster">
+        <?= csrf_field() ?>
+        <label class="u-sr-only" for="sales-member">Credit this order to</label>
+        <select class="adm-input adm-select adm-input--sm" id="sales-member" name="member_id">
+          <option value="0">No salesperson</option>
+<?php foreach ($sellers as $seller): ?>
+          <option value="<?= e((string) $seller['id']) ?>"<?= !empty($sales) && (int) $sales['sales_member_id'] === (int) $seller['id'] ? ' selected' : '' ?><?= (int) $seller['is_active'] !== 1 ? ' disabled' : '' ?>><?= e((string) $seller['display_name'] . ' · ' . rtrim(rtrim((string) $seller['commission_rate'], '0'), '.') . '%') ?></option>
+<?php endforeach; ?>
+        </select>
+        <?php partial_admin('button.php', ['label' => 'Save', 'type' => 'submit', 'variant' => 'ghost', 'size' => 'sm']); ?>
+      </form>
+<?php endif; ?>
+    </section>
+<?php endif; ?>
     <section class="adm-card">
       <div class="adm-card__head"><h2 class="adm-card__title">Payment</h2><?= $badge((string) $order['payment_status'], ['label' => adm_order_payment_label((string) $order['payment_status']), 'small' => true]) ?></div>
       <dl class="adm-dl">

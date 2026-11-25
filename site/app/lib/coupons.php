@@ -1,6 +1,8 @@
 <?php
 defined('SKYFR') || exit;
 
+require_once __DIR__ . '/rewards.php';
+
 const COUPON_CODE_PATTERN = '/^[A-Z0-9-]{1,40}$/';
 const COUPON_RATE_HOUR_MAX = 10;
 const COUPON_RATE_DAY_MAX = 50;
@@ -22,6 +24,7 @@ function coupon_messages(): array
         'removed' => 'Coupon removed.',
         'empty_field' => 'Enter a coupon code.',
         'rate_limited' => "That code isn't valid. Please check the spelling and try again.",
+        'reward_rule' => 'This thank-you code works only on the second order from the phone number it was given to.',
     ];
 }
 
@@ -49,7 +52,7 @@ function coupon_find(string $code, bool $forUpdate = false): ?array
     if (!coupon_code_is_wellformed($code)) {
         return null;
     }
-    $sql = 'SELECT id, code, type, value, min_order_total, usage_limit, per_phone_limit, used_count, starts_at, expires_at, is_active FROM coupons WHERE code = :code' . ($forUpdate ? ' FOR UPDATE' : '');
+    $sql = 'SELECT id, code, kind, type, value, min_order_total, usage_limit, per_phone_limit, used_count, starts_at, expires_at, is_active, reward_phone FROM coupons WHERE code = :code' . ($forUpdate ? ' FOR UPDATE' : '');
     return db_fetch($sql, ['code' => $code]);
 }
 
@@ -81,6 +84,9 @@ function coupon_validate(?array $coupon, string $code, int $subtotalPaisa, strin
     $minPaisa = money_paisa((string) $coupon['min_order_total']);
     if ($subtotalPaisa < $minPaisa) {
         return $fail('below_min', ['min' => money(money_from_paisa($minPaisa)), 'shortfall' => money(money_from_paisa($minPaisa - $subtotalPaisa))]);
+    }
+    if ($phoneNormalized !== null && reward_breaks_rule($coupon, $phoneNormalized)) {
+        return $fail('reward_rule');
     }
     if ($phoneNormalized !== null && $coupon['per_phone_limit'] !== null && coupon_phone_uses((int) $coupon['id'], $phoneNormalized) >= (int) $coupon['per_phone_limit']) {
         return $fail('phone_limit');

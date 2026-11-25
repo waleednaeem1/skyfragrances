@@ -20,7 +20,7 @@ $top = (int) $chart['top_paisa'];
       </div>
       <ol class="adm-chart__bars">
 <?php foreach ($bars as $index => $bar):
-    $height = $top > 0 ? round($bar['paisa'] / $top * 100, 2) : 0;
+    $height = $top > 0 ? max(0, round($bar['paisa'] / $top * 100, 2)) : 0;
     $edge = $index < $count * 0.2 ? ' is-start' : ($index >= $count * 0.8 ? ' is-end' : '');
     $summary = $bar['tip'] . ': ' . $bar['value'] . ', ' . $bar['orders'] . ' order' . ($bar['orders'] === 1 ? '' : 's');
     $tag = $bar['href'] !== null && !$bar['future'] ? 'a' : 'span';

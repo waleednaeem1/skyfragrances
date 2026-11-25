@@ -1,36 +1,44 @@
 <?php
 defined('SKYFR') || exit;
-$groups = [
+$groups = array_filter(array_map(static fn (array $items): array => array_values(array_filter($items, static fn (array $item): bool => team_can_route($item[4]) && ($item[0] !== '/sales' || !team_is_owner()))), [
     'Sales' => [
-        ['/', 'Dashboard', 'grid', 0],
-        ['/orders', 'Orders', 'package', (int) ($badges['orders'] ?? 0)],
-        ['/customers', 'Customers', 'users', 0],
+        ['/', 'Dashboard', 'grid', 0, 'admin.dashboard'],
+        ['/orders', 'Orders', 'package', (int) ($badges['orders'] ?? 0), 'admin.orders'],
+        ['/customers', 'Customers', 'users', 0, 'admin.customers'],
+        ['/sales', 'My sales', 'chart', 0, 'admin.sales'],
+    ],
+    'Money' => [
+        ['/statements', 'Statements', 'chart', 0, 'admin.statements'],
+        ['/expenses', 'Expenses', 'wallet', 0, 'admin.expenses'],
     ],
     'Catalogue' => [
-        ['/products', 'Products', 'droplet', 0],
-        ['/collections', 'Collections', 'layers', 0],
-        ['/coupons', 'Coupons', 'tag', 0],
-        ['/reviews', 'Reviews', 'star', (int) ($badges['reviews'] ?? 0)],
+        ['/products', 'Products', 'droplet', 0, 'admin.products'],
+        ['/collections', 'Collections', 'layers', 0, 'admin.collections'],
+        ['/coupons', 'Coupons', 'tag', 0, 'admin.coupons'],
+        ['/reviews', 'Reviews', 'star', (int) ($badges['reviews'] ?? 0), 'admin.reviews'],
     ],
     'Audience' => [
-        ['/messages', 'Messages', 'mail', 0],
-        ['/subscribers', 'Subscribers', 'user-plus', 0],
+        ['/messages', 'Messages', 'mail', 0, 'admin.messages'],
+        ['/subscribers', 'Subscribers', 'user-plus', 0, 'admin.subscribers'],
     ],
     'Store' => [
-        ['/pages', 'Pages', 'file', 0],
-        ['/settings', 'Settings', 'settings', 0],
-        ['/tools', 'Tools', 'tool', 0],
+        ['/team', 'Team', 'users', 0, 'admin.team'],
+        ['/pages', 'Pages', 'file', 0, 'admin.pages'],
+        ['/settings', 'Settings', 'settings', 0, 'admin.settings'],
+        ['/tools', 'Tools', 'tool', 0, 'admin.tools'],
+        ['/activity', 'Activity log', 'file', 0, 'admin.activity'],
     ],
-];
+]));
+$homeUrl = team_home_url();
 ?>
 <nav class="adm-side" aria-label="Sections">
-  <a class="adm-side__brand" href="<?= e(url('/admin')) ?>" aria-label="Sky Fragrances admin home">
+  <a class="adm-side__brand" href="<?= e(url($homeUrl)) ?>" aria-label="Sky Fragrances admin home">
     <img src="<?= e(asset('img/brand/monogram-transparent-256.webp')) ?>" alt="" width="36" height="36" decoding="async">
     <span><span class="adm-side__brand-name">Sky Fragrances</span><span class="adm-side__brand-sub">Admin</span></span>
   </a>
 <?php foreach ($groups as $group => $items): ?>
   <p class="adm-side__group"><?= e($group) ?></p>
-<?php foreach ($items as [$path, $label, $icon, $count]): ?>
+<?php foreach ($items as [$path, $label, $icon, $count, $routeName]): ?>
 <?php $active = $path === '/' ? $currentPath === '/admin' : $isActive($path); ?>
   <a class="adm-side__link<?= $active ? ' is-active' : '' ?>" href="<?= e(url('/admin' . ($path === '/' ? '' : $path))) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
     <?php partial('icon.php', ['name' => $icon, 'size' => 18, 'class' => 'adm-side__icon']); ?>

@@ -24,6 +24,14 @@ return [
 
     $r('admin.orders', 'GET', '/orders', 'orders.php', 'orders.php', 'admin-orders'),
     $r('admin.customers', 'GET', '/customers', 'customers.php', 'customers.php', 'admin-customers'),
+    $r('admin.statements', 'GET', '/statements', 'statements.php', 'statements.php', 'admin-statements'),
+    $r('admin.statements.export', 'GET', '/statements/export.xlsx', 'statements.php', null, 'admin-statements'),
+    $r('admin.statements.print', 'GET', '/statements/print', 'statements.php', null, 'admin-statements'),
+    $r('admin.expenses', 'GET', '/expenses', 'expenses.php', 'expenses.php', 'admin-expenses'),
+    $r('admin.expenses.new', 'GET|POST', '/expenses/new', 'expenses.php', 'expense-form.php', 'admin-expenses'),
+    $r('admin.expenses.edit', 'GET|POST', '/expenses/{id}/edit', 'expenses.php', 'expense-form.php', 'admin-expenses', $n),
+    $r('admin.expenses.paid', 'POST', '/expenses/{id}/paid', 'expenses.php', null, 'admin-expenses', $n),
+    $r('admin.expenses.delete', 'POST', '/expenses/{id}/delete', 'expenses.php', null, 'admin-expenses', $n),
     $r('admin.customers.show', 'GET', '/customers/{phone}', 'customers.php', 'customer.php', 'admin-customer', ['phone' => 'phone']),
     $r('admin.orders.export', 'GET', '/orders/export.csv', 'export.php', null, 'admin-orders'),
     $r('admin.orders.bulk', 'POST', '/orders/bulk', 'orders.php', null, 'admin-orders'),
@@ -66,6 +74,7 @@ return [
     $r('admin.scent_families.toggle', 'POST', '/scent-families/{id}/toggle', 'scent-families.php', null, 'admin-scent-families', $n),
     $r('admin.coupons', 'GET', '/coupons', 'coupons.php', 'coupons.php', 'admin-coupons'),
     $r('admin.coupons.new', 'GET|POST', '/coupons/new', 'coupon-form.php', 'coupon-form.php', 'admin-coupon-form'),
+    $r('admin.coupons.reward', 'GET|POST', '/coupons/reward', 'coupon-reward.php', 'coupon-reward.php', 'admin-coupons'),
     $r('admin.coupons.edit', 'GET|POST', '/coupons/{id}', 'coupon-form.php', 'coupon-form.php', 'admin-coupon-form', $n),
     $r('admin.coupons.toggle', 'POST', '/coupons/{id}/toggle', 'coupons.php', null, 'admin-coupons', $n),
 
@@ -97,6 +106,15 @@ return [
     $r('admin.tools.regenerate_images', 'GET|POST', '/tools/regenerate-images', 'tools.php', 'tools-progress.php', 'admin-tools'),
 
     $r('admin.activity', 'GET', '/activity', 'activity.php', 'activity.php', 'admin-activity'),
+
+    $r('admin.sales', 'GET', '/sales', 'team.php', 'team-sales.php', 'admin-team'),
+    $r('admin.team', 'GET', '/team', 'team.php', 'team.php', 'admin-team'),
+    $r('admin.team.new', 'GET|POST', '/team/new', 'team.php', 'team-form.php', 'admin-team'),
+    $r('admin.team.edit', 'GET|POST', '/team/{id}', 'team.php', 'team-form.php', 'admin-team', $n),
+    $r('admin.team.sales', 'GET', '/team/{id}/sales', 'team.php', 'team-sales.php', 'admin-team', $n),
+    $r('admin.team.pay_ready', 'POST', '/team/{id}/pay-ready', 'team.php', null, 'admin-team', $n),
+    $r('admin.team.share', 'GET|POST', '/team/share/{order}', 'team.php', 'team-share.php', 'admin-team', $o),
+    $r('admin.team.assign', 'POST', '/orders/{order}/salesperson', 'team.php', null, 'admin-order', $o),
 
     ['name' => 'admin.notfound', 'method' => 'GET|POST', 'path' => '*', 'controller' => 'notfound.php', 'view' => '404.php', 'where' => [], 'preset' => [], 'robots' => 'noindex, nofollow', 'body_class' => 'admin t-light admin-notfound'],
 ];

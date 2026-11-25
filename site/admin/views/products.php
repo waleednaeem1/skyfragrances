@@ -128,7 +128,7 @@ $bulkButtons = [
     'clear_url' => '/admin/products',
     'count_text' => '',
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'products', 'query' => $query]); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'products', 'query' => $query]); ?>
 <?php partial_admin('table.php', [
     'caption' => 'Products',
     'list_id' => 'products-list',
@@ -148,7 +148,7 @@ $bulkButtons = [
         ? ['title' => 'No products yet', 'text' => 'Add your first perfume. Sizes, prices and photos all live on the product form.', 'action' => ['label' => 'Add product', 'href' => '/admin/products/new']]
         : ['title' => 'No products match', 'text' => 'Try a different search or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/products', 'variant' => 'ghost']],
 ]); ?>
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'products', 'query' => $query]); ?>
+<?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'products', 'query' => $query]); ?>
 <?php if ($threshold === 0): ?>
 <p class="adm-note">Low-stock alerts are off (Settings › Store › Low stock threshold is 0). Sold-out sizes are still flagged.</p>
 <?php endif; ?>

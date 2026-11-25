@@ -57,6 +57,7 @@ function confirmation_view_data(array $order, array $state = []): array
         'proofErrors' => $state['proofErrors'] ?? [],
         'notice' => $state['notice'] ?? null,
         'trapField' => form_trap_field(),
+        'reward' => reward_for_order((int) $order['id']),
     ];
 }
 

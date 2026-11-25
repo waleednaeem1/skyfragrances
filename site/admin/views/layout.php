@@ -22,7 +22,7 @@ if ($admin !== null) {
         }
     }
 }
-$createUrl = (string) ($head['create_url'] ?? ($isActive('/coupons') ? '/admin/coupons/new' : ($isActive('/collections') ? '/admin/collections/new' : '/admin/products/new')));
+$createUrl = (string) ($head['create_url'] ?? ($isActive('/coupons') ? '/admin/coupons/new' : ($isActive('/collections') ? '/admin/collections/new' : (team_can('products') ? '/admin/products/new' : (team_can('orders') ? '/admin/orders/new' : '/admin/coupons/new')))));
 $backUrl = (string) ($head['back'] ?? '');
 $flashes = flash_take();
 $navData = ['isActive' => $isActive, 'currentPath' => $currentPath, 'badges' => $badges, 'createUrl' => $createUrl];
@@ -57,7 +57,7 @@ $navData = ['isActive' => $isActive, 'currentPath' => $currentPath, 'badges' => 
 <?php if ($backUrl !== ''): ?>
   <a class="adm-top__back" href="<?= e(url($backUrl)) ?>" aria-label="Back">&larr;</a>
 <?php else: ?>
-  <a class="adm-top__logo" href="<?= e(url('/admin')) ?>" aria-label="Dashboard"><img src="<?= e(asset('img/brand/monogram-transparent-256.webp')) ?>" alt="Sky Fragrances" width="34" height="34" decoding="async"></a>
+  <a class="adm-top__logo" href="<?= e(url(team_home_url())) ?>" aria-label="Dashboard"><img src="<?= e(asset('img/brand/monogram-transparent-256.webp')) ?>" alt="Sky Fragrances" width="34" height="34" decoding="async"></a>
 <?php endif; ?>
   <span class="adm-top__title"><?= e($title === '' ? 'Dashboard' : $title) ?></span>
   <a class="adm-top__link" href="<?= e(url('/')) ?>" target="_blank" rel="noopener"><span class="adm-top__link-more">View&nbsp;</span>Shop<?php partial('icon.php', ['name' => 'external', 'size' => 14, 'class' => 'adm-top__link-icon']); ?></a>

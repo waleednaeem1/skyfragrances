@@ -116,7 +116,7 @@ foreach ($orders as $o) {
     'clear_url' => $activeChips !== [] ? $clearUrl : null,
 ]); ?>
 
-<?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'orders', 'path' => '/admin/orders', 'query' => $query]); ?>
+<?php partial_admin('pagination.php', ['top' => true, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'orders', 'path' => '/admin/orders', 'query' => $query]); ?>
 
 <?php partial_admin('table.php', [
     'caption' => 'Orders',
