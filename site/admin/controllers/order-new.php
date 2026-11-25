@@ -39,6 +39,7 @@ if (request_method() === 'POST') {
                 'ip_hash' => request_ip_hash(),
                 'user_agent' => mb_substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
                 'source' => 'phone',
+                'placed_at' => order_datetime_parse($form['received_at']),
             ], $cart);
             if ($result['outcome'] === 'placed' || $result['outcome'] === 'replay') {
                 if ($result['outcome'] === 'placed') {

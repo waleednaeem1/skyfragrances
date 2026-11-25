@@ -237,7 +237,7 @@
   });
 
   on('[data-href]', 'click', function (ev, row) {
-    if (ev.target.closest('a, button, input, label, form, [data-sheet]')) return;
+    if (ev.target.closest('a, button, input, select, textarea, label, [data-sheet]')) return;
     var list = row.closest('[data-list]');
     if (list && list.classList.contains('is-selecting')) {
       var box = qs('[data-select-row]', row);

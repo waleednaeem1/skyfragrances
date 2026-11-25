@@ -3,7 +3,7 @@ defined('SKYFR') || exit;
 $status = (string) ($status ?? '');
 $tones = [
     'pending' => 'gold', 'confirmed' => 'green', 'packing' => 'slate', 'shipped' => 'champagne', 'delivered' => 'forest', 'cancelled' => 'maroon',
-    'unpaid' => 'neutral', 'awaiting_verification' => 'gold', 'paid' => 'green', 'failed' => 'red', 'refunded' => 'blue',
+    'unpaid' => 'neutral', 'awaiting_verification' => 'gold', 'partial' => 'champagne', 'paid' => 'green', 'failed' => 'red', 'refunded' => 'blue',
     'approved' => 'green', 'rejected' => 'maroon',
     'new' => 'gold', 'read' => 'neutral', 'replied' => 'green', 'archived' => 'muted',
     'subscribed' => 'green', 'unsubscribed' => 'muted',

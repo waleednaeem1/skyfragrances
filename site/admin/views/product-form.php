@@ -17,7 +17,7 @@ $errorLabel = static function (string $key) use ($labels): string {
         return $labels[$key];
     }
     if (preg_match('/^sizes-(\d+)-(.+)$/', $key, $m)) {
-        return ucfirst(str_replace('_', ' ', $m[2]));
+        return $m[2] === 'display_stock' ? 'Stock shown on the shop' : ucfirst(str_replace('_', ' ', $m[2]));
     }
     if (str_starts_with($key, 'img-alt-')) {
         return 'Photo alt text';
@@ -59,6 +59,9 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
     <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('stock'), 'id' => $id('stock'), 'label' => 'Stock', 'value' => $size['stock'] ?? '0', 'required' => true, 'error' => $err($id('stock')), 'help' => ($size['stock'] ?? '') !== '' && is_numeric($size['stock']) && (int) $size['stock'] <= 0 ? 'Sold out — customers see SOLD OUT for this size.' : ((($size['low_stock_threshold'] ?? '') !== '' ? (int) $size['low_stock_threshold'] : $threshold) > 0 && is_numeric($size['stock'] ?? '') && (int) $size['stock'] > 0 && (int) $size['stock'] <= (($size['low_stock_threshold'] ?? '') !== '' ? (int) $size['low_stock_threshold'] : $threshold) ? 'Low stock — at or below the alert level.' : '')]); ?>
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('low_stock_threshold'), 'id' => $id('low_stock_threshold'), 'label' => 'Low-stock alert at', 'value' => $size['low_stock_threshold'] ?? '', 'placeholder' => (string) $threshold, 'help' => 'Blank uses the shop default (' . $threshold . ').', 'error' => $err($id('low_stock_threshold'))]); ?>
+    </div>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('display_stock'), 'id' => $id('display_stock'), 'label' => 'Stock shown on the shop', 'value' => $size['display_stock'] ?? '', 'placeholder' => 'Same as stock', 'help' => 'What customers see. Under 10 shows as "Only N left", 10 or more as "In stock". Blank shows the real stock. Orders always use the real stock, and the size shows Out of stock when the real stock is 0.', 'error' => $err($id('display_stock'))]); ?>
     </div>
     <label class="adm-check"><input type="radio" class="adm-check__input" name="default_size" value="<?= e($i) ?>"<?= !empty($size['is_default']) ? ' checked' : '' ?>><span class="adm-check__box" aria-hidden="true"></span><span class="adm-check__label">Default size (selected first on the product page)</span></label>
   </div>

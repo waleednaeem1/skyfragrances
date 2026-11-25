@@ -6,7 +6,7 @@ const PAYMENT_REFERENCE_PATTERN = '/^[A-Z0-9-]{5,30}$/';
 const PAYMENT_PROOF_PER_ORDER_MAX = 3;
 const PAYMENT_PROOF_PER_IP_HOUR_MAX = 5;
 const PAYMENT_PROOF_PER_ORDER_WINDOW_SECONDS = 86400;
-const PAYMENT_REVIEW_APPROVE_FROM = ['unpaid', 'awaiting_verification', 'failed'];
+const PAYMENT_RECORD_FROM = ['unpaid', 'awaiting_verification', 'failed', 'partial'];
 const PAYMENT_REVIEW_REJECT_FROM = ['unpaid', 'awaiting_verification'];
 const PAYMENT_DUPLICATE_REF_DAYS = 90;
 
@@ -197,76 +197,113 @@ function payment_proof_store(array $order, string $tmpPath, string $mime, ?strin
     });
 }
 
-function payment_review(int $orderId, ?int $proofId, bool $approve, array $actor, string $note = ''): array
+function payment_proof_close(int $orderId, ?int $proofId, bool $approve, array $actor, string $note, string $now): void
 {
-    $result = db_transaction(static function () use ($orderId, $proofId, $approve, $actor, $note): array {
+    if ($proofId !== null) {
+        db_update('payment_proofs', [
+            'review_status' => $approve ? 'approved' : 'rejected',
+            'reviewed_by' => $actor['admin_id'] ?? null,
+            'reviewed_by_name' => $actor['admin_username'] ?? null,
+            'reviewed_at' => $now,
+            'review_note' => $note === '' ? null : mb_substr($note, 0, 255),
+        ], ['id' => $proofId, 'order_id' => $orderId]);
+    }
+    if ($approve) {
+        db_query(
+            "UPDATE payment_proofs SET review_status = 'superseded', reviewed_at = :now WHERE order_id = :id AND review_status = 'pending' AND id <> :keep",
+            ['now' => $now, 'id' => $orderId, 'keep' => $proofId ?? 0]
+        );
+    } else {
+        payment_proof_reset_budget($orderId);
+    }
+}
+
+function payment_record(int $orderId, array $actor, ?int $amountPaisa, string $paidAt, string $note = '', ?int $proofId = null): array
+{
+    $result = db_transaction(static function () use ($orderId, $actor, $amountPaisa, $paidAt, $note, $proofId): array {
+        $order = db_fetch('SELECT id, payment_status, payment_method, grand_total, amount_paid FROM orders WHERE id = :id FOR UPDATE', ['id' => $orderId]);
+        if ($order === null) {
+            return ['ok' => false, 'message' => 'Order not found.'];
+        }
+        $from = (string) $order['payment_status'];
+        if (!in_array($from, PAYMENT_RECORD_FROM, true)) {
+            return ['ok' => false, 'message' => 'This order is already ' . str_replace('_', ' ', $from) . '.'];
+        }
+        $total = money_paisa((string) $order['grand_total']);
+        $paid = money_paisa((string) $order['amount_paid']);
+        $due = max(0, $total - $paid);
+        $amount = $amountPaisa ?? $due;
+        if ($amount <= 0) {
+            return ['ok' => false, 'message' => $due === 0 ? 'Nothing is due on this order.' : 'Enter the amount received.'];
+        }
+        if ($amount > $due) {
+            return ['ok' => false, 'message' => 'That is more than the ' . money(money_from_paisa($due)) . ' still due on this order.'];
+        }
+        $now = now_karachi();
+        $paidNow = $paid + $amount;
+        $to = $paidNow >= $total ? 'paid' : 'partial';
+        db_insert('order_payments', [
+            'order_id' => $orderId,
+            'amount' => money_from_paisa($amount),
+            'paid_at' => $paidAt,
+            'note' => trim($note) === '' ? null : mb_substr(trim($note), 0, 255),
+            'admin_id' => $actor['admin_id'] ?? null,
+            'admin_name' => $actor['admin_username'] ?? null,
+            'created_at' => $now,
+        ]);
+        db_query(
+            'UPDATE orders SET amount_paid = :amount, payment_status = :to, paid_at = :paid, updated_at = :now WHERE id = :id',
+            ['amount' => money_from_paisa($paidNow), 'to' => $to, 'paid' => $to === 'paid' ? $paidAt : null, 'now' => $now, 'id' => $orderId]
+        );
+        payment_proof_close($orderId, $proofId, true, $actor, $note, $now);
+        $history = 'Received ' . money(money_from_paisa($amount)) . ' by ' . payment_method_label((string) $order['payment_method'])
+            . ($to === 'partial' ? ' — ' . money(money_from_paisa($total - $paidNow)) . ' still due' : '')
+            . (trim($note) !== '' ? ' — ' . trim($note) : '');
+        order_history_insert($orderId, 'payment_status', $from, $to, mb_substr($history, 0, 500), $actor, $now);
+        return [
+            'ok' => true,
+            'to' => $to,
+            'message' => $to === 'paid' ? 'Payment recorded. The order is now fully paid.' : 'Part payment recorded. ' . money(money_from_paisa($total - $paidNow)) . ' is still due.',
+        ];
+    });
+    if ($result['ok'] && $result['to'] === 'paid' && $proofId !== null) {
+        notify_payment_received($orderId);
+    }
+    return $result;
+}
+
+function payment_review(int $orderId, ?int $proofId, bool $approve, array $actor, string $note = '', ?string $paidAt = null): array
+{
+    if ($approve) {
+        return payment_record($orderId, $actor, null, $paidAt ?? now_karachi(), $note === '' ? 'Payment approved' : $note, $proofId);
+    }
+    $result = db_transaction(static function () use ($orderId, $proofId, $actor, $note): array {
         $order = db_fetch('SELECT id, order_number, status, payment_status, customer_email, customer_name FROM orders WHERE id = :id FOR UPDATE', ['id' => $orderId]);
         if ($order === null) {
             return ['ok' => false, 'message' => 'Order not found.', 'order' => null];
         }
         $from = (string) $order['payment_status'];
-        if (!in_array($from, $approve ? PAYMENT_REVIEW_APPROVE_FROM : PAYMENT_REVIEW_REJECT_FROM, true)) {
+        if (!in_array($from, PAYMENT_REVIEW_REJECT_FROM, true)) {
             return ['ok' => false, 'message' => 'This order is already ' . $from . '.', 'order' => $order];
         }
-        if (!$approve && trim($note) === '') {
+        if (trim($note) === '') {
             return ['ok' => false, 'message' => 'A short reason is required when rejecting a payment.', 'order' => $order];
         }
         $now = now_karachi();
-        $to = $approve ? 'paid' : 'failed';
         $moved = db_query(
-            'UPDATE orders SET payment_status = :to, paid_at = :paid, updated_at = :now WHERE id = :id AND payment_status = :from',
-            ['to' => $to, 'paid' => $approve ? $now : null, 'now' => $now, 'id' => $orderId, 'from' => $from]
+            "UPDATE orders SET payment_status = 'failed', paid_at = NULL, updated_at = :now WHERE id = :id AND payment_status = :from",
+            ['now' => $now, 'id' => $orderId, 'from' => $from]
         )->rowCount() === 1;
         if (!$moved) {
             throw new RuntimeException('payment status changed concurrently');
         }
-        if ($proofId !== null) {
-            db_update('payment_proofs', [
-                'review_status' => $approve ? 'approved' : 'rejected',
-                'reviewed_by' => $actor['admin_id'] ?? null,
-                'reviewed_by_name' => $actor['admin_username'] ?? null,
-                'reviewed_at' => $now,
-                'review_note' => $note === '' ? null : mb_substr($note, 0, 255),
-            ], ['id' => $proofId, 'order_id' => $orderId]);
-        }
-        if ($approve) {
-            db_query(
-                "UPDATE payment_proofs SET review_status = 'superseded', reviewed_at = :now WHERE order_id = :id AND review_status = 'pending' AND id <> :keep",
-                ['now' => $now, 'id' => $orderId, 'keep' => $proofId ?? 0]
-            );
-        } else {
-            payment_proof_reset_budget($orderId);
-        }
-        order_history_insert($orderId, 'payment_status', $from, $to, $approve ? 'Payment approved' : 'Payment rejected: ' . $note, $actor, $now);
-        $order['payment_status'] = $to;
-        return ['ok' => true, 'message' => $approve ? 'Payment approved.' : 'Payment rejected.', 'order' => $order];
+        payment_proof_close($orderId, $proofId, false, $actor, $note, $now);
+        order_history_insert($orderId, 'payment_status', $from, 'failed', 'Payment rejected: ' . $note, $actor, $now);
+        $order['payment_status'] = 'failed';
+        return ['ok' => true, 'message' => 'Payment rejected.', 'order' => $order];
     });
     if ($result['ok']) {
-        $approve ? notify_payment_received($orderId) : notify_payment_rejected($orderId, $note);
+        notify_payment_rejected($orderId, $note);
     }
     return $result;
-}
-
-function payment_mark_paid(int $orderId, array $actor, ?string $amountReceived = null, string $note = ''): array
-{
-    return db_transaction(static function () use ($orderId, $actor, $amountReceived, $note): array {
-        $order = db_fetch('SELECT id, payment_status, payment_method, grand_total FROM orders WHERE id = :id FOR UPDATE', ['id' => $orderId]);
-        if ($order === null) {
-            return ['ok' => false, 'message' => 'Order not found.'];
-        }
-        if (!in_array($order['payment_status'], ['unpaid', 'awaiting_verification', 'failed'], true)) {
-            return ['ok' => false, 'message' => 'This order is already ' . $order['payment_status'] . '.'];
-        }
-        $now = now_karachi();
-        db_query("UPDATE orders SET payment_status = 'paid', paid_at = :now, updated_at = :now2 WHERE id = :id", ['now' => $now, 'now2' => $now, 'id' => $orderId]);
-        $history = 'Payment marked as received — ' . payment_method_label((string) $order['payment_method']);
-        if ($amountReceived !== null && money_paisa($amountReceived) !== money_paisa((string) $order['grand_total'])) {
-            $history .= ' (received ' . money($amountReceived) . ' against ' . money((string) $order['grand_total']) . ')';
-        }
-        if (trim($note) !== '') {
-            $history .= ' — ' . trim($note);
-        }
-        order_history_insert($orderId, 'payment_status', (string) $order['payment_status'], 'paid', mb_substr($history, 0, 500), $actor, $now);
-        return ['ok' => true, 'message' => 'Payment recorded.'];
-    });
 }

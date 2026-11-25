@@ -280,7 +280,7 @@ $pages = max(1, (int) ceil($total / $per));
 $page = min($filters['page'], $pages);
 $offset = ($page - 1) * $per;
 $orders = $total === 0 ? [] : db_fetch_all(
-    'SELECT o.id, o.order_number, o.status, o.payment_method, o.payment_status, o.customer_name, o.customer_phone, o.phone_normalized, o.city, o.grand_total, o.item_count, o.courier_name, o.tracking_number, o.created_at, o.stock_restored_at,
+    'SELECT o.id, o.order_number, o.status, o.payment_method, o.payment_status, o.customer_name, o.customer_phone, o.phone_normalized, o.city, o.grand_total, o.amount_paid, o.item_count, o.courier_name, o.tracking_number, o.created_at, o.stock_restored_at,
         EXISTS (SELECT 1 FROM payment_proofs pp WHERE pp.order_id = o.id AND pp.file_path IS NOT NULL) AS has_proof
      FROM orders o WHERE ' . $built['where'] . ' ORDER BY ' . $built['order'] . ' LIMIT ' . (int) $per . ' OFFSET ' . (int) $offset,
     $built['params']

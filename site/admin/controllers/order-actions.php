@@ -10,7 +10,7 @@ const ADM_ORDER_TRACKING_PATTERN = '/^[A-Za-z0-9\- ]{1,60}$/';
 const ADM_ORDER_PROOF_VIEW_LOG_SECONDS = 3600;
 const ADM_ORDER_EXPORT_CAP = 5000;
 const ADM_ORDER_STATUS_LABELS = ['pending' => 'Pending', 'confirmed' => 'Confirmed', 'packing' => 'Packing', 'shipped' => 'Shipped', 'delivered' => 'Delivered', 'cancelled' => 'Cancelled'];
-const ADM_ORDER_PAYMENT_LABELS = ['unpaid' => 'Unpaid', 'awaiting_verification' => 'Review needed', 'paid' => 'Paid', 'failed' => 'Not verified', 'refunded' => 'Refunded'];
+const ADM_ORDER_PAYMENT_LABELS = ['unpaid' => 'Unpaid', 'awaiting_verification' => 'Review needed', 'partial' => 'Part paid', 'paid' => 'Paid', 'failed' => 'Not verified', 'refunded' => 'Refunded'];
 const ADM_ORDER_STATUS_RANK = ['pending' => 1, 'confirmed' => 2, 'packing' => 3, 'shipped' => 4, 'delivered' => 5, 'cancelled' => 6];
 
 function adm_actor(): array
@@ -245,6 +245,11 @@ function adm_order_post_payment(array $order): never
     $orderId = (int) $order['id'];
     $before = ['payment_status' => $order['payment_status']];
     if ($action === 'mark_paid') {
+        $paidAt = order_datetime_parse((string) request_post('paid_at', ''));
+        if ($paidAt === null) {
+            flash('error', 'Enter the date and time the payment was received. It cannot be in the future.');
+            redirect('/admin/orders/' . $order['order_number'] . '#payment', 303);
+        }
         $amount = trim((string) request_post('amount', ''));
         $amount = $amount === '' ? null : str_replace(',', '', $amount);
         if ($amount !== null && !preg_match('/^\d{1,8}(\.\d{1,2})?$/', $amount)) {
@@ -252,14 +257,12 @@ function adm_order_post_payment(array $order): never
             redirect(adm_order_path($order), 303);
         }
         $proof = adm_order_pending_proof($order);
-        $result = $proof !== null && ($amount === null || money_paisa($amount) === money_paisa((string) $order['grand_total']))
-            ? payment_review($orderId, (int) $proof['id'], true, adm_actor(), $note)
-            : payment_mark_paid($orderId, adm_actor(), $amount, $note);
+        $result = payment_record($orderId, adm_actor(), $amount === null ? null : money_paisa($amount), $paidAt, $note, $proof === null ? null : (int) $proof['id']);
         if ($result['ok']) {
-            $summary = 'Payment marked as received — ' . payment_method_label((string) $order['payment_method']) . ($amount !== null ? ', ' . money($amount) : '');
-            adm_order_log($order, 'order.mark_paid', $summary, $before, ['payment_status' => 'paid']);
+            $summary = 'Payment received — ' . payment_method_label((string) $order['payment_method']) . ($amount !== null ? ', ' . money($amount) : '') . ($result['to'] === 'partial' ? ' (part payment)' : '');
+            adm_order_log($order, 'order.mark_paid', $summary, $before, ['payment_status' => $result['to']]);
         }
-        adm_order_flash_result($result, 'Payment recorded. The order status is unchanged — confirm it when you are ready.');
+        adm_order_flash_result($result, (string) ($result['message'] ?? 'Payment recorded.') . ' The order status is unchanged — confirm it when you are ready.');
         redirect(adm_order_path($order), 303);
     }
     if ($action === 'reject') {
@@ -276,21 +279,22 @@ function adm_order_post_payment(array $order): never
         redirect(adm_order_path($order), 303);
     }
     if ($action === 'refund') {
-        if ($order['payment_status'] !== 'paid') {
-            flash('error', 'Only a paid order can be marked refunded.');
+        if (!in_array($order['payment_status'], ['paid', 'partial'], true)) {
+            flash('error', 'Only an order with a payment can be marked refunded.');
             redirect(adm_order_path($order), 303);
         }
         if ($note === '') {
             flash('error', 'A reason is required to record a refund.');
             redirect(adm_order_path($order), 303);
         }
-        db_transaction(static function () use ($orderId, $note): void {
+        $from = (string) $order['payment_status'];
+        db_transaction(static function () use ($orderId, $note, $from, $order): void {
             $now = now_karachi();
-            $moved = db_query("UPDATE orders SET payment_status = 'refunded', updated_at = :now WHERE id = :id AND payment_status = 'paid'", ['now' => $now, 'id' => $orderId])->rowCount() === 1;
+            $moved = db_query("UPDATE orders SET payment_status = 'refunded', amount_paid = 0, updated_at = :now WHERE id = :id AND payment_status = :from", ['now' => $now, 'id' => $orderId, 'from' => $from])->rowCount() === 1;
             if (!$moved) {
-                throw new RuntimeException('Order is no longer paid');
+                throw new RuntimeException('Order payment changed while refunding');
             }
-            order_history_insert($orderId, 'payment_status', 'paid', 'refunded', 'Refund recorded: ' . $note, adm_actor(), $now);
+            order_history_insert($orderId, 'payment_status', $from, 'refunded', 'Refund of ' . money((string) $order['amount_paid']) . ' recorded: ' . $note, adm_actor(), $now);
         });
         adm_order_log($order, 'order.refunded', 'Payment marked refunded: ' . $note, $before, ['payment_status' => 'refunded']);
         flash('success', 'Refund recorded. Money movement happens outside this system.');
@@ -656,6 +660,8 @@ function adm_order_print_payload(array $order, ?array $items = null): array
         'itemCount' => array_sum(array_map(static fn (array $i): int => (int) $i['quantity'], $items)),
         'isCod' => $order['payment_method'] === 'cod',
         'isPaid' => $order['payment_status'] === 'paid',
-        'collectAmount' => $order['payment_method'] === 'cod' && $order['payment_status'] !== 'paid' && $order['status'] !== 'cancelled' ? money((string) $order['grand_total']) : null,
+        'amountPaid' => money(money_from_paisa(order_balance($order)['paid'])),
+        'balanceDue' => order_balance($order)['due'] > 0 ? money(money_from_paisa(order_balance($order)['due'])) : null,
+        'collectAmount' => order_balance($order)['due'] > 0 && ($order['payment_method'] === 'cod' || $order['payment_status'] === 'partial') ? money(money_from_paisa(order_balance($order)['due'])) : null,
     ];
 }

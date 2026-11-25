@@ -9,6 +9,7 @@ require_once __DIR__ . '/notifications.php';
 
 const ORDER_NUMBER_PATTERN = '/^(?:SK-[0-9]{3,7}|SF-[0-9]{6}-[A-HJ-NP-Z2-9]{4})$/';
 const ORDER_NUMBER_RETRIES = 5;
+const ORDER_DATETIME_EARLIEST = '2024-01-01 00:00:00';
 const ORDER_DEADLOCK_RETRIES = 2;
 const ORDER_STATUS_FLOW = ['pending', 'confirmed', 'packing', 'shipped', 'delivered'];
 const ORDER_TRANSITIONS = [
@@ -86,6 +87,38 @@ function order_number_next(): string
 {
     db_query("INSERT INTO order_sequence (name, value) VALUES ('order', LAST_INSERT_ID(1)) ON DUPLICATE KEY UPDATE value = LAST_INSERT_ID(value + 1)");
     return order_number_format((int) db_fetch_column('SELECT LAST_INSERT_ID()'));
+}
+
+function order_datetime_parse(string $raw): ?string
+{
+    $raw = trim($raw);
+    $tz = new DateTimeZone('Asia/Karachi');
+    foreach (['Y-m-d\TH:i', 'Y-m-d\TH:i:s'] as $format) {
+        $at = DateTimeImmutable::createFromFormat('!' . $format, $raw, $tz);
+        if ($at !== false && $at->format($format) === $raw) {
+            $value = $at->format('Y-m-d H:i:s');
+            return $value >= ORDER_DATETIME_EARLIEST && $at <= new DateTimeImmutable('+10 minutes', $tz) ? $value : null;
+        }
+    }
+    return null;
+}
+
+function order_balance(array $order): array
+{
+    $total = money_paisa((string) $order['grand_total']);
+    $paid = money_paisa((string) ($order['amount_paid'] ?? '0'));
+    $open = $order['status'] !== 'cancelled' && $order['payment_status'] !== 'refunded';
+    return ['total' => $total, 'paid' => $paid, 'due' => $open ? max(0, $total - $paid) : 0];
+}
+
+function order_payments(int $orderId): array
+{
+    return db_fetch_all('SELECT id, amount, paid_at, note, admin_name, created_at FROM order_payments WHERE order_id = :id AND voided_at IS NULL ORDER BY paid_at ASC, id ASC', ['id' => $orderId]);
+}
+
+function order_datetime_input(?string $stored = null): string
+{
+    return (new DateTimeImmutable($stored ?? 'now', new DateTimeZone('Asia/Karachi')))->format('Y-m-d\TH:i');
 }
 
 function order_number_is_wellformed(string $number): bool
@@ -343,7 +376,7 @@ function order_place_attempt(array $input, array $cart): array
         if (!order_seen_matches($input, $priced)) {
             throw order_error(ORDER_ERR_REPRICE, (string) $priced['grand_total_paisa']);
         }
-        $now = now_karachi();
+        $now = ($input['source'] ?? 'web') === 'phone' && is_string($input['placed_at'] ?? null) ? $input['placed_at'] : now_karachi();
         $accessToken = bin2hex(random_bytes(16));
         $header = order_insert_header($input, $priced, $input['idem_key'], $accessToken, $now);
         order_insert_items($header['id'], $priced, $now);

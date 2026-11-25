@@ -50,7 +50,7 @@
         el.textContent = 'In stock';
       }
     });
-    var max = Math.max(0, Math.min(10, stock));
+    var max = stock > 0 ? parseInt(size.max_qty, 10) || 1 : 0;
     SF.qsa('.js-qty[data-product-qty]').forEach(function (group) {
       group.setAttribute('data-max', String(max || 1));
       var input = group.querySelector('.qty__input');

@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS product_sizes (
   price               DECIMAL(10,2) UNSIGNED NOT NULL,
   sale_price          DECIMAL(10,2) UNSIGNED NULL DEFAULT NULL,
   stock               INT UNSIGNED           NOT NULL DEFAULT 0,
+  display_stock       SMALLINT UNSIGNED      NULL DEFAULT NULL,
   low_stock_threshold TINYINT UNSIGNED       NULL DEFAULT NULL,
   is_default          TINYINT UNSIGNED       NOT NULL DEFAULT 0,
   is_active           TINYINT UNSIGNED       NOT NULL DEFAULT 1,
@@ -353,6 +354,7 @@ CREATE TABLE IF NOT EXISTS orders (
   shipping_fee             DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0.00,
   cod_fee                  DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0.00,
   grand_total              DECIMAL(10,2) UNSIGNED NOT NULL,
+  amount_paid              DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0.00,
   item_count               SMALLINT UNSIGNED      NOT NULL DEFAULT 0,
   coupon_id                INT UNSIGNED           NULL DEFAULT NULL,
   coupon_code              VARCHAR(40)            NULL DEFAULT NULL,
@@ -527,6 +529,22 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   PRIMARY KEY (id),
   KEY idx_rate_limits_lookup (bucket, subject_hash, attempted_at),
   KEY idx_rate_limits_time (attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
+
+CREATE TABLE IF NOT EXISTS order_payments (
+  id          INT UNSIGNED           NOT NULL AUTO_INCREMENT,
+  order_id    INT UNSIGNED           NOT NULL,
+  amount      DECIMAL(10,2) UNSIGNED NOT NULL,
+  paid_at     DATETIME               NOT NULL,
+  note        VARCHAR(255)           NULL DEFAULT NULL,
+  admin_id    INT UNSIGNED           NULL DEFAULT NULL,
+  admin_name  VARCHAR(64)            NULL DEFAULT NULL,
+  created_at  DATETIME               NOT NULL,
+  voided_at   DATETIME               NULL DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY idx_order_payments_order (order_id, voided_at),
+  CONSTRAINT fk_order_payments_order_id FOREIGN KEY (order_id)
+    REFERENCES orders (id) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE IF NOT EXISTS order_sequence (

@@ -105,12 +105,13 @@ function product_present_size(array $row): array
     $comparePaisa = $unit['compare_at_paisa'];
     $savePercent = $comparePaisa !== null && $comparePaisa > 0 ? intdiv(($comparePaisa - $unitPaisa) * 100, $comparePaisa) : 0;
     $stock = (int) $row['stock'];
+    $shown = $stock <= 0 ? 0 : ($row['display_stock'] === null ? $stock : (int) $row['display_stock']);
     return [
         'id' => (int) $row['id'],
         'label' => (string) $row['size_label'],
         'size_ml' => $row['size_ml'] === null ? null : (int) $row['size_ml'],
         'sku' => (string) $row['sku'],
-        'stock' => $stock,
+        'stock' => $shown,
         'in_stock' => $stock > 0,
         'is_default' => (int) $row['is_default'] === 1,
         'on_sale' => $comparePaisa !== null,
@@ -120,7 +121,7 @@ function product_present_size(array $row): array
         'effective_display' => money(money_from_paisa($unitPaisa)),
         'sale_price_display' => $comparePaisa !== null ? money(money_from_paisa($unitPaisa)) : null,
         'save_percent' => $savePercent,
-        'max_qty' => max(1, min(CART_MAX_QTY_PER_LINE, $stock)),
+        'max_qty' => max(1, min(CART_MAX_QTY_PER_LINE, $stock, $shown)),
     ];
 }
 
@@ -515,7 +516,7 @@ $productId = (int) $product['id'];
 $productName = (string) $product['name'];
 
 $sizes = array_map('product_present_size', db_fetch_all(
-    'SELECT id, size_label, size_ml, sku, price, sale_price, stock, is_default
+    'SELECT id, size_label, size_ml, sku, price, sale_price, stock, display_stock, is_default
      FROM product_sizes WHERE product_id = :id AND is_active = 1 ORDER BY sort_order ASC, size_ml ASC, id ASC',
     ['id' => $productId]
 ));
@@ -581,6 +582,7 @@ $sizesJson = [
         'sale_price_display' => $size['sale_price_display'],
         'save_percent' => $size['save_percent'],
         'stock' => $size['stock'],
+        'max_qty' => $size['max_qty'],
     ], $sizes),
 ];
 

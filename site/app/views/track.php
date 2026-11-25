@@ -112,6 +112,10 @@ $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="
         </div>
         <div class="summary__rows">
           <p class="summary__row summary__row--total"><span class="summary__label">Order total</span><span class="summary__value summary__value--total"><?= e($order['grand_total_display']) ?></span></p>
+<?php if ($order['balance_due_display'] !== null): ?>
+          <p class="summary__row"><span class="summary__label">Paid</span><span class="summary__value"><?= e($order['amount_paid_display']) ?></span></p>
+          <p class="summary__row"><span class="summary__label">Balance due</span><span class="summary__value"><strong><?= e($order['balance_due_display']) ?></strong></span></p>
+<?php endif; ?>
         </div>
         <p class="summary__note">Your confirmation page holds the full receipt with prices and delivery details.</p>
       </div>

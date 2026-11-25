@@ -39,7 +39,7 @@ function order_form_size_options(array $reserved = []): array
 function order_form_input(): array
 {
     $form = [];
-    foreach (['customer_name', 'customer_phone', 'customer_email', 'city', 'address', 'postal_code', 'customer_note', 'payment_method', 'coupon_code', 'idem_key', 'price_token', 'price_total'] as $key) {
+    foreach (['customer_name', 'customer_phone', 'customer_email', 'city', 'address', 'postal_code', 'customer_note', 'payment_method', 'coupon_code', 'idem_key', 'price_token', 'price_total', 'received_at'] as $key) {
         $value = request_post($key, '');
         $form[$key] = is_string($value) ? trim(preg_replace('/[^\P{C}\n]+/u', '', $value) ?? '') : '';
     }
@@ -64,6 +64,7 @@ function order_form_blank(): array
     $methods = payment_methods_enabled();
     $form['payment_method'] = in_array('cod', $methods, true) ? 'cod' : (string) ($methods[0] ?? 'cod');
     $form['idem_key'] = bin2hex(random_bytes(16));
+    $form['received_at'] = order_datetime_input();
     $form['lines'] = array_fill(0, ORDER_FORM_LINES, ['size_id' => 0, 'qty' => 1]);
     return $form;
 }
@@ -92,6 +93,9 @@ function order_form_validate(array $form, array $sizeOptions, ?string &$phoneNor
     }
     if (mb_strlen($form['customer_note']) > 500) {
         $errors['customer_note'] = 'Keep the note under 500 characters.';
+    }
+    if (order_datetime_parse($form['received_at']) === null) {
+        $errors['received_at'] = 'Enter the date and time the order was received. It cannot be in the future.';
     }
     if (!$checkItems) {
         return $errors;

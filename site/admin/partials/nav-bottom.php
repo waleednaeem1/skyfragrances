@@ -4,6 +4,7 @@ $ordersCount = (int) ($badges['orders'] ?? 0);
 $reviewsCount = (int) ($badges['reviews'] ?? 0);
 $more = [
     ['/admin', 'Dashboard'],
+    ['/admin/customers', 'Customers'],
     ['/admin/collections', 'Collections'],
     ['/admin/coupons', 'Coupons'],
     ['/admin/messages', 'Messages'],

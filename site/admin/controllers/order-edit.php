@@ -43,6 +43,8 @@ function order_edit_form_from_order(array $order, array $editableItems): array
     }
     $form['delivery_fee'] = order_edit_money_out((string) $order['shipping_fee']);
     $form['discount'] = order_edit_money_out((string) $order['discount_total']);
+    $form['received_at'] = order_datetime_input((string) $order['created_at']);
+    $form['paid_at'] = order_datetime_input($order['paid_at'] === null ? null : (string) $order['paid_at']);
     $lines = [];
     foreach ($editableItems as $item) {
         $lines[] = ['size_id' => (int) $item['product_size_id'], 'qty' => (int) $item['quantity'], 'price' => order_edit_money_out((string) $item['unit_price_charged'])];
@@ -69,7 +71,7 @@ function order_edit_input(int $lineCount): array
             'price' => is_array($prices) && isset($prices[$i]) && is_string($prices[$i]) ? trim($prices[$i]) : '',
         ];
     }
-    foreach (['delivery_fee', 'discount', 'payment_status'] as $key) {
+    foreach (['delivery_fee', 'discount', 'payment_status', 'paid_at'] as $key) {
         $value = request_post($key, '');
         $form[$key] = is_string($value) ? trim($value) : '';
     }
@@ -84,6 +86,9 @@ function order_edit_validate(array $form, array $sizeOptions, ?string &$phoneNor
     }
     if (!isset($paymentStatuses[$form['payment_status']])) {
         $errors['payment_status'] = 'Choose the payment status.';
+    }
+    if ($form['payment_status'] === 'paid' && order_datetime_parse($form['paid_at']) === null) {
+        $errors['paid_at'] = 'Enter the date and time the payment was received. It cannot be in the future.';
     }
     $chosen = 0;
     $subtotal = $fixedSubtotal;
@@ -211,12 +216,38 @@ function order_edit_save(array $order, array $form, array $lines, string $phoneN
             'shipping_fee' => money_from_paisa($shipping),
             'grand_total' => money_from_paisa($subtotal - $discount + $shipping + $cod),
             'item_count' => $count,
+            'created_at' => order_datetime_parse($form['received_at']) ?? (string) $locked['created_at'],
             'updated_at' => $now,
         ];
-        if ($form['payment_status'] !== (string) $locked['payment_status']) {
-            $update['payment_status'] = $form['payment_status'];
-            $update['paid_at'] = $form['payment_status'] === 'paid' ? ($locked['paid_at'] ?? $now) : null;
+        $total = $subtotal - $discount + $shipping + $cod;
+        $paidSoFar = money_paisa((string) $locked['amount_paid']);
+        $chosen = $form['payment_status'];
+        $changed = $chosen !== (string) $locked['payment_status'];
+        $actor = adm_actor();
+        if ($changed && $chosen === 'paid' && $paidSoFar < $total) {
+            db_insert('order_payments', [
+                'order_id' => (int) $order['id'],
+                'amount' => money_from_paisa($total - $paidSoFar),
+                'paid_at' => order_datetime_parse($form['paid_at']) ?? $now,
+                'note' => 'Marked paid in Edit order',
+                'admin_id' => $actor['admin_id'] ?? null,
+                'admin_name' => $actor['admin_username'] ?? null,
+                'created_at' => $now,
+            ]);
+            $paidSoFar = $total;
+        } elseif ($changed && $chosen === 'unpaid' && $paidSoFar > 0) {
+            db_query('UPDATE order_payments SET voided_at = :now WHERE order_id = :id AND voided_at IS NULL', ['now' => $now, 'id' => (int) $order['id']]);
+            $paidSoFar = 0;
         }
+        $keep = in_array($chosen, ['awaiting_verification', 'failed', 'refunded'], true) && $chosen === (string) $locked['payment_status'];
+        $status = $keep ? $chosen : ($total > 0 && $paidSoFar >= $total ? 'paid' : ($paidSoFar > 0 ? 'partial' : 'unpaid'));
+        $update['payment_status'] = $status;
+        $update['amount_paid'] = money_from_paisa($status === 'refunded' ? 0 : $paidSoFar);
+        $update['paid_at'] = match ($status) {
+            'paid' => order_datetime_parse($form['paid_at']) ?? $locked['paid_at'] ?? $now,
+            'refunded' => $locked['paid_at'],
+            default => null,
+        };
         db_update('orders', $update, ['id' => (int) $order['id']]);
         $pdo->commit();
         return ['before' => $items, 'after_total' => $update['grand_total'], 'locked' => $locked];

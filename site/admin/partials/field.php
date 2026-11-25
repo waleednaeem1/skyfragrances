@@ -37,7 +37,7 @@ if (isset($inputmode)) {
     $extra .= ' inputmode="tel"';
 }
 $wrapClass = 'adm-field' . (!empty($compact) ? ' adm-field--compact' : '') . ($error !== '' ? ' adm-field--error' : '') . (!empty($class) ? ' ' . $class : '');
-$inputType = match ($type) { 'money', 'int' => 'text', 'phone' => 'tel', 'email' => 'email', 'url' => 'url', 'date' => 'date', 'password' => 'password', 'number' => 'number', 'search' => 'search', default => 'text' };
+$inputType = match ($type) { 'money', 'int' => 'text', 'phone' => 'tel', 'email' => 'email', 'url' => 'url', 'date' => 'date', 'datetime' => 'datetime-local', 'password' => 'password', 'number' => 'number', 'search' => 'search', default => 'text' };
 ?>
 <div class="<?= e($wrapClass) ?>">
 <?php if ($type === 'checkbox'): ?>

@@ -30,6 +30,7 @@ $statusPillClass = $isCancelled ? 'status-pill--danger' : (in_array((string) ($s
 $paymentPillClass = $isPaid ? 'status-pill--success' : ((string) ($paymentStatus ?? '') === 'failed' ? 'status-pill--danger' : 'status-pill--muted');
 $paymentStatusLabel = match ((string) ($paymentStatus ?? '')) {
     'paid' => 'Paid',
+    'partial' => 'Part paid',
     'awaiting_verification' => 'Awaiting verification',
     'failed' => 'Receipt rejected',
     'refunded' => 'Refunded',

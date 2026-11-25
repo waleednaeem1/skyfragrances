@@ -5,7 +5,7 @@ define('APP_ROOT', dirname(__DIR__));
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'packing', 'shipped', 'delivered', 'cancelled'];
 const PAYMENT_METHODS = ['cod', 'bank', 'jazzcash', 'easypaisa'];
-const PAYMENT_STATUSES = ['unpaid', 'awaiting_verification', 'paid', 'failed', 'refunded'];
+const PAYMENT_STATUSES = ['unpaid', 'awaiting_verification', 'partial', 'paid', 'failed', 'refunded'];
 const REVIEW_STATUSES = ['pending', 'approved', 'rejected'];
 const GENDERS = ['him', 'her', 'unisex'];
 const COUPON_TYPES = ['percent', 'fixed'];
@@ -221,7 +221,7 @@ function bootstrap_define_site_url(bool $settingsLoaded): void
     define('SITE_URL', $settingsLoaded ? settings_site_url() : rtrim((string) config('base_url', ''), '/'));
 }
 
-foreach (['text', 'money', 'url', 'db', 'settings', 'theme', 'session', 'csrf', 'flash', 'request', 'response', 'ratelimit', 'view', 'upload', 'image', 'mail', 'auth', 'https', 'maintenance', 'housekeeping', 'copyupgrade'] as $bootstrapLib) {
+foreach (['text', 'money', 'url', 'db', 'settings', 'theme', 'session', 'csrf', 'flash', 'request', 'response', 'ratelimit', 'view', 'upload', 'image', 'mail', 'auth', 'https', 'maintenance', 'housekeeping', 'schemaupgrade', 'copyupgrade'] as $bootstrapLib) {
     require_once APP_ROOT . '/app/lib/' . $bootstrapLib . '.php';
 }
 unset($bootstrapLib);
@@ -246,6 +246,7 @@ if (!$bootstrapSettingsLoaded) {
 }
 bootstrap_define_site_url(true);
 unset($bootstrapSettingsLoaded, $bootstrapSettingsError);
+schema_upgrade_maybe_run();
 copy_upgrade_maybe_run();
 
 maintenance_gate();

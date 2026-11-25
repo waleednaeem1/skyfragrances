@@ -15,7 +15,7 @@ function product_form_defaults(): array
 
 function product_form_size_defaults(): array
 {
-    return ['id' => '', 'size_label' => '', 'size_ml' => '', 'sku' => '', 'price' => '', 'sale_price' => '', 'stock' => '0', 'low_stock_threshold' => ''];
+    return ['id' => '', 'size_label' => '', 'size_ml' => '', 'sku' => '', 'price' => '', 'sale_price' => '', 'stock' => '0', 'display_stock' => '', 'low_stock_threshold' => ''];
 }
 
 function product_form_sizes_from_post(): array
@@ -171,6 +171,12 @@ function product_form_validate_sizes(string $productName, array &$sizes, ?int $p
         } else {
             $size['stock'] = $stock;
         }
+        $shown = catalogue_int_input($size['display_stock'], 1, 9999);
+        if ($shown === PHP_INT_MIN) {
+            $errors[$prefix . 'display_stock'] = 'Size ' . $n . ': stock shown on the shop must be a whole number from 1 to 9999, or blank to show the real stock.';
+        } else {
+            $size['display_stock'] = $shown;
+        }
         $threshold = catalogue_int_input($size['low_stock_threshold'], 0, 255);
         if ($threshold === PHP_INT_MIN) {
             $errors[$prefix . 'low_stock_threshold'] = 'Size ' . $n . ': the low-stock alert level must be 0–255, or blank for the shop default.';
@@ -245,7 +251,7 @@ function product_form_save_sizes(int $productId, array $sizes, array $existing):
     foreach ($sizes as $i => $size) {
         $data = [
             'size_label' => $size['size_label'], 'size_ml' => $size['size_ml'] === '' ? null : (int) $size['size_ml'], 'sku' => $size['sku'],
-            'price' => $size['price'], 'sale_price' => $size['sale_price'], 'stock' => (int) $size['stock'], 'low_stock_threshold' => $size['low_stock_threshold'],
+            'price' => $size['price'], 'sale_price' => $size['sale_price'], 'stock' => (int) $size['stock'], 'display_stock' => $size['display_stock'], 'low_stock_threshold' => $size['low_stock_threshold'],
             'is_default' => (int) $size['is_default'], 'is_active' => 1, 'sort_order' => ($i + 1) * 10, 'updated_at' => $now,
         ];
         if ($size['id'] !== null && isset($existing[$size['id']])) {
@@ -254,6 +260,9 @@ function product_form_save_sizes(int $productId, array $sizes, array $existing):
             $keep[] = $size['id'];
             if ((int) $before['stock'] !== (int) $size['stock']) {
                 $stockNotes[] = $size['size_label'] . ' ' . (int) $before['stock'] . ' → ' . (int) $size['stock'];
+            }
+            if ($before['display_stock'] !== null ? (int) $before['display_stock'] !== $size['display_stock'] : $size['display_stock'] !== null) {
+                $stockNotes[] = $size['size_label'] . ' shown on the shop as ' . ($size['display_stock'] ?? 'the real stock');
             }
             if (product_form_price_changed($before, $size)) {
                 $priceNotes[] = $size['size_label'] . ' ' . product_form_price_label($before) . ' → ' . product_form_price_label($size);
@@ -349,7 +358,7 @@ if ($product !== null) {
 }
 $sizes = [];
 foreach ($existingSizes as $sizeRow) {
-    $sizes[] = ['id' => (string) $sizeRow['id'], 'size_label' => $sizeRow['size_label'], 'size_ml' => (string) ($sizeRow['size_ml'] ?? ''), 'sku' => $sizeRow['sku'], 'price' => catalogue_money_field($sizeRow['price']), 'sale_price' => catalogue_money_field($sizeRow['sale_price']), 'stock' => (string) $sizeRow['stock'], 'low_stock_threshold' => (string) ($sizeRow['low_stock_threshold'] ?? ''), 'is_default' => (int) $sizeRow['is_default']];
+    $sizes[] = ['id' => (string) $sizeRow['id'], 'size_label' => $sizeRow['size_label'], 'size_ml' => (string) ($sizeRow['size_ml'] ?? ''), 'sku' => $sizeRow['sku'], 'price' => catalogue_money_field($sizeRow['price']), 'sale_price' => catalogue_money_field($sizeRow['sale_price']), 'stock' => (string) $sizeRow['stock'], 'display_stock' => (string) ($sizeRow['display_stock'] ?? ''), 'low_stock_threshold' => (string) ($sizeRow['low_stock_threshold'] ?? ''), 'is_default' => (int) $sizeRow['is_default']];
 }
 if ($sizes === []) {
     $sizes[] = product_form_size_defaults() + ['is_default' => 1];

@@ -34,10 +34,15 @@ foreach (PAYMENT_STATUSES as $p) {
 $rangeOptions = ['' => 'Any date', 'today' => 'Today', 'yesterday' => 'Yesterday', 'week' => 'Last 7 days', 'month' => 'This month', 'last_month' => 'Last month'];
 $rows = [];
 foreach ($orders as $o) {
-    $number = '<span class="adm-mono">' . e((string) $o['order_number']) . '</span>';
+    $viewUrl = '/admin/orders/' . $o['order_number'] . '/view';
+    $number = '<a class="adm-mono adm-link" href="' . e(url($viewUrl)) . '">' . e((string) $o['order_number']) . '</a>';
     $itemsText = (int) $o['item_count'] . ' item' . ((int) $o['item_count'] === 1 ? '' : 's');
     $dateHtml = '<span style="white-space:nowrap">' . e(adm_order_date_compact((string) $o['created_at'])) . '</span>' . ($o['is_new'] ? ' <span class="adm-badge adm-badge--gold adm-badge--sm">new</span>' : '');
     $paymentHtml = $badge((string) $o['payment_method'], ['label' => payment_method_label((string) $o['payment_method']), 'small' => true]) . ' ' . $badge((string) $o['payment_status'], ['label' => adm_order_payment_label((string) $o['payment_status']), 'small' => true]) . ((int) $o['has_proof'] === 1 ? ' <span title="Proof attached" aria-label="Proof attached">&#128206;</span>' : '');
+    $due = order_balance($o)['due'];
+    if ($o['payment_status'] === 'partial' && $due > 0) {
+        $paymentHtml .= '<br><span class="adm-note adm-stock--low">' . e(money(money_from_paisa($due))) . ' due</span>';
+    }
     $statusHtml = $badge((string) $o['status'], ['label' => adm_order_status_label((string) $o['status'])]) . ($o['on_hold'] ? ' ' . $badge('hold', ['label' => 'Unpaid ' . $o['hold_days'] . 'd', 'tone' => 'red', 'small' => true]) : '');
     $tracking = trim((string) ($o['tracking_number'] ?? ''));
     $courierHtml = $tracking === '' ? '<span class="adm-muted">' . e((string) ($o['courier_name'] ?? '')) . '</span>' : e((string) $o['courier_name']) . ' <span class="adm-mono">' . e(mb_strimwidth($tracking, 0, 14, '…')) . '</span> <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-copy="' . e($tracking) . '">Copy</button>';
@@ -49,12 +54,12 @@ foreach ($orders as $o) {
     $actions[] = ['label' => 'Print slip', 'href' => '/admin/orders/' . $o['order_number'] . '/packing-slip', 'external' => true];
     $rows[] = [
         'id' => (int) $o['id'],
-        'href' => '/admin/orders/' . $o['order_number'],
+        'href' => $viewUrl,
         'class' => $o['on_hold'] ? 'is-hold' : '',
         'cells' => [
             'order' => '<span style="white-space:nowrap">' . $number . '</span><br><span class="adm-muted">' . e($itemsText) . '</span>',
             'date' => $dateHtml,
-            'customer' => e((string) $o['customer_name']) . '<br><span class="adm-muted"><a href="tel:' . e((string) $o['phone_normalized']) . '">' . e((string) $o['customer_phone']) . '</a> · ' . e((string) $o['city']) . '</span>',
+            'customer' => '<a class="adm-link" href="' . e(url('/admin/customers/' . ltrim((string) $o['phone_normalized'], '+'))) . '">' . e((string) $o['customer_name']) . '</a><br><span class="adm-muted"><a href="tel:' . e((string) $o['phone_normalized']) . '">' . e((string) $o['customer_phone']) . '</a> · ' . e((string) $o['city']) . '</span>',
             'total' => $moneyHtml((string) $o['grand_total']),
             'payment' => $paymentHtml,
             'status' => $statusHtml,

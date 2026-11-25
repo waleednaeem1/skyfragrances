@@ -62,7 +62,7 @@ function track_lookup(string $orderNumber, string $phoneNormalized): ?array
         return null;
     }
     return db_fetch(
-        'SELECT id, order_number, status, payment_method, payment_status, customer_name, city, grand_total, item_count, courier_name, tracking_number, tracking_url, created_at, shipped_at, delivered_at, cancelled_at FROM orders WHERE order_number = :number AND phone_normalized = :phone LIMIT 1',
+        'SELECT id, order_number, status, payment_method, payment_status, customer_name, city, grand_total, amount_paid, item_count, courier_name, tracking_number, tracking_url, created_at, shipped_at, delivered_at, cancelled_at FROM orders WHERE order_number = :number AND phone_normalized = :phone LIMIT 1',
         ['number' => $orderNumber, 'phone' => $phoneNormalized]
     );
 }
@@ -108,6 +108,8 @@ function track_view_order(array $order): array
         'item_count' => (int) $order['item_count'],
         'payment_method_label' => payment_method_label((string) $order['payment_method']),
         'is_paid' => $order['payment_status'] === 'paid',
+        'amount_paid_display' => money(money_from_paisa(order_balance($order)['paid'])),
+        'balance_due_display' => $order['payment_status'] === 'partial' && order_balance($order)['due'] > 0 ? money(money_from_paisa(order_balance($order)['due'])) : null,
         'courier_name' => $order['status'] === 'shipped' || $order['status'] === 'delivered' ? $order['courier_name'] : null,
         'tracking_number' => $order['status'] === 'shipped' || $order['status'] === 'delivered' ? $order['tracking_number'] : null,
         'tracking_url' => str_starts_with(strtolower($trackingUrl), 'https://') ? $trackingUrl : null,

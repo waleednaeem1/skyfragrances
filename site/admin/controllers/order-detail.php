@@ -47,6 +47,7 @@ $history = db_fetch_all('SELECT * FROM order_status_history WHERE order_id = :id
 $notes = db_fetch_all('SELECT * FROM order_notes WHERE order_id = :id ORDER BY is_pinned DESC, created_at DESC, id DESC', ['id' => $orderId]);
 $activity = db_fetch_all("SELECT admin_username, action, summary, created_at FROM admin_activity_log WHERE entity_type = 'order' AND entity_id = :id ORDER BY created_at DESC, id DESC LIMIT 10", ['id' => $orderId]);
 $proofs = order_proofs($orderId);
+$payments = order_payments($orderId);
 $latestProof = $proofs[0] ?? null;
 $proofFileOk = $latestProof !== null && !empty($latestProof['file_path']) && image_proof_path((string) $latestProof['file_path']) !== null;
 $previousOrders = db_fetch_all('SELECT order_number, status, grand_total, created_at FROM orders WHERE phone_normalized = :p AND id <> :id ORDER BY created_at DESC LIMIT 5', ['p' => (string) $order['phone_normalized'], 'id' => $orderId]);
@@ -69,7 +70,8 @@ $legalTargets = ORDER_TRANSITIONS[(string) $order['status']] ?? [];
 $courierKey = courier_key_for((string) ($order['courier_name'] ?? ''));
 $courierStatus = $courierKey === null ? null : courier_status_for((int) $order['id']);
 
-render_admin('order-detail.php', [
+$viewOnly = $routeName === 'admin.orders.view';
+render_admin($viewOnly ? 'order-view.php' : 'order-detail.php', [
     'courierKey' => $courierKey,
     'courierStatus' => $courierStatus,
     'order' => $order,
@@ -78,6 +80,7 @@ render_admin('order-detail.php', [
     'notes' => $notes,
     'activity' => $activity,
     'latestProof' => $latestProof,
+    'payments' => $payments,
     'proofCount' => count($proofs),
     'proofFileOk' => $proofFileOk,
     'previousOrders' => $previousOrders,
@@ -96,6 +99,6 @@ render_admin('order-detail.php', [
     'isMobileUa' => (bool) preg_match('/Mobile|Android|iPhone/i', (string) ($order['user_agent'] ?? '')),
 ], [
     'title' => (string) $order['order_number'],
-    'body_class' => 'admin t-light admin-order has-actionbar',
-    'back' => '/admin/orders',
+    'body_class' => $viewOnly ? 'admin t-light admin-order-view' : 'admin t-light admin-order has-actionbar',
+    'back' => $viewOnly ? '/admin/orders' : '/admin/orders/' . $order['order_number'] . '/view',
 ]);

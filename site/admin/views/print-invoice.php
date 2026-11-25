@@ -182,6 +182,8 @@ table.items { width: 100%; border-collapse: collapse; }
       <span class="pill pill--void">Cancelled</span>
 <?php elseif ($p['isPaid']): ?>
       <span class="pill pill--paid">Paid</span>
+<?php elseif ($o['payment_status'] === 'partial'): ?>
+      <span class="pill pill--due">Part paid · <?= e((string) $p['balanceDue']) ?> due</span>
 <?php elseif ($p['collectAmount'] !== null): ?>
       <span class="pill pill--due">Pay on delivery</span>
 <?php else: ?>
@@ -215,7 +217,12 @@ table.items { width: 100%; border-collapse: collapse; }
 
   <section class="bottom">
     <div>
-<?php if (!$isCancelled && !$p['isPaid'] && $p['collectAmount'] !== null): ?>
+<?php if (!$isCancelled && $o['payment_status'] === 'partial' && $p['balanceDue'] !== null): ?>
+      <div class="note">
+        <h2>Balance due</h2>
+        <p>We have received <strong><?= e($p['amountPaid']) ?></strong> of <?= e(money((string) $o['grand_total'])) ?>. <strong><?= e($p['balanceDue']) ?></strong> is still to be paid<?= $p['collectAmount'] !== null && $o['payment_method'] === 'cod' ? ' on delivery' : '' ?>.</p>
+      </div>
+<?php elseif (!$isCancelled && !$p['isPaid'] && $p['collectAmount'] !== null): ?>
       <div class="note">
         <h2>Cash on delivery</h2>
         <p>Please keep <strong><?= e($p['collectAmount']) ?></strong> ready for the courier. The rider will call before delivery.</p>
@@ -246,11 +253,11 @@ table.items { width: 100%; border-collapse: collapse; }
       <tr><td>Cash on delivery fee</td><td><?= e(money((string) $o['cod_fee'])) ?></td></tr>
 <?php endif; ?>
       <tr class="grand"><td>Total</td><td><?= e(money((string) $o['grand_total'])) ?></td></tr>
-<?php if ($p['isPaid']): ?>
-      <tr class="sub"><td>Paid</td><td><?= e(money((string) $o['grand_total'])) ?></td></tr>
-      <tr class="sub due"><td>Balance due</td><td><?= e(money('0.00')) ?></td></tr>
-<?php elseif (!$isCancelled): ?>
-      <tr class="sub due"><td>Amount due</td><td><?= e(money((string) $o['grand_total'])) ?></td></tr>
+<?php if (!$isCancelled && $o['payment_status'] !== 'refunded'): ?>
+<?php if (order_balance($o)['paid'] > 0): ?>
+      <tr class="sub"><td>Paid</td><td><?= e($p['amountPaid']) ?></td></tr>
+<?php endif; ?>
+      <tr class="sub due"><td><?= order_balance($o)['paid'] > 0 ? 'Balance due' : 'Amount due' ?></td><td><?= e($p['balanceDue'] ?? money('0.00')) ?></td></tr>
 <?php endif; ?>
     </table>
   </section>

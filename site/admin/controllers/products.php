@@ -78,7 +78,7 @@ function products_duplicate(array $source): int
         }
         db_insert('product_sizes', [
             'product_id' => $newId, 'size_label' => $size['size_label'], 'size_ml' => $size['size_ml'], 'sku' => $sku,
-            'price' => $size['price'], 'sale_price' => $size['sale_price'], 'stock' => 0, 'low_stock_threshold' => $size['low_stock_threshold'],
+            'price' => $size['price'], 'sale_price' => $size['sale_price'], 'stock' => 0, 'display_stock' => $size['display_stock'], 'low_stock_threshold' => $size['low_stock_threshold'],
             'is_default' => $size['is_default'], 'is_active' => 1, 'sort_order' => $size['sort_order'], 'created_at' => $now,
         ]);
     }

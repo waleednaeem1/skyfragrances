@@ -149,9 +149,9 @@ table.items { width: 100%; border-collapse: collapse; }
       </div>
 <?php if ($p['collectAmount'] !== null): ?>
       <div class="collect">
-        <p class="label">Collect on delivery</p>
+        <p class="label"><?= $o['payment_status'] === 'partial' ? 'Balance to collect' : 'Collect on delivery' ?></p>
         <div class="amount"><?= e($p['collectAmount']) ?></div>
-        <div class="small">Write this amount on the courier booking.</div>
+        <div class="small"><?= $o['payment_status'] === 'partial' ? e($p['amountPaid']) . ' already paid. ' : '' ?>Write this amount on the courier booking.</div>
       </div>
 <?php elseif ($p['isPaid']): ?>
       <div class="prepaid">Paid in full · nothing to collect</div>

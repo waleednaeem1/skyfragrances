@@ -85,7 +85,7 @@ foreach ($latestOrders as $order) {
     $moneyHtml = ob_get_clean();
     $orderRows[] = [
         'id' => (int) $order['id'],
-        'href' => '/admin/orders/' . $order['order_number'],
+        'href' => '/admin/orders/' . $order['order_number'] . '/view',
         'cells' => [
             'number' => '<span class="adm-mono">' . e((string) $order['order_number']) . '</span>',
             'customer' => e((string) $order['customer_name']) . ' <span class="adm-muted">' . e((string) $order['city']) . '</span>',

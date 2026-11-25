@@ -6,7 +6,7 @@ $priceEditable = !empty($priceEditable);
 $paymentStatusOptions = is_array($paymentStatusOptions ?? null) ? $paymentStatusOptions : [];
 $lockNote = (string) ($lockNote ?? '');
 $lockedItems = is_array($lockedItems ?? null) ? $lockedItems : [];
-$fieldLabels = ['payment_status' => 'Payment status', 'delivery_fee' => 'Delivery fee', 'discount' => 'Discount', 
+$fieldLabels = ['payment_status' => 'Payment status', 'paid_at' => 'Payment received on', 'received_at' => 'Order received', 'delivery_fee' => 'Delivery fee', 'discount' => 'Discount', 
     'customer_name' => 'Name', 'customer_phone' => 'Mobile number', 'customer_email' => 'Email', 'city' => 'City',
     'address' => 'Address', 'postal_code' => 'Postal code', 'customer_note' => 'Note', 'payment_method' => 'Payment',
 ];
@@ -35,6 +35,12 @@ foreach ($methods as $method) {
   </ul>
 </div>
 <?php endif; ?>
+  <div class="adm-form__section">
+    <h2 class="adm-form__section-title">Order</h2>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'datetime', 'name' => 'received_at', 'label' => 'Order received', 'value' => (string) ($form['received_at'] ?? ''), 'required' => true, 'error' => $errors['received_at'] ?? '', 'help' => 'When the customer placed the order. Reports and the customer ledger use this date.', 'attr' => ['max' => order_datetime_input()]]); ?>
+    </div>
+  </div>
   <div class="adm-form__section">
     <h2 class="adm-form__section-title">Customer</h2>
     <?php partial_admin('field.php', ['type' => 'text', 'name' => 'customer_name', 'label' => 'Name', 'value' => $form['customer_name'], 'required' => true, 'maxlength' => 120, 'error' => $errors['customer_name'] ?? '']); ?>
@@ -106,6 +112,9 @@ foreach ($methods as $method) {
       <?php partial_admin('field.php', ['type' => 'select', 'name' => 'payment_method', 'label' => 'How the customer pays', 'value' => $form['payment_method'], 'options' => $methodOptions, 'required' => true, 'error' => $errors['payment_method'] ?? '', 'help' => 'Mark it paid from the order page once the money arrives.']); ?>
 <?php if ($priceEditable): ?>
       <?php partial_admin('field.php', ['type' => 'select', 'name' => 'payment_status', 'label' => 'Payment status', 'value' => (string) ($form['payment_status'] ?? ''), 'options' => $paymentStatusOptions, 'error' => $errors['payment_status'] ?? '']); ?>
+    </div>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'datetime', 'name' => 'paid_at', 'label' => 'Payment received on', 'value' => (string) ($form['paid_at'] ?? ''), 'error' => $errors['paid_at'] ?? '', 'help' => 'Used when the payment status is Paid. Set the day the money actually arrived.', 'attr' => ['max' => order_datetime_input()]]); ?>
     </div>
     <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'text', 'name' => 'delivery_fee', 'label' => 'Delivery fee (Rs.)', 'value' => (string) ($form['delivery_fee'] ?? ''), 'error' => $errors['delivery_fee'] ?? '', 'help' => '0 for free delivery.', 'attr' => ['inputmode' => 'decimal', 'autocomplete' => 'off']]); ?>

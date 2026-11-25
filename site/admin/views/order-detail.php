@@ -62,9 +62,10 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     <div><dt class="adm-muted">Transaction ID</dt><dd><span class="adm-mono"><?= e((string) $order['payment_reference']) ?></span> <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-copy="<?= e((string) $order['payment_reference']) ?>">Copy</button></dd></div>
 <?php endif; ?>
 <?php if (!empty($order['paid_at'])): ?>
-    <div><dt class="adm-muted">Paid at</dt><dd><?= e(adm_order_datetime((string) $order['paid_at'])) ?></dd></div>
+    <div><dt class="adm-muted">Paid in full</dt><dd><?= e(adm_order_datetime((string) $order['paid_at'])) ?></dd></div>
 <?php endif; ?>
   </dl>
+<?php partial_admin('order-payments.php', ['order' => $order, 'payments' => $payments]); ?>
 <?php if ($latestProof !== null): ?>
   <div class="adm-media">
 <?php if ($proofFileOk): ?>
@@ -84,17 +85,20 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php elseif ($isManual): ?>
   <p class="adm-muted">No payment proof uploaded.</p>
 <?php endif; ?>
-<?php if (in_array($order['payment_status'], ['unpaid', 'awaiting_verification', 'failed'], true)): ?>
+<?php if (in_array($order['payment_status'], ['unpaid', 'awaiting_verification', 'failed', 'partial'], true) && order_balance($order)['due'] > 0): ?>
   <form method="post" action="<?= e(url($detailPath . '/payment')) ?>" class="adm-form">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="mark_paid">
     <div class="adm-field--pair">
-      <?php partial_admin('field.php', ['type' => 'money', 'name' => 'amount', 'id' => 'pay-amount', 'label' => 'Amount received', 'value' => money_attr((string) $order['grand_total']), 'help' => 'Order total is ' . money((string) $order['grand_total']) . '. A different amount is recorded in the timeline.', 'compact' => true]); ?>
+      <?php partial_admin('field.php', ['type' => 'money', 'name' => 'amount', 'id' => 'pay-amount', 'label' => 'Amount received', 'value' => money_attr(money_from_paisa(order_balance($order)['due'])), 'help' => 'Balance due is ' . money(money_from_paisa(order_balance($order)['due'])) . '. Enter less to record a part payment.', 'compact' => true]); ?>
       <?php partial_admin('field.php', ['type' => 'text', 'name' => 'note', 'id' => 'pay-note', 'label' => 'Reference / notes', 'value' => '', 'maxlength' => 200, 'compact' => true]); ?>
     </div>
-    <?php partial_admin('button.php', ['label' => $order['payment_status'] === 'awaiting_verification' ? 'Approve payment — mark as paid' : 'Mark as paid', 'variant' => 'gold', 'confirm' => "Mark this order as paid?\nThis records that you received " . money((string) $order['grand_total']) . ' by ' . payment_method_label((string) $order['payment_method']) . '. The order status stays ' . adm_order_status_label((string) $order['status']) . '.', 'confirm_label' => 'Yes, mark paid']); ?>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'datetime', 'name' => 'paid_at', 'id' => 'pay-date', 'label' => 'Payment received on', 'value' => order_datetime_input(), 'required' => true, 'compact' => true, 'help' => 'Change it if the money arrived on an earlier day.', 'attr' => ['max' => order_datetime_input()]]); ?>
+    </div>
+    <?php partial_admin('button.php', ['label' => $order['payment_status'] === 'awaiting_verification' ? 'Approve and record payment' : 'Record payment', 'variant' => 'gold', 'confirm' => "Record this payment?\nIf it is less than the balance due, the order is marked Part paid and the rest stays due.", 'confirm_label' => 'Record payment']); ?>
   </form>
-<?php if ($isManual && $order['payment_status'] !== 'failed'): ?>
+<?php if ($isManual && !in_array($order['payment_status'], ['failed', 'partial'], true)): ?>
   <form method="post" action="<?= e(url($detailPath . '/payment')) ?>" class="adm-form">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="reject">
@@ -136,52 +140,9 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php endif; ?>
 </section>
 
-<section class="adm-card adm-card--flush" id="items">
-  <div class="adm-card__head"><h2 class="adm-card__title">Items</h2></div>
-  <div class="adm-table-wrap">
-    <table class="adm-table">
-      <caption class="u-sr-only">Order items</caption>
-      <thead><tr><th scope="col" class="adm-table__th">Product</th><th scope="col" class="adm-table__th">SKU</th><th scope="col" class="adm-table__th adm-table__th--right">Unit</th><th scope="col" class="adm-table__th adm-table__th--right">Qty</th><th scope="col" class="adm-table__th adm-table__th--right">Line</th></tr></thead>
-      <tbody>
-<?php foreach ($items as $item): ?>
-        <tr class="adm-table__row">
-          <td class="adm-table__td"><div class="adm-media"><img class="adm-thumb adm-thumb--sm" src="<?= e($item['image_url']) ?>" alt="" width="48" loading="lazy"><div class="adm-media__body"><p class="adm-media__title"><?php if (!$item['product_deleted']): ?><a href="<?= e(url('/product/' . $item['product_slug'])) ?>" target="_blank" rel="noopener"><?= e((string) $item['product_name']) ?></a><?php else: ?><?= e((string) $item['product_name']) ?> <span class="adm-muted">product deleted</span><?php endif; ?></p><p class="adm-media__meta"><?= e((string) $item['size_label']) ?></p></div></div></td>
-          <td class="adm-table__td adm-mono"><?= e((string) $item['sku']) ?></td>
-          <td class="adm-table__td adm-table__td--right adm-table__td--money"><?= $moneyHtml((string) $item['unit_price_charged']) ?><?php if ($item['live_price'] !== null): ?><br><span class="adm-note">now <?= e(money($item['live_price'])) ?></span><?php endif; ?></td>
-          <td class="adm-table__td adm-table__td--right adm-num"><?= (int) $item['quantity'] ?></td>
-          <td class="adm-table__td adm-table__td--right adm-table__td--money"><?= $moneyHtml((string) $item['line_total'], ['strong' => true]) ?></td>
-        </tr>
-<?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-  <ul class="adm-cards">
-<?php foreach ($items as $item): ?>
-    <li class="adm-rowcard"><div class="adm-rowcard__body"><div class="adm-media"><img class="adm-thumb adm-thumb--sm" src="<?= e($item['image_url']) ?>" alt="" width="48" loading="lazy"><div class="adm-media__body"><p class="adm-media__title"><?= e((string) $item['product_name']) ?> <?= e((string) $item['size_label']) ?><?= $item['product_deleted'] ? ' <span class="adm-muted">(deleted)</span>' : '' ?></p><p class="adm-media__meta"><span class="adm-mono"><?= e((string) $item['sku']) ?></span> · <?= e(money((string) $item['unit_price_charged'])) ?> × <?= (int) $item['quantity'] ?><?= $item['live_price'] !== null ? ' · now ' . e(money($item['live_price'])) : '' ?></p></div></div><div class="adm-rowcard__figures"><span class="adm-rowcard__money"><?= $moneyHtml((string) $item['line_total'], ['strong' => true]) ?></span></div></div></li>
-<?php endforeach; ?>
-  </ul>
-</section>
+<?php partial_admin('order-items.php', ['items' => $items]); ?>
 
-<section class="adm-card" id="totals">
-  <div class="adm-card__head"><h2 class="adm-card__title">Totals</h2></div>
-  <table class="adm-totals">
-    <tr><td>Subtotal</td><td><?= $moneyHtml((string) $order['subtotal']) ?></td></tr>
-<?php if (money_paisa((string) $order['discount_total']) > 0): ?>
-    <tr><td>Discount<?php if (!empty($order['coupon_code'])): ?> (<?= e((string) $order['coupon_code']) ?><?= $order['coupon_type'] === 'percent' ? ' · ' . e(rtrim(rtrim((string) $order['coupon_value'], '0'), '.')) . '%' : '' ?>)<?php endif; ?></td><td><?= $moneyHtml((string) $order['discount_total'], ['negative' => true]) ?></td></tr>
-<?php endif; ?>
-    <tr><td>Shipping</td><td><?= $moneyHtml((string) $order['shipping_fee'], ['free_when_zero' => true]) ?></td></tr>
-<?php if (money_paisa((string) $order['cod_fee']) > 0): ?>
-    <tr><td>COD fee</td><td><?= $moneyHtml((string) $order['cod_fee']) ?></td></tr>
-<?php endif; ?>
-    <tr class="adm-totals__grand"><td>Grand total</td><td><?= $moneyHtml((string) $order['grand_total'], ['strong' => true]) ?></td></tr>
-<?php if ($order['payment_status'] === 'paid'): ?>
-    <tr><td>Paid</td><td><?= $moneyHtml((string) $order['grand_total']) ?></td></tr>
-    <tr><td>Balance due</td><td><?= $moneyHtml('0.00') ?></td></tr>
-<?php elseif ($order['payment_method'] === 'cod' && $order['status'] !== 'cancelled'): ?>
-    <tr><td>Balance due</td><td><?= $moneyHtml((string) $order['grand_total'], ['low' => true]) ?> <span class="adm-note">collect on delivery</span></td></tr>
-<?php endif; ?>
-  </table>
-</section>
+<?php partial_admin('order-totals.php', ['order' => $order]); ?>
 
 <section class="adm-card" id="status">
   <div class="adm-card__head"><h2 class="adm-card__title">Status</h2><?= $badge((string) $order['status'], ['label' => adm_order_status_label((string) $order['status']), 'small' => true]) ?></div>
@@ -219,7 +180,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 </section>
 
 <section class="adm-card" id="customer">
-  <div class="adm-card__head"><h2 class="adm-card__title">Customer</h2><?php if ($previousCount > 0): ?><span class="adm-muted"><?= e((string) ($previousCount + 1)) ?><?= match ($previousCount + 1) { 2 => 'nd', 3 => 'rd', default => 'th' } ?> order</span><?php endif; ?></div>
+  <div class="adm-card__head"><h2 class="adm-card__title">Customer</h2><a class="adm-btn adm-btn--text adm-btn--sm" href="<?= e(url('/admin/customers/' . ltrim((string) $order['phone_normalized'], '+'))) ?>"><?= $previousCount > 0 ? e(($previousCount + 1) . ' orders') . ' · ' : '' ?>Customer ledger</a></div>
   <p><strong><?= e((string) $order['customer_name']) ?></strong></p>
   <p><a href="tel:<?= e((string) $order['phone_normalized']) ?>"><?= e((string) $order['customer_phone']) ?></a> <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-copy="<?= e((string) $order['customer_phone']) ?>">Copy</button></p>
   <p><?php if (!empty($order['customer_email'])): ?><a href="mailto:<?= e((string) $order['customer_email']) ?>"><?= e((string) $order['customer_email']) ?></a><?php else: ?><span class="adm-muted">— no email provided</span><?php endif; ?></p>
@@ -278,20 +239,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
   </form>
 </section>
 
-<section class="adm-card" id="timeline">
-  <div class="adm-card__head"><h2 class="adm-card__title">Timeline</h2></div>
-  <ol class="adm-timeline">
-<?php foreach ($history as $entry): $isCoin = $entry['field'] === 'payment_status'; ?>
-    <li class="adm-timeline__item<?= $isCoin ? ' adm-timeline__item--coin' : '' ?>">
-      <div class="adm-timeline__head"><?= $isCoin ? $badge((string) $entry['to_status'], ['label' => adm_order_payment_label((string) $entry['to_status']), 'small' => true]) : $badge((string) $entry['to_status'], ['label' => adm_order_status_label((string) $entry['to_status']), 'small' => true]) ?> <span class="adm-timeline__time"><?= e(adm_order_datetime((string) $entry['created_at'])) ?></span></div>
-      <p class="adm-timeline__meta">by <?= $entry['changed_by'] === 'admin' ? 'Admin' . (!empty($entry['admin_username']) ? ' (' . e((string) $entry['admin_username']) . ')' : '') : ucfirst(e((string) $entry['changed_by'])) ?></p>
-<?php if (!empty($entry['note'])): ?>
-      <p class="adm-timeline__note">&ldquo;<?= e((string) $entry['note']) ?>&rdquo;</p>
-<?php endif; ?>
-    </li>
-<?php endforeach; ?>
-  </ol>
-</section>
+<?php partial_admin('order-timeline.php', ['history' => $history]); ?>
 
 <section class="adm-card" id="notes">
   <div class="adm-card__head"><h2 class="adm-card__title">Internal notes</h2></div>
