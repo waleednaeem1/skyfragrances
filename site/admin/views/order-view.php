@@ -23,6 +23,7 @@ $pinned = array_values(array_filter($notes, static fn (array $note): bool => (in
         ['label' => 'Manage order', 'href' => $detailPath, 'variant' => 'gold'],
         ['label' => 'Edit', 'href' => $detailPath . '/edit', 'variant' => 'ghost'],
         ['label' => 'Invoice', 'href' => $detailPath . '/invoice', 'external' => true, 'variant' => 'ghost'],
+        ['label' => 'Small receipt', 'href' => $detailPath . '/receipt', 'external' => true, 'variant' => 'ghost'],
         ['label' => 'Packing slip', 'href' => $detailPath . '/packing-slip', 'external' => true, 'variant' => 'ghost'],
         $whatsappPrimary === null ? null : ['label' => 'WhatsApp', 'href' => $whatsappPrimary['href'], 'external' => true, 'variant' => 'ghost'],
     ])),

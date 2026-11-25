@@ -36,6 +36,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     'actions' => array_values(array_filter([
         ['label' => 'Edit', 'href' => $detailPath . '/edit', 'size' => 'sm'],
         ['label' => 'Invoice', 'href' => $detailPath . '/invoice', 'external' => true, 'size' => 'sm'],
+        ['label' => 'Small receipt', 'href' => $detailPath . '/receipt', 'external' => true, 'size' => 'sm'],
         ['label' => 'Packing slip', 'href' => $detailPath . '/packing-slip', 'external' => true, 'size' => 'sm'],
     ])),
 ]); ?>

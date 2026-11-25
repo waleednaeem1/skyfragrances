@@ -33,6 +33,22 @@ function adm_print_orders(array $params): array
 }
 
 $routeName = (string) ($route['name'] ?? '');
+if ($routeName === 'admin.orders.receipt') {
+    $order = adm_order_load($params);
+    $width = request_query('w', '80') === '58' ? 58 : 80;
+    adm_order_log($order, 'order.receipt_printed', 'Small receipt (' . $width . ' mm) opened for printing');
+    $sales = $order['sales_member_id'] !== null ? team_commission_for_order((int) $order['id']) : null;
+    adm_print_render('print-receipt.php', [
+        'p' => adm_order_print_payload($order),
+        'store' => adm_print_store(),
+        'width' => $width,
+        'servedBy' => $sales !== null ? (string) $sales['member_name'] : '',
+        'reward' => reward_for_order((int) $order['id']),
+        'printedAt' => adm_order_datetime(now_karachi()),
+        'autoprint' => request_query('print', '1') !== '0',
+        'returnUrl' => '/admin/orders/' . $order['order_number'] . '/view',
+    ]);
+}
 $isInvoice = $routeName === 'admin.orders.invoice';
 $orders = $isInvoice ? [adm_order_load($params)] : adm_print_orders($params);
 $itemsByOrder = adm_orders_items_by_order(array_map(static fn (array $o): int => (int) $o['id'], $orders));

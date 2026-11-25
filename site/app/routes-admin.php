@@ -49,6 +49,7 @@ return [
     $r('admin.orders.stock_back', 'POST', '/orders/{order}/stock-back', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.proof', 'GET', '/orders/{order}/proof', 'order-detail.php', null, 'admin-order', $o),
     $r('admin.orders.invoice', 'GET', '/orders/{order}/invoice', 'order-print.php', 'order-invoice.php', 'admin-print', $o),
+    $r('admin.orders.receipt', 'GET', '/orders/{order}/receipt', 'order-print.php', 'print-receipt.php', 'admin-print', $o),
     $r('admin.orders.packing_slip', 'GET', '/orders/{order}/packing-slip', 'order-print.php', 'order-packing-slip.php', 'admin-print', $o),
 
     $r('admin.products', 'GET', '/products', 'products.php', 'products.php', 'admin-products'),
