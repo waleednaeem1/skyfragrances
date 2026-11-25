@@ -102,6 +102,6 @@ render_admin($viewOnly ? 'order-view.php' : 'order-detail.php', [
     'isMobileUa' => (bool) preg_match('/Mobile|Android|iPhone/i', (string) ($order['user_agent'] ?? '')),
 ], [
     'title' => (string) $order['order_number'],
-    'body_class' => $viewOnly ? 'admin t-light admin-order-view' : 'admin t-light admin-order has-actionbar',
+    'body_class' => $viewOnly ? 'admin t-light admin-order-view' : 'admin t-light admin-order',
     'back' => $viewOnly ? '/admin/orders' : '/admin/orders/' . $order['order_number'] . '/view',
 ]);

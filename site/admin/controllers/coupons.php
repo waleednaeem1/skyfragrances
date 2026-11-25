@@ -207,4 +207,4 @@ render_admin('coupons.php', [
     'per' => $per,
     'total' => $total,
     'returnTo' => '/admin/coupons' . ($query === [] ? '' : '?' . http_build_query($query)),
-], ['title' => 'Coupons', 'body_class' => (string) $route['body_class'], 'create_url' => '/admin/coupons/new']);
+], ['title' => 'Coupons', 'body_class' => (string) $route['body_class']]);

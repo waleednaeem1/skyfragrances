@@ -14,18 +14,17 @@ foreach ($collections as $i => $c) {
     $products = (int) $c['product_count'];
     $thumb = '<img class="adm-thumb" src="' . e(catalogue_collection_image_url($c['image'], 'card')) . '" alt="" width="48" height="60" loading="lazy">';
     $media = '<div class="adm-media">' . $thumb . '<div class="adm-media__body"><span class="adm-media__title">' . e($c['name']) . '</span><span class="adm-media__meta adm-mono">' . e($c['slug']) . '</span></div></div>';
-    $cardTitle = '<div class="adm-media">' . $thumb . '<span class="adm-media__title">' . e($c['name']) . '</span></div>';
     $chip = $badge($live ? 'live' : 'hidden') . ((int) $c['show_on_home'] === 1 ? ' ' . $badge('home', ['label' => 'Home', 'tone' => 'champagne', 'small' => true]) : '');
     $actions = [
-        ['label' => 'Edit', 'href' => '/admin/collections/' . $id],
-        ['label' => 'Move up', 'post' => '/admin/collections/' . $id, 'fields' => ['move' => 'up'], 'disabled' => $i === 0],
-        ['label' => 'Move down', 'post' => '/admin/collections/' . $id, 'fields' => ['move' => 'down'], 'disabled' => $i === $count - 1],
-        ['label' => 'View on site', 'href' => url('/collections/' . $c['slug']), 'external' => true],
+        ['label' => 'Edit ' . $c['name'], 'href' => '/admin/collections/' . $id, 'icon' => 'pencil'],
+        ['label' => 'Move ' . $c['name'] . ' up', 'icon' => 'chevron-up', 'post' => '/admin/collections/' . $id, 'fields' => ['move' => 'up'], 'disabled' => $i === 0],
+        ['label' => 'Move ' . $c['name'] . ' down', 'icon' => 'chevron-down', 'post' => '/admin/collections/' . $id, 'fields' => ['move' => 'down'], 'disabled' => $i === $count - 1],
+        ['label' => 'View ' . $c['name'] . ' on the site', 'icon' => 'external', 'href' => url('/collections/' . $c['slug']), 'external' => true],
         ['label' => 'Products in it', 'href' => '/admin/products?collection_id=' . $id . '&status=all'],
-        ['label' => $live ? 'Hide' : 'Make live', 'post' => '/admin/collections/' . $id, 'fields' => ['toggle' => '1']],
+        ['label' => ($live ? 'Hide ' : 'Make live ') . $c['name'], 'icon' => $live ? 'eye-off' : 'eye', 'post' => '/admin/collections/' . $id, 'fields' => ['toggle' => '1']],
     ];
     if ($products === 0) {
-        $actions[] = ['label' => 'Delete', 'variant' => 'danger', 'post' => '/admin/collections/' . $id . '/delete', 'confirm' => 'Delete ' . $c['name'] . "?\nIt has no products. The landing page and its image are removed for good.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
+        $actions[] = ['label' => 'Delete ' . $c['name'], 'icon' => 'trash', 'variant' => 'danger', 'post' => '/admin/collections/' . $id . '/delete', 'confirm' => 'Delete ' . $c['name'] . "?\nIt has no products. The landing page and its image are removed for good.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
     }
     $rows[] = [
         'id' => $id,
@@ -35,15 +34,6 @@ foreach ($collections as $i => $c) {
             'products' => '<span class="adm-num">' . e((string) $products) . '</span>' . ((int) $c['live_count'] !== $products ? ' <span class="adm-muted">(' . e((string) (int) $c['live_count']) . ' live)</span>' : ''),
             'order' => '<span class="adm-num">' . e((string) (int) $c['sort_order']) . '</span>',
             'status' => $chip,
-        ],
-        'card' => [
-            'title' => $cardTitle,
-            'chip' => $badge($live ? 'live' : 'hidden'),
-            'lines' => [
-                ['label' => 'Products', 'html' => e((string) $products) . ((int) $c['live_count'] !== $products ? ' (' . e((string) (int) $c['live_count']) . ' live)' : '')],
-                ['label' => 'Order', 'html' => e((string) (int) $c['sort_order']) . ((int) $c['show_on_home'] === 1 ? ' · on the home page' : '')],
-            ],
-            'inline_actions' => 3,
         ],
         'actions' => $actions,
     ];
@@ -66,6 +56,6 @@ foreach ($collections as $i => $c) {
         ['key' => 'status', 'label' => 'Status'],
     ],
     'rows' => $rows,
-    'empty' => ['title' => 'No collections yet', 'text' => 'Collections group perfumes into landing pages such as /collections/midnight-meridian.', 'action' => ['label' => 'Add collection', 'href' => '/admin/collections/new']],
+    'empty' => ['icon' => 'layers', 'title' => 'No collections yet', 'text' => 'Collections group perfumes into landing pages such as /collections/midnight-meridian.', 'action' => ['label' => 'Add collection', 'href' => '/admin/collections/new']],
 ]); ?>
 <p class="adm-note">Hiding a collection keeps its products live; deleting is only possible once it is empty.</p>

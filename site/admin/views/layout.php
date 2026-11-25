@@ -8,67 +8,56 @@ if (!str_contains($bodyClass, 't-light')) {
     $bodyClass .= ' t-light';
 }
 $currentPath = request_path();
-$isActive = static fn (string $prefix): bool => $currentPath === '/admin' . $prefix || ($prefix !== '' && str_starts_with($currentPath, '/admin' . $prefix . '/'));
-$badges = ['orders' => 0, 'reviews' => 0];
-if ($admin !== null) {
-    if (isset($head['badges']) && is_array($head['badges'])) {
-        $badges = $head['badges'] + $badges;
-    } else {
-        try {
-            $badges['orders'] = (int) db_fetch_column("SELECT COUNT(*) FROM orders WHERE status IN ('pending', 'confirmed')");
-            $badges['reviews'] = (int) db_fetch_column("SELECT COUNT(*) FROM reviews WHERE status = 'pending'");
-        } catch (Throwable $badgeError) {
-            log_write('warning', 'Admin nav badges unavailable', ['error' => $badgeError->getMessage()]);
-        }
-    }
-}
-$createUrl = (string) ($head['create_url'] ?? ($isActive('/coupons') ? '/admin/coupons/new' : ($isActive('/collections') ? '/admin/collections/new' : (team_can('products') ? '/admin/products/new' : (team_can('orders') ? '/admin/orders/new' : '/admin/coupons/new')))));
 $backUrl = (string) ($head['back'] ?? '');
 $flashes = flash_take();
-$navData = ['isActive' => $isActive, 'currentPath' => $currentPath, 'badges' => $badges, 'createUrl' => $createUrl];
+$counts = $admin !== null ? admin_shell_counts() : [];
+$navData = ['currentPath' => $currentPath, 'counts' => $counts, 'nav' => $admin !== null ? admin_nav($admin) : []];
 ?>
 <!doctype html>
-<html lang="en" class="adm-root">
+<html lang="en" class="adm-root" data-theme="colorful">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
-<meta name="theme-color" content="#0A0A0A">
+<meta name="theme-color" content="#F4F4F1">
 <title><?= e($pageTitle) ?></title>
 <link rel="icon" href="<?= e(url('/favicon.ico')) ?>">
-<?php if (is_file(APP_ROOT . '/assets/css/critical.css')): ?>
-<link rel="stylesheet" href="<?= e(asset('css/critical.css')) ?>">
-<?php endif; ?>
-<link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
+<link rel="preload" href="<?= e(asset('fonts/geist-variable.woff2')) ?>" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="<?= e(asset('css/admin.css')) ?>">
 </head>
 <body class="<?= e($bodyClass) ?>" data-base="<?= e(BASE_PATH) ?>">
 <?php if ($admin === null): ?>
 <div class="adm-login">
-  <div class="adm-login__inner">
-    <?php partial_admin('flash.php', ['flashes' => $flashes]); ?>
-    <?= $content ?>
-  </div>
+  <main class="adm-login__panel" id="main">
+    <div class="adm-login__inner">
+      <?php partial_admin('flash.php', ['flashes' => $flashes]); ?>
+      <?= $content ?>
+    </div>
+  </main>
+  <aside class="adm-login__art" aria-hidden="true">
+    <p class="adm-login__tag"><span>SKY/ADMIN</span><span><?= e(date('Y')) ?></span></p>
+    <div class="adm-login__bars"><span></span><span></span><span></span><span></span><span class="is-hi"></span><span></span></div>
+    <p class="adm-login__slogan">Every order, bottle and rupee — in one place.</p>
+    <p class="adm-login__tagline"><?= e((string) setting('store_tagline', 'More Than Just A Scent')) ?>.</p>
+  </aside>
 </div>
 <?php else: ?>
 <a class="adm-skip" href="#main">Skip to content</a>
-<header class="adm-top">
-<?php if ($backUrl !== ''): ?>
-  <a class="adm-top__back" href="<?= e(url($backUrl)) ?>" aria-label="Back">&larr;</a>
-<?php else: ?>
-  <a class="adm-top__logo" href="<?= e(url(team_home_url())) ?>" aria-label="Dashboard"><img src="<?= e(asset('img/brand/monogram-transparent-256.webp')) ?>" alt="Sky Fragrances" width="34" height="34" decoding="async"></a>
-<?php endif; ?>
-  <span class="adm-top__title"><?= e($title === '' ? 'Dashboard' : $title) ?></span>
-  <a class="adm-top__link" href="<?= e(url('/')) ?>" target="_blank" rel="noopener"><span class="adm-top__link-more">View&nbsp;</span>Shop<?php partial('icon.php', ['name' => 'external', 'size' => 14, 'class' => 'adm-top__link-icon']); ?></a>
-</header>
+<div class="adm-app">
 <?php partial_admin('nav-side.php', $navData); ?>
-<main class="adm-main<?= !empty($head['wide']) ? ' adm-main--wide' : '' ?>" id="main" tabindex="-1">
-  <?php partial_admin('flash.php', ['flashes' => $flashes]); ?>
-  <?= $content ?>
-</main>
-<?php partial_admin('nav-bottom.php', $navData); ?>
+  <div class="adm-frame">
+    <div class="adm-canvas">
+<?php partial_admin('topbar.php', ['counts' => $counts, 'crumbs' => admin_breadcrumbs($currentPath, $title === '' ? 'Dashboard' : $title, $backUrl)]); ?>
+      <main class="adm-main<?= !empty($head['wide']) ? ' adm-main--wide' : '' ?>" id="main" tabindex="-1">
+        <?php partial_admin('flash.php', ['flashes' => $flashes]); ?>
+        <?= $content ?>
+      </main>
+    </div>
+  </div>
+</div>
 <?php partial_admin('confirm.php'); ?>
+<?php partial_admin('palette.php', ['palette' => admin_palette($admin)]); ?>
 <?php endif; ?>
 <script src="<?= e(asset('js/admin.js')) ?>" defer></script>
 </body>

@@ -53,7 +53,7 @@ $faqRow = static function (int $index, array $item, string $error, bool $isTempl
 <?php if ($isSystem): ?>
     <p class="adm-note">This is one of the standard pages. It is always live because the shop links to it from the footer and checkout.</p>
 <?php else: ?>
-    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'is_active', 'label' => 'Live — visitors can open this page', 'value' => $form['is_active']]); ?>
+    <?php partial_admin('field.php', ['type' => 'switch', 'name' => 'is_active', 'label' => 'Live — visitors can open this page', 'value' => $form['is_active']]); ?>
 <?php endif; ?>
   </div>
 <?php if ($isFaq): ?>

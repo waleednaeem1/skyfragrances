@@ -25,9 +25,4 @@ $moneyHtml = static function (string $value, array $extra = []): string {
       </tbody>
     </table>
   </div>
-  <ul class="adm-cards">
-<?php foreach ($items as $item): ?>
-    <li class="adm-rowcard"><div class="adm-rowcard__body"><div class="adm-media"><img class="adm-thumb adm-thumb--sm" src="<?= e($item['image_url']) ?>" alt="" width="48" loading="lazy"><div class="adm-media__body"><p class="adm-media__title"><?= e((string) $item['product_name']) ?> <?= e((string) $item['size_label']) ?><?= $item['product_deleted'] ? ' <span class="adm-muted">(deleted)</span>' : '' ?></p><p class="adm-media__meta"><span class="adm-mono"><?= e((string) $item['sku']) ?></span> · <?= e(money((string) $item['unit_price_charged'])) ?> × <?= (int) $item['quantity'] ?><?= $item['live_price'] !== null ? ' · now ' . e(money($item['live_price'])) : '' ?></p></div></div><div class="adm-rowcard__figures"><span class="adm-rowcard__money"><?= $moneyHtml((string) $item['line_total'], ['strong' => true]) ?></span></div></div></li>
-<?php endforeach; ?>
-  </ul>
 </section>

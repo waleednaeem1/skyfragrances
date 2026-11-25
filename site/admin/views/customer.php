@@ -39,15 +39,6 @@ foreach ($ledger as $i => $entry) {
             'received' => $received,
             'balance' => $balanceHtml,
         ],
-        'card' => [
-            'title' => $what,
-            'sub' => e(date_long($entry['at'])),
-            'lines' => [
-                ['label' => 'Charged', 'html' => $charged],
-                ['label' => 'Received', 'html' => $received],
-                ['label' => 'Balance', 'html' => $balanceHtml],
-            ],
-        ],
     ];
 }
 $headerActions = [['label' => 'Call', 'href' => 'tel:' . $customer['phone_normalized'], 'variant' => 'ghost']];
@@ -66,15 +57,15 @@ if ($whatsapp !== null) {
 <div class="adm-banner adm-banner--warn" role="status"><?= e(money(money_from_paisa($refundDue))) ?> was paid for orders that were later cancelled. Refund it, then mark those orders Refunded so the ledger settles.</div>
 <?php endif; ?>
 <div class="adm-grid">
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Orders</span><span class="adm-kpi__value"><?= e((string) $all['orders']) ?></span><p class="adm-delta adm-delta--flat"><span><?= $cancelled > 0 ? e($cancelled . ' cancelled, not counted') : 'None cancelled' ?></span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Ordered</span><span class="adm-kpi__value"><?= e(money(money_from_paisa($all['ordered']))) ?></span></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Collected</span><span class="adm-kpi__value"><?= e(money(money_from_paisa($all['collected']))) ?></span></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">To collect</span><span class="adm-kpi__value<?= $all['to_collect'] > 0 ? ' adm-kpi__value--alert' : '' ?>"><?= e(money(money_from_paisa($all['to_collect']))) ?></span></div>
+  <?php partial_admin('kpi-card.php', ['label' => 'Orders', 'icon' => 'package', 'tone' => 'c1', 'value' => (string) $all['orders'], 'note' => $cancelled > 0 ? $cancelled . ' cancelled, not counted' : 'None cancelled']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Ordered', 'icon' => 'cart', 'tone' => 'c2', 'value' => money(money_from_paisa($all['ordered']))]); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Collected', 'icon' => 'banknote', 'tone' => 'c4', 'value' => money(money_from_paisa($all['collected']))]); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'To collect', 'icon' => 'wallet', 'tone' => 'c5', 'value' => money(money_from_paisa($all['to_collect'])), 'alert' => $all['to_collect'] > 0]); ?>
 </div>
 <div class="adm-card">
   <div class="adm-card__head"><h2 class="adm-card__title">By period</h2></div>
   <div class="adm-table-wrap">
-    <table class="adm-table adm-table--plain">
+    <table class="adm-table">
       <thead><tr><th scope="col" class="adm-table__th">Period</th><th scope="col" class="adm-table__th adm-table__th--right">Orders</th><th scope="col" class="adm-table__th adm-table__th--right">Ordered</th><th scope="col" class="adm-table__th adm-table__th--right">Collected</th><th scope="col" class="adm-table__th adm-table__th--right">To collect</th></tr></thead>
       <tbody>
 <?php foreach ($periods as $period): $t = $period['totals']; ?>

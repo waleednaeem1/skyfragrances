@@ -11,9 +11,9 @@ foreach ($codes as $c) {
     $view = $c['view'];
     $digits = ltrim((string) $c['reward_phone'], '+');
     $firstName = trim(explode(' ', trim((string) $c['customer_name']))[0] ?? '');
-    $actions = [['label' => 'Copy code', 'type' => 'button', 'attr' => ['data-copy' => (string) $c['code']]]];
+    $actions = [['label' => 'Copy ' . $c['code'], 'icon' => 'copy', 'type' => 'button', 'attr' => ['data-copy' => (string) $c['code']]]];
     if ($view['usable']) {
-        $actions[] = ['label' => 'Send on WhatsApp', 'href' => 'https://wa.me/' . $digits . '?text=' . rawurlencode(reward_message($view, $firstName)), 'external' => true];
+        $actions[] = ['label' => 'Send ' . $c['code'] . ' on WhatsApp', 'icon' => 'whatsapp', 'href' => 'https://wa.me/' . $digits . '?text=' . rawurlencode(reward_message($view, $firstName)), 'external' => true];
     }
     if ($c['used_order'] === null) {
         $actions[] = ['label' => (int) $c['is_active'] === 1 ? 'Stop code' : 'Restart code', 'post' => '/admin/coupons/' . (int) $c['id'] . '/toggle', 'fields' => ['return' => $returnTo]];
@@ -29,17 +29,6 @@ foreach ($codes as $c) {
             'expires' => $c['expires_at'] === null ? '<span class="adm-muted">Never</span>' : e(date_short((string) $c['expires_at'])),
             'status' => $badge($c['state']),
         ],
-        'card' => [
-            'title' => '<span class="adm-mono">' . e((string) $c['code']) . '</span>',
-            'chip' => $badge($c['state'] + ['small' => true]),
-            'sub' => e((string) ($c['customer_name'] ?? '')) . ' · ' . e((string) ($c['customer_phone'] ?? '')),
-            'lines' => [
-                ['label' => 'Discount', 'html' => e($view['label'])],
-                ['label' => 'Given on', 'html' => $issued],
-                ['label' => 'Expires', 'html' => $c['expires_at'] === null ? 'Never' : e(date_short((string) $c['expires_at']))],
-            ],
-            'inline_actions' => 1,
-        ],
         'actions' => $actions,
     ];
 }
@@ -52,10 +41,10 @@ $conversion = $stats['issued'] > 0 ? round($stats['used'] / $stats['issued'] * 1
     'back_label' => 'Coupons',
 ]); ?>
 <div class="adm-grid">
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Status</span><span class="adm-kpi__value"><?= $config['enabled'] ? 'On' : 'Off' ?></span><p class="adm-delta adm-delta--flat"><span><?= $config['enabled'] ? e($preview['label']) . ' the second order' : 'No new codes are given' ?></span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Codes given</span><span class="adm-kpi__value"><?= e((string) $stats['issued']) ?></span><p class="adm-delta adm-delta--flat"><span><?= e((string) $stats['waiting']) ?> waiting to be used</span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Second orders</span><span class="adm-kpi__value"><?= e((string) $stats['used']) ?></span><p class="adm-delta adm-delta--flat"><span><?= e((string) $conversion) ?>% of codes used</span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Sales from codes</span><span class="adm-kpi__value"><?= e(money($stats['billed'])) ?></span><p class="adm-delta adm-delta--flat"><span><?= e(money($stats['discount'])) ?> given as discount</span></p></div>
+  <?php partial_admin('kpi-card.php', ['label' => 'Status', 'icon' => 'sparkle', 'tone' => 'c1', 'value' => $config['enabled'] ? 'On' : 'Off', 'note' => $config['enabled'] ? $preview['label'] . ' the second order' : 'No new codes are given']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Codes given', 'icon' => 'tag', 'tone' => 'c2', 'value' => (string) $stats['issued'], 'note' => $stats['waiting'] . ' waiting to be used']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Second orders', 'icon' => 'cart', 'tone' => 'c4', 'value' => (string) $stats['used'], 'note' => $conversion . '% of codes used']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Sales from codes', 'icon' => 'banknote', 'tone' => 'c3', 'value' => money($stats['billed']), 'note' => money($stats['discount']) . ' given as discount']); ?>
 </div>
 <div class="adm-duo">
   <section class="adm-card">
@@ -65,7 +54,7 @@ $conversion = $stats['issued'] > 0 ? round($stats['used'] / $stats['issued'] * 1
 <?php endif; ?>
     <form method="post" action="<?= e(url('/admin/coupons/reward')) ?>" class="adm-form" novalidate>
       <?= csrf_field() ?>
-      <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'enabled', 'label' => 'Give a thank-you code after a customer\'s first website order', 'value' => $form['enabled'] === '1']); ?>
+      <?php partial_admin('field.php', ['type' => 'switch', 'name' => 'enabled', 'label' => 'Give a thank-you code after a customer\'s first website order', 'value' => $form['enabled'] === '1']); ?>
       <?php partial_admin('field.php', ['type' => 'segment', 'name' => 'type', 'label' => 'Discount', 'value' => $form['type'], 'options' => ['percent' => 'Percent off', 'fixed' => 'Rupees off']]); ?>
       <div class="adm-field--pair">
         <?php partial_admin('field.php', ['type' => 'int', 'name' => 'value', 'label' => 'Discount amount', 'value' => $form['value'], 'required' => true, 'maxlength' => 9, 'error' => $err('value'), 'help' => 'A percent such as 10, or rupees such as 500.']); ?>
@@ -106,7 +95,7 @@ $conversion = $stats['issued'] > 0 ? round($stats['used'] / $stats['issued'] * 1
         ['key' => 'status', 'label' => 'Status'],
     ],
     'rows' => $tableRows,
-    'empty' => ['title' => 'No codes given yet', 'text' => $config['enabled'] ? 'The next first-time website order will get one.' : 'Turn the thank-you code on above to start.'],
+    'empty' => ['icon' => 'tag', 'title' => 'No codes given yet', 'text' => $config['enabled'] ? 'The next first-time website order will get one.' : 'Turn the thank-you code on above to start.'],
 ]); ?>
 </section>
 <?php partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'codes', 'path' => '/admin/coupons/reward', 'query' => []]); ?>

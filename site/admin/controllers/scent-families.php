@@ -94,7 +94,7 @@ if ($routeName === 'admin.scent_families') {
          FROM scent_families sf ORDER BY sf.sort_order ASC, sf.name ASC'
     );
     $orphans = db_fetch_all('SELECT p.scent_family, COUNT(*) AS n FROM products p WHERE p.deleted_at IS NULL AND p.scent_family IS NOT NULL AND p.scent_family NOT IN (SELECT name FROM scent_families) GROUP BY p.scent_family');
-    render_admin('scent-families.php', ['families' => $families, 'orphans' => $orphans], ['title' => 'Scent families', 'body_class' => 'admin t-light admin-scent-families', 'create_url' => '/admin/scent-families/new']);
+    render_admin('scent-families.php', ['families' => $families, 'orphans' => $orphans], ['title' => 'Scent families', 'body_class' => 'admin t-light admin-scent-families']);
 }
 
 $isNew = $routeName === 'admin.scent_families.new';
@@ -135,4 +135,4 @@ render_admin('scent-family-form.php', [
     'errors' => $errors,
     'productCount' => $family === null ? 0 : (int) db_fetch_column('SELECT COUNT(*) FROM products WHERE scent_family = :n AND deleted_at IS NULL', ['n' => $family['name']]),
     'slugHistory' => $family === null ? [] : catalogue_slug_history('scent', (int) $family['id']),
-], ['title' => $isNew ? 'New scent family' : 'Edit scent family', 'body_class' => 'admin t-light admin-scent-family-form', 'back' => '/admin/scent-families', 'create_url' => '/admin/scent-families/new']);
+], ['title' => $isNew ? 'New scent family' : 'Edit scent family', 'body_class' => 'admin t-light admin-scent-family-form', 'back' => '/admin/scent-families']);

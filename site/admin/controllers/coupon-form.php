@@ -264,4 +264,4 @@ render_admin('coupon-form.php', [
     'usedCount' => $usedCount,
     'ledger' => $ledger,
     'shareUrl' => $coupon === null ? '' : 'https://wa.me/?text=' . rawurlencode('Use code ' . $coupon['code'] . ' at Sky Fragrances. ' . settings_site_url() . '/shop'),
-], ['title' => $title, 'body_class' => (string) $route['body_class'], 'back' => '/admin/coupons', 'create_url' => '/admin/coupons/new']);
+], ['title' => $title, 'body_class' => (string) $route['body_class'], 'back' => '/admin/coupons']);

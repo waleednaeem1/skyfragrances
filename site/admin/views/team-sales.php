@@ -37,16 +37,6 @@ foreach ($rows as $row) {
             'share' => $shareHtml,
             'status' => $badge($state) . ($row['commission_paid_at'] !== null ? '<span class="adm-media__meta">' . e(date_short((string) $row['commission_paid_at'])) . '</span>' : '') . ($c['paid_warning'] ? '<span class="adm-media__meta adm-stock--low">Order was cancelled after payment</span>' : ''),
         ],
-        'card' => [
-            'title' => $orderHtml,
-            'chip' => $badge($state + ['small' => true]),
-            'sub' => e(date_short((string) $row['created_at'])) . ' · ' . e((string) $row['customer_name']),
-            'lines' => [
-                ['label' => 'Profit', 'html' => $profitHtml],
-                ['label' => 'Share', 'html' => $shareHtml],
-            ],
-            'inline_actions' => 1,
-        ],
         'actions' => $actions,
     ];
 }
@@ -78,10 +68,10 @@ $chips = ['' => 'All', 'ready' => 'Ready to pay', 'waiting' => 'Waiting', 'paid'
 </section>
 <?php partial_admin('period-picker.php', ['picker' => $picker]); ?>
 <div class="adm-grid">
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Orders</span><span class="adm-kpi__value"><?= e((string) $totals['orders']) ?></span><p class="adm-delta adm-delta--flat"><span><?= e($period['label']) ?></span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Sales</span><span class="adm-kpi__value"><?= e($fm($totals['net'])) ?></span><p class="adm-delta adm-delta--flat"><span>Perfumes, after discounts</span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Profit</span><span class="adm-kpi__value"><?= e($fm($totals['profit'])) ?></span><p class="adm-delta adm-delta--flat"><span>After cost per bottle</span></p></div>
-  <div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">Share earned</span><span class="adm-kpi__value"><?= e($fm($totals['share'])) ?></span><p class="adm-delta adm-delta--flat"><span><?= e($fm($totals['paid'])) ?> paid · <?= e($fm($totals['ready'] + $totals['waiting'])) ?> not paid</span></p></div>
+  <?php partial_admin('kpi-card.php', ['label' => 'Orders', 'value' => (string) $totals['orders'], 'note' => $period['label']]); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Sales', 'icon' => 'chart', 'tone' => 'c1', 'value' => $fm($totals['net']), 'note' => 'Perfumes, after discounts']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Profit', 'icon' => 'trend', 'tone' => 'c4', 'value' => $fm($totals['profit']), 'note' => 'After cost per bottle']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Share earned', 'icon' => 'wallet', 'tone' => 'c2', 'value' => $fm($totals['share']), 'note' => $fm($totals['paid']) . ' paid · ' . $fm($totals['ready'] + $totals['waiting']) . ' not paid']); ?>
 </div>
 <nav class="adm-rail" aria-label="Filter shares">
 <?php foreach ($chips as $key => $label): ?>
@@ -102,6 +92,6 @@ $chips = ['' => 'All', 'ready' => 'Ready to pay', 'waiting' => 'Waiting', 'paid'
         ['key' => 'status', 'label' => 'Status'],
     ],
     'rows' => $tableRows,
-    'empty' => ['title' => 'No orders in this period', 'text' => $isOwnerView ? 'Orders credited to ' . $member['display_name'] . ' will show here.' : 'Orders credited to you will show here.'],
+    'empty' => ['icon' => 'chart', 'title' => 'No orders in this period', 'text' => $isOwnerView ? 'Orders credited to ' . $member['display_name'] . ' will show here.' : 'Orders credited to you will show here.'],
 ]); ?>
 </section>

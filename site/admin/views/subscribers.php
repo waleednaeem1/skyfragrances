@@ -14,8 +14,8 @@ foreach ($subscribers as $s) {
         $s['status'] === 'subscribed'
             ? ['label' => 'Unsubscribe', 'post' => $statusPost, 'fields' => ['to' => 'unsubscribed']]
             : ['label' => 'Resubscribe', 'post' => $statusPost, 'fields' => ['to' => 'subscribed']],
-        ['label' => 'Copy email', 'type' => 'button', 'attr' => ['data-copy' => (string) $s['email']]],
-        ['label' => 'Delete', 'variant' => 'danger', 'post' => $statusPost, 'fields' => ['to' => 'delete'], 'confirm' => "Delete " . $s['email'] . "?\nThe address is removed for good. If they opted out, prefer Unsubscribe so the opt-out stays on record.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'],
+        ['label' => 'Copy ' . $s['email'], 'icon' => 'copy', 'type' => 'button', 'attr' => ['data-copy' => (string) $s['email']]],
+        ['label' => 'Delete ' . $s['email'], 'icon' => 'trash', 'variant' => 'danger', 'post' => $statusPost, 'fields' => ['to' => 'delete'], 'confirm' => "Delete " . $s['email'] . "?\nThe address is removed for good. If they opted out, prefer Unsubscribe so the opt-out stays on record.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'],
     ];
     $sourceLabel = $sources[$s['source']] ?? ucfirst((string) $s['source']);
     $joined = '<time class="adm-note" datetime="' . e(date_iso($s['subscribed_at'])) . '">' . e(date_long($s['subscribed_at'])) . '</time>';
@@ -28,16 +28,6 @@ foreach ($subscribers as $s) {
             'source' => e($sourceLabel),
             'subscribed' => $joined,
             'unsubscribed' => $left === '' ? '<span class="adm-muted">—</span>' : $left,
-        ],
-        'card' => [
-            'title' => '<span class="adm-mono">' . e((string) $s['email']) . '</span>',
-            'chip' => $badge((string) $s['status'], ['small' => true]),
-            'lines' => array_values(array_filter([
-                ['label' => 'Source', 'html' => e($sourceLabel)],
-                ['label' => 'Subscribed', 'html' => $joined],
-                $left === '' ? null : ['label' => 'Unsubscribed', 'html' => $left],
-            ])),
-            'inline_actions' => 1,
         ],
         'actions' => $actions,
     ];
@@ -75,7 +65,7 @@ $exportLabel = 'Export CSV (' . (int) $exportCount . ')';
     ],
     'rows' => $rows,
     'empty' => $activeChips === []
-        ? ['title' => 'No subscribers yet', 'text' => 'The newsletter box in the shop footer adds people here.']
-        : ['title' => 'No subscribers match', 'text' => 'Try another email or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/subscribers', 'variant' => 'ghost']],
+        ? ['icon' => 'mail', 'title' => 'No subscribers yet', 'text' => 'The newsletter box in the shop footer adds people here.']
+        : ['icon' => 'mail', 'title' => 'No subscribers match', 'text' => 'Try another email or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/subscribers', 'variant' => 'ghost']],
 ]); ?>
 <?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'subscribers']); ?>

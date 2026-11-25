@@ -86,7 +86,5 @@ render_admin('order-new.php', [
     'sizeOptions' => $sizeOptions,
     'methods' => payment_methods_enabled(),
     'cities' => checkout_cities(),
-    'sellers' => team_is_owner() ? array_values(array_filter(team_sellers(), static fn (array $s): bool => (int) $s['is_active'] === 1)) : [],
-    'selfRate' => !team_is_owner() && team_is_seller() ? rtrim(rtrim((string) auth_user()['commission_rate'], '0'), '.') : null,
-    'salesMemberId' => (int) request_post('sales_member_id', 0),
-], ['title' => 'New phone order', 'body_class' => 'admin t-light admin-order-new has-actionbar']);
+    'salesField' => team_sales_field(auth_user(), null, (int) request_post('sales_member_id', -1)),
+], ['title' => 'New phone order', 'body_class' => 'admin t-light admin-order-new']);

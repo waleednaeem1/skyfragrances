@@ -34,10 +34,11 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     'back' => '/admin/orders',
     'back_label' => 'Orders',
     'actions' => array_values(array_filter([
-        ['label' => 'Edit', 'href' => $detailPath . '/edit', 'size' => 'sm'],
-        ['label' => 'Invoice', 'href' => $detailPath . '/invoice', 'external' => true, 'size' => 'sm'],
-        ['label' => 'Small receipt', 'href' => $detailPath . '/receipt', 'external' => true, 'size' => 'sm'],
-        ['label' => 'Packing slip', 'href' => $detailPath . '/packing-slip', 'external' => true, 'size' => 'sm'],
+        ['label' => 'Edit', 'href' => $detailPath . '/edit', 'icon' => 'pencil'],
+        ['label' => 'Invoice', 'href' => $detailPath . '/invoice', 'external' => true, 'icon' => 'file'],
+        ['label' => 'Small receipt', 'href' => $detailPath . '/receipt', 'external' => true, 'icon' => 'receipt'],
+        ['label' => 'Packing slip', 'href' => $detailPath . '/packing-slip', 'external' => true, 'icon' => 'printer'],
+        ['label' => 'View', 'href' => $detailPath . '/view', 'variant' => 'text', 'icon' => 'eye'],
     ])),
 ]); ?>
 <p class="adm-cluster">
@@ -52,9 +53,46 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php endif; ?>
 </p>
 
+<div class="adm-split">
+<div class="adm-split__main">
+<section class="adm-card" id="status">
+  <div class="adm-card__head"><div><h2 class="adm-card__title">Status</h2><p class="adm-card__sub">Move the order along. Customers get an email at each step if they gave one.</p></div><?= $badge((string) $order['status'], ['label' => adm_order_status_label((string) $order['status']), 'small' => true]) ?></div>
+<?php partial_admin('order-stepper.php', ['status' => (string) $order['status']]); ?>
+<?php if ($legalTargets === []): ?>
+  <p class="adm-muted">This order is <?= e(strtolower(adm_order_status_label((string) $order['status']))) ?>. Nothing further can change; add a note if something needs recording.</p>
+<?php elseif (!$reconciles): ?>
+  <p class="adm-muted">Status changes are disabled until the totals reconcile.</p>
+<?php else: ?>
+  <div class="adm-cluster">
+<?php foreach ($legalTargets as $target): ?>
+<?php if ($target === 'cancelled' || $target === 'shipped' || order_transition_requires_reason((string) $order['status'], $target)) { continue; } ?>
+    <?php partial_admin('button.php', [
+        'label' => 'Mark ' . strtolower(adm_order_status_label($target)),
+        'variant' => ($primaryAction['to'] ?? '') === $target ? 'gold' : 'ghost',
+        'post' => $detailPath . '/status',
+        'fields' => ['to' => $target],
+        'confirm' => $target === 'delivered' ? "Mark this order as delivered?\nIf it was a mistake you can move it back from here." : null,
+        'confirm_label' => 'Yes, mark delivered',
+    ]); ?>
+<?php endforeach; ?>
+<?php if (in_array('shipped', $legalTargets, true)): ?>
+    <a class="adm-btn adm-btn--<?= ($primaryAction['to'] ?? '') === 'shipped' ? 'gold' : 'ghost' ?>" href="#shipping">Mark shipped…</a>
+<?php endif; ?>
+  </div>
+<?php foreach ($legalTargets as $target): ?>
+<?php if ($target === 'cancelled' || !order_transition_requires_reason((string) $order['status'], $target)) { continue; } ?>
+  <form method="post" action="<?= e(url($detailPath . '/status')) ?>" class="adm-form">
+    <?= csrf_field() ?>
+    <input type="hidden" name="to" value="<?= e($target) ?>">
+    <?php partial_admin('field.php', ['type' => 'text', 'name' => 'note', 'id' => 'back-' . $target, 'label' => 'Reason to move back to ' . adm_order_status_label($target), 'value' => '', 'required' => true, 'maxlength' => 200, 'compact' => true]); ?>
+    <?php partial_admin('button.php', ['label' => 'Back to ' . strtolower(adm_order_status_label($target)), 'variant' => 'ghost', 'size' => 'sm', 'confirm' => 'Move this order back to ' . adm_order_status_label($target) . "?\n" . ($order['status'] === 'shipped' ? 'The courier and tracking details will be cleared.' : 'Use this only to fix a wrong tap.'), 'confirm_label' => 'Yes, move back']); ?>
+  </form>
+<?php endforeach; ?>
+<?php endif; ?>
+</section>
 <section class="adm-card" id="payment">
   <div class="adm-card__head"><h2 class="adm-card__title">Payment</h2><?= $badge((string) $order['payment_status'], ['label' => $paymentLabel, 'small' => true]) ?></div>
-  <dl class="adm-list">
+  <dl class="adm-dl">
     <div><dt class="adm-muted">Method</dt><dd><?= e(payment_method_label((string) $order['payment_method'])) ?></dd></div>
 <?php if (!empty($order['payment_account_snapshot'])): ?>
     <div><dt class="adm-muted">Paid to</dt><dd><?= e((string) $order['payment_account_snapshot']) ?></dd></div>
@@ -119,87 +157,8 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
   </details>
 <?php endif; ?>
 </section>
-
-<section class="adm-card" id="whatsapp">
-  <div class="adm-card__head"><h2 class="adm-card__title">WhatsApp</h2></div>
-<?php if (!$phoneDialable): ?>
-  <p class="adm-muted">Phone number cannot be dialled.</p>
-<?php else: ?>
-<?php if ($whatsappPrimary !== null): ?>
-  <?php partial_admin('button.php', ['label' => 'Send "' . $whatsappPrimary['label'] . '" message', 'href' => $whatsappPrimary['href'], 'external' => true, 'variant' => 'gold', 'block' => true]); ?>
-<?php endif; ?>
-  <details>
-    <summary class="adm-muted">Other messages</summary>
-    <div class="adm-stack">
-<?php foreach ($whatsapp as $key => $message): ?>
-<?php if ($key === $whatsappDefault) { continue; } ?>
-      <?php partial_admin('button.php', ['label' => $message['label'], 'href' => $message['href'], 'external' => true, 'variant' => 'ghost', 'size' => 'sm']); ?>
-<?php endforeach; ?>
-    </div>
-  </details>
-  <p class="adm-note">WhatsApp opens with the text ready — nothing is sent until you tap send.</p>
-<?php endif; ?>
-</section>
-
 <?php partial_admin('order-items.php', ['items' => $items]); ?>
-
 <?php partial_admin('order-totals.php', ['order' => $order]); ?>
-
-<section class="adm-card" id="status">
-  <div class="adm-card__head"><h2 class="adm-card__title">Status</h2><?= $badge((string) $order['status'], ['label' => adm_order_status_label((string) $order['status']), 'small' => true]) ?></div>
-<?php if ($legalTargets === []): ?>
-  <p class="adm-muted">This order is <?= e(strtolower(adm_order_status_label((string) $order['status']))) ?>. Nothing further can change; add a note if something needs recording.</p>
-<?php elseif (!$reconciles): ?>
-  <p class="adm-muted">Status changes are disabled until the totals reconcile.</p>
-<?php else: ?>
-  <div class="adm-cluster">
-<?php foreach ($legalTargets as $target): ?>
-<?php if ($target === 'cancelled' || $target === 'shipped' || order_transition_requires_reason((string) $order['status'], $target)) { continue; } ?>
-    <?php partial_admin('button.php', [
-        'label' => 'Mark ' . strtolower(adm_order_status_label($target)),
-        'variant' => ($primaryAction['to'] ?? '') === $target ? 'gold' : 'ghost',
-        'post' => $detailPath . '/status',
-        'fields' => ['to' => $target],
-        'confirm' => $target === 'delivered' ? "Mark this order as delivered?\nIf it was a mistake you can move it back from here." : null,
-        'confirm_label' => 'Yes, mark delivered',
-    ]); ?>
-<?php endforeach; ?>
-<?php if (in_array('shipped', $legalTargets, true)): ?>
-    <a class="adm-btn adm-btn--<?= ($primaryAction['to'] ?? '') === 'shipped' ? 'gold' : 'ghost' ?>" href="#shipping">Mark shipped…</a>
-<?php endif; ?>
-  </div>
-<?php foreach ($legalTargets as $target): ?>
-<?php if ($target === 'cancelled' || !order_transition_requires_reason((string) $order['status'], $target)) { continue; } ?>
-  <form method="post" action="<?= e(url($detailPath . '/status')) ?>" class="adm-form">
-    <?= csrf_field() ?>
-    <input type="hidden" name="to" value="<?= e($target) ?>">
-    <?php partial_admin('field.php', ['type' => 'text', 'name' => 'note', 'id' => 'back-' . $target, 'label' => 'Reason to move back to ' . adm_order_status_label($target), 'value' => '', 'required' => true, 'maxlength' => 200, 'compact' => true]); ?>
-    <?php partial_admin('button.php', ['label' => 'Back to ' . strtolower(adm_order_status_label($target)), 'variant' => 'ghost', 'size' => 'sm', 'confirm' => 'Move this order back to ' . adm_order_status_label($target) . "?\n" . ($order['status'] === 'shipped' ? 'The courier and tracking details will be cleared.' : 'Use this only to fix a wrong tap.'), 'confirm_label' => 'Yes, move back']); ?>
-  </form>
-<?php endforeach; ?>
-<?php endif; ?>
-</section>
-
-<section class="adm-card" id="customer">
-  <div class="adm-card__head"><h2 class="adm-card__title">Customer</h2><a class="adm-btn adm-btn--text adm-btn--sm" href="<?= e(url('/admin/customers/' . ltrim((string) $order['phone_normalized'], '+'))) ?>"><?= $previousCount > 0 ? e(($previousCount + 1) . ' orders') . ' · ' : '' ?>Customer ledger</a></div>
-  <p><strong><?= e((string) $order['customer_name']) ?></strong></p>
-  <p><a href="tel:<?= e((string) $order['phone_normalized']) ?>"><?= e((string) $order['customer_phone']) ?></a> <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-copy="<?= e((string) $order['customer_phone']) ?>">Copy</button></p>
-  <p><?php if (!empty($order['customer_email'])): ?><a href="mailto:<?= e((string) $order['customer_email']) ?>"><?= e((string) $order['customer_email']) ?></a><?php else: ?><span class="adm-muted">— no email provided</span><?php endif; ?></p>
-  <div class="adm-note"><?= nl2br(e((string) $order['address'])) ?><br><?= e((string) $order['city']) ?><?= !empty($order['postal_code']) ? ' ' . e((string) $order['postal_code']) : '' ?></div>
-  <p class="adm-cluster">
-    <a class="adm-btn adm-btn--ghost adm-btn--sm" href="tel:<?= e((string) $order['phone_normalized']) ?>">Call</a>
-    <button type="button" class="adm-btn adm-btn--ghost adm-btn--sm" data-copy="<?= e($copyAddress) ?>">Copy address</button>
-  </p>
-<?php if (!empty($order['customer_note'])): ?>
-  <blockquote class="adm-note">&ldquo;<?= nl2br(e((string) $order['customer_note'])) ?>&rdquo;</blockquote>
-<?php endif; ?>
-  <p class="adm-muted">Placed <?= e(adm_order_datetime((string) $order['created_at'])) ?> · <?= $isMobileUa ? 'Mobile' : 'Desktop' ?></p>
-<?php if ($previousOrders !== []): ?>
-  <p class="adm-muted">Previous: <?php foreach ($previousOrders as $i => $prev): ?><?= $i > 0 ? ', ' : '' ?><a href="<?= e(url('/admin/orders/' . $prev['order_number'])) ?>"><?= e((string) $prev['order_number']) ?></a><?php endforeach; ?></p>
-<?php endif; ?>
-  <p><a class="adm-btn adm-btn--ghost adm-btn--sm" href="<?= e(url($detailPath . '/edit')) ?>">Edit customer details</a></p>
-</section>
-
 <section class="adm-card" id="shipping">
   <div class="adm-card__head"><h2 class="adm-card__title">Shipping</h2><?php if (!empty($order['shipped_at'])): ?><span class="adm-muted">Shipped <?= e(adm_order_datetime((string) $order['shipped_at'])) ?></span><?php endif; ?></div>
 <?php if (!empty($order['tracking_number'])): ?>
@@ -239,9 +198,7 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php endif; ?>
   </form>
 </section>
-
 <?php partial_admin('order-timeline.php', ['history' => $history]); ?>
-
 <section class="adm-card" id="notes">
   <div class="adm-card__head"><h2 class="adm-card__title">Internal notes</h2></div>
 <?php if ($notes === []): ?>
@@ -261,7 +218,6 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
     <?php partial_admin('button.php', ['label' => 'Add note', 'variant' => 'ghost', 'size' => 'sm']); ?>
   </form>
 </section>
-
 <section class="adm-card" id="activity">
   <details>
     <summary class="adm-card__title">Activity (last <?= e((string) count($activity)) ?>)</summary>
@@ -276,7 +232,6 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
 <?php endif; ?>
   </details>
 </section>
-
 <section class="adm-card adm-card--danger" id="danger">
   <div class="adm-card__head"><h2 class="adm-card__title">Danger zone</h2></div>
 <?php if ($order['status'] === 'cancelled'): ?>
@@ -298,8 +253,52 @@ $whatsappPrimary = $whatsapp[$whatsappDefault] ?? null;
   <p class="adm-muted">Nothing to do here. Orders are never deleted.</p>
 <?php endif; ?>
 </section>
+</div>
+<aside class="adm-split__side">
+<section class="adm-card" id="customer">
+  <div class="adm-card__head"><h2 class="adm-card__title">Customer</h2><a class="adm-btn adm-btn--text adm-btn--sm" href="<?= e(url('/admin/customers/' . ltrim((string) $order['phone_normalized'], '+'))) ?>"><?= $previousCount > 0 ? e(($previousCount + 1) . ' orders') . ' · ' : '' ?>Customer ledger</a></div>
+  <p><strong><?= e((string) $order['customer_name']) ?></strong></p>
+  <p><a href="tel:<?= e((string) $order['phone_normalized']) ?>"><?= e((string) $order['customer_phone']) ?></a> <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-copy="<?= e((string) $order['customer_phone']) ?>">Copy</button></p>
+  <p><?php if (!empty($order['customer_email'])): ?><a href="mailto:<?= e((string) $order['customer_email']) ?>"><?= e((string) $order['customer_email']) ?></a><?php else: ?><span class="adm-muted">— no email provided</span><?php endif; ?></p>
+  <div class="adm-note"><?= nl2br(e((string) $order['address'])) ?><br><?= e((string) $order['city']) ?><?= !empty($order['postal_code']) ? ' ' . e((string) $order['postal_code']) : '' ?></div>
+  <p class="adm-cluster">
+    <a class="adm-btn adm-btn--ghost adm-btn--sm" href="tel:<?= e((string) $order['phone_normalized']) ?>">Call</a>
+    <button type="button" class="adm-btn adm-btn--ghost adm-btn--sm" data-copy="<?= e($copyAddress) ?>">Copy address</button>
+  </p>
+<?php if (!empty($order['customer_note'])): ?>
+  <blockquote class="adm-note">&ldquo;<?= nl2br(e((string) $order['customer_note'])) ?>&rdquo;</blockquote>
+<?php endif; ?>
+  <p class="adm-muted">Placed <?= e(adm_order_datetime((string) $order['created_at'])) ?> · <?= $isMobileUa ? 'Mobile' : 'Desktop' ?></p>
+<?php if ($previousOrders !== []): ?>
+  <p class="adm-muted">Previous: <?php foreach ($previousOrders as $i => $prev): ?><?= $i > 0 ? ', ' : '' ?><a href="<?= e(url('/admin/orders/' . $prev['order_number'])) ?>"><?= e((string) $prev['order_number']) ?></a><?php endforeach; ?></p>
+<?php endif; ?>
+  <p><a class="adm-btn adm-btn--ghost adm-btn--sm" href="<?= e(url($detailPath . '/edit')) ?>">Edit customer details</a></p>
+</section>
+<section class="adm-card" id="whatsapp">
+  <div class="adm-card__head"><h2 class="adm-card__title">WhatsApp</h2></div>
+<?php if (!$phoneDialable): ?>
+  <p class="adm-muted">Phone number cannot be dialled.</p>
+<?php else: ?>
+<?php if ($whatsappPrimary !== null): ?>
+  <?php partial_admin('button.php', ['label' => 'Send "' . $whatsappPrimary['label'] . '" message', 'href' => $whatsappPrimary['href'], 'external' => true, 'variant' => 'gold', 'block' => true]); ?>
+<?php endif; ?>
+  <details>
+    <summary class="adm-muted">Other messages</summary>
+    <div class="adm-stack">
+<?php foreach ($whatsapp as $key => $message): ?>
+<?php if ($key === $whatsappDefault) { continue; } ?>
+      <?php partial_admin('button.php', ['label' => $message['label'], 'href' => $message['href'], 'external' => true, 'variant' => 'ghost', 'size' => 'sm']); ?>
+<?php endforeach; ?>
+    </div>
+  </details>
+  <p class="adm-note">WhatsApp opens with the text ready — nothing is sent until you tap send.</p>
+<?php endif; ?>
+</section>
+<?php partial_admin('order-sales.php', ['order' => $order, 'sales' => $sales, 'sellers' => $sellers]); ?>
+</aside>
+</div>
 
-<form method="post" action="<?= e(url($detailPath . '/status')) ?>" class="adm-inline-form">
+<form method="post" action="<?= e(url($detailPath . '/status')) ?>">
   <?= csrf_field() ?>
 <?php if ($primaryAction !== null && $reconciles && $primaryAction['to'] !== 'shipped'): ?>
   <input type="hidden" name="to" value="<?= e($primaryAction['to']) ?>">

@@ -23,14 +23,6 @@ foreach ($rows as $r) {
             'payment' => $badge((string) $r['payment_method'], ['label' => payment_method_label((string) $r['payment_method']), 'small' => true]) . ' ' . $badge((string) $r['payment_status'], ['label' => adm_order_payment_label((string) $r['payment_status']), 'small' => true]),
             'total' => $moneyHtml((string) $r['grand_total']),
         ],
-        'card' => [
-            'title' => '<span class="adm-mono">' . e((string) $r['order_number']) . '</span>',
-            'chip' => $badge((string) $r['payment_status'], ['label' => adm_order_payment_label((string) $r['payment_status']), 'small' => true]),
-            'sub' => e(adm_order_date_compact((string) $r['created_at'])) . ' · ' . $age . 'd ago',
-            'lines' => [['html' => e((string) $r['customer_name']) . ' · ' . e((string) $r['city'])]],
-            'money' => $moneyHtml((string) $r['grand_total']),
-            'aside' => $badge((string) $r['payment_method'], ['label' => payment_method_label((string) $r['payment_method']), 'small' => true]),
-        ],
     ];
 }
 ?>
@@ -42,7 +34,7 @@ foreach ($rows as $r) {
 ]); ?>
 
 <?php if ($rows === []): ?>
-<?php partial_admin('empty.php', ['title' => 'Nothing to cancel', 'text' => 'Every transfer order placed more than ' . $hours . ' hours ago has been paid, confirmed or cancelled already.', 'action' => ['label' => 'Back to orders', 'href' => '/admin/orders']]); ?>
+<?php partial_admin('empty.php', ['icon' => 'check', 'title' => 'Nothing to cancel', 'text' => 'Every transfer order placed more than ' . $hours . ' hours ago has been paid, confirmed or cancelled already.', 'action' => ['label' => 'Back to orders', 'href' => '/admin/orders']]); ?>
 <?php else: ?>
 <div class="adm-banner adm-banner--warn" role="status"><strong><?= e((string) count($rows)) ?> order<?= count($rows) === 1 ? '' : 's' ?></strong> holding <?= e(money(money_from_paisa($holdTotal))) ?> of stock will be cancelled. Stock goes back on the shelf once per order, the coupon use is returned, and each customer with an email gets the cancellation email. COD orders are never included. This cannot be undone.</div>
 

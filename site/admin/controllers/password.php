@@ -33,6 +33,7 @@ if (request_method() === 'POST') {
 
 render_admin('password.php', [
     'errors' => $errors,
+    'signedInAs' => (string) $admin['username'] . ' · ' . admin_role_label($admin),
     'lastLoginAt' => $admin['last_login_at'] ?? null,
     'passwordChangedAt' => $admin['password_changed_at'] ?? null,
     'recentLogins' => auth_recent_logins((string) $admin['username']),

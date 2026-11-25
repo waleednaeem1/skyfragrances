@@ -39,6 +39,11 @@ foreach ($methods as $method) {
     <h2 class="adm-form__section-title">Order</h2>
     <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'datetime', 'name' => 'received_at', 'label' => 'Order received', 'value' => (string) ($form['received_at'] ?? ''), 'required' => true, 'error' => $errors['received_at'] ?? '', 'help' => 'When the customer placed the order. Reports and the customer ledger use this date.', 'attr' => ['max' => order_datetime_input()]]); ?>
+<?php if (!empty($salesField) && $salesField['mode'] === 'choose'): ?>
+      <?php partial_admin('field.php', ['type' => 'select', 'name' => 'sales_member_id', 'label' => 'Sold by', 'value' => $salesField['value'], 'options' => $salesField['options'], 'help' => $salesField['help']]); ?>
+<?php elseif (!empty($salesField)): ?>
+      <div class="adm-field"><span class="adm-field__label">Sold by</span><p class="adm-field__static"><?= e((string) $salesField['text']) ?></p><p class="adm-field__help"><?= e((string) $salesField['help']) ?></p></div>
+<?php endif; ?>
     </div>
   </div>
   <div class="adm-form__section">
@@ -126,31 +131,5 @@ foreach ($methods as $method) {
     </div>
   </div>
 
-<?php endif; ?>
-<?php if ($priced !== null && $errors === []): ?>
-  <div class="adm-form__section" aria-live="polite">
-    <h2 class="adm-form__section-title">Review</h2>
-    <table class="adm-table">
-      <thead><tr><th scope="col">Perfume</th><th scope="col">Qty</th><th scope="col" class="adm-num">Price</th><th scope="col" class="adm-num">Total</th></tr></thead>
-      <tbody>
-<?php foreach ($priced['lines'] as $line): ?>
-        <tr>
-          <td><?= e($line['product_name']) ?> <span class="adm-muted"><?= e($line['size_label']) ?></span></td>
-          <td><?= (int) $line['qty'] ?></td>
-          <td class="adm-num"><?= e(money(money_from_paisa((int) $line['unit_price_paisa']))) ?></td>
-          <td class="adm-num"><?= e(money(money_from_paisa((int) $line['line_total_paisa']))) ?></td>
-        </tr>
-<?php endforeach; ?>
-      </tbody>
-      <tfoot>
-        <tr><th scope="row" colspan="3">Subtotal</th><td class="adm-num"><?= e(money(money_from_paisa((int) $priced['subtotal_paisa']))) ?></td></tr>
-<?php if ((int) $priced['discount_paisa'] > 0): ?>
-        <tr><th scope="row" colspan="3">Discount<?= $priced['coupon'] !== null ? ' (' . e((string) $priced['coupon']['code']) . ')' : '' ?></th><td class="adm-num">− <?= e(money(money_from_paisa((int) $priced['discount_paisa']))) ?></td></tr>
-<?php endif; ?>
-        <tr><th scope="row" colspan="3">Delivery</th><td class="adm-num"><?= (int) $priced['shipping_paisa'] === 0 ? 'Free' : e(money(money_from_paisa((int) $priced['shipping_paisa']))) ?></td></tr>
-        <tr><th scope="row" colspan="3">Total to collect</th><td class="adm-num"><strong><?= e(money(money_from_paisa((int) $priced['grand_total_paisa']))) ?></strong></td></tr>
-      </tfoot>
-    </table>
-  </div>
 <?php endif; ?>
 

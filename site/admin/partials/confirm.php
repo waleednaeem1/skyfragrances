@@ -3,7 +3,6 @@ defined('SKYFR') || exit;
 ?>
 <dialog class="adm-confirm" data-confirm-dialog aria-labelledby="adm-confirm-title">
   <form method="dialog" class="adm-confirm__box">
-    <div class="adm-sheet__handle" aria-hidden="true"></div>
     <h2 class="adm-confirm__title" id="adm-confirm-title" data-confirm-title>Are you sure?</h2>
     <p class="adm-confirm__text" data-confirm-text></p>
     <div class="adm-field" data-confirm-word-wrap hidden>

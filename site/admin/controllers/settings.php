@@ -22,6 +22,7 @@ function settings_definitions(): array
         'address_line' => ['store', 'text', 'Business address', ['maxlength' => 160, 'help' => 'Printed on invoices and the contact page.']],
         'footer_blurb' => ['store', 'textarea', 'Footer blurb', ['maxlength' => 240, 'rows' => 3]],
         'currency_prefix' => ['store', 'text', 'Currency prefix', ['maxlength' => 6, 'required' => true]],
+        'monthly_sales_goal' => ['store', 'money', 'Monthly sales goal', ['help' => 'Shown as a progress ring on the dashboard. Leave it at 0 to hide the ring.']],
         'timezone' => ['store', 'readonly', 'Timezone', ['help' => 'All dates in the panel and in emails use Pakistan time.']],
         'site_theme' => ['appearance', 'choice', 'Storefront theme', ['options' => ['dark' => 'Dark', 'light' => 'Light'], 'help' => 'Dark is the default and the original look. Light switches the whole shop, for every visitor, straight after you save. The admin panel keeps its own look. With Light, a light and airy homepage photo looks best.']],
         'contact_phone' => ['contact', 'phone', 'Phone number', ['help' => 'Shown to customers exactly as typed.']],
@@ -468,4 +469,4 @@ render_admin('settings.php', [
     'panelOrigin' => request_origin(),
     'httpsPermanent' => https_redirect_is_permanent(APP_ROOT),
     'httpsLocal' => in_array(request_host(), ['localhost', '127.0.0.1', '::1'], true) || !request_is_https(),
-], ['title' => 'Settings · ' . SETTINGS_TABS[$tab], 'body_class' => ($head['body_class'] ?? 'admin t-light') . ' has-actionbar'] + $head);
+], ['title' => 'Settings · ' . SETTINGS_TABS[$tab], 'body_class' => ($head['body_class'] ?? 'admin t-light')] + $head);

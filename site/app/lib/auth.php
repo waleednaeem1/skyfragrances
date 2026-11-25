@@ -32,7 +32,7 @@ function auth_user(): ?array
         return null;
     }
     $row = db_fetch(
-        'SELECT id, username, email, display_name, role, permissions, commission_rate, is_active, last_login_at, password_changed_at
+        'SELECT id, username, email, display_name, role, permissions, commission_rate, job_title, is_active, last_login_at, password_changed_at
          FROM admin_users WHERE id = :id',
         ['id' => $adminId]
     );

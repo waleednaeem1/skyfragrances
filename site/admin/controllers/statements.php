@@ -8,7 +8,7 @@ function statements_series(array $buckets, string $field): array
 {
     $series = [];
     foreach ($buckets as $key => $bucket) {
-        $series[$key] = ['orders' => $bucket['orders'], 'paisa' => $bucket[$field]];
+        $series[$key] = ['orders' => $bucket['orders'], 'amount' => $bucket[$field]];
     }
     return $series;
 }

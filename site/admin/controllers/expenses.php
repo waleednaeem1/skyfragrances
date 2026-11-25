@@ -165,7 +165,7 @@ if (in_array($routeName, ['admin.expenses.new', 'admin.expenses.edit'], true)) {
         'type' => $type,
         'form' => $form,
         'errors' => $errors,
-    ], ['title' => $existing !== null ? 'Edit entry' : ($type === 'income' ? 'Add money in' : 'Add expense'), 'body_class' => (string) $route['body_class'] . ' has-actionbar', 'back' => '/admin/expenses']);
+    ], ['title' => $existing !== null ? 'Edit entry' : ($type === 'income' ? 'Add money in' : 'Add expense'), 'body_class' => (string) $route['body_class'], 'back' => '/admin/expenses']);
 }
 
 $karachi = new DateTimeImmutable('now', new DateTimeZone('Asia/Karachi'));

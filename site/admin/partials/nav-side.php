@@ -1,53 +1,43 @@
 <?php
 defined('SKYFR') || exit;
-$groups = array_filter(array_map(static fn (array $items): array => array_values(array_filter($items, static fn (array $item): bool => team_can_route($item[4]) && ($item[0] !== '/sales' || !team_is_owner()))), [
-    'Sales' => [
-        ['/', 'Dashboard', 'grid', 0, 'admin.dashboard'],
-        ['/orders', 'Orders', 'package', (int) ($badges['orders'] ?? 0), 'admin.orders'],
-        ['/customers', 'Customers', 'users', 0, 'admin.customers'],
-        ['/sales', 'My sales', 'chart', 0, 'admin.sales'],
-    ],
-    'Money' => [
-        ['/statements', 'Statements', 'chart', 0, 'admin.statements'],
-        ['/expenses', 'Expenses', 'wallet', 0, 'admin.expenses'],
-    ],
-    'Catalogue' => [
-        ['/products', 'Products', 'droplet', 0, 'admin.products'],
-        ['/collections', 'Collections', 'layers', 0, 'admin.collections'],
-        ['/coupons', 'Coupons', 'tag', 0, 'admin.coupons'],
-        ['/reviews', 'Reviews', 'star', (int) ($badges['reviews'] ?? 0), 'admin.reviews'],
-    ],
-    'Audience' => [
-        ['/messages', 'Messages', 'mail', 0, 'admin.messages'],
-        ['/subscribers', 'Subscribers', 'user-plus', 0, 'admin.subscribers'],
-    ],
-    'Store' => [
-        ['/team', 'Team', 'users', 0, 'admin.team'],
-        ['/pages', 'Pages', 'file', 0, 'admin.pages'],
-        ['/settings', 'Settings', 'settings', 0, 'admin.settings'],
-        ['/tools', 'Tools', 'tool', 0, 'admin.tools'],
-        ['/activity', 'Activity log', 'file', 0, 'admin.activity'],
-    ],
-]));
-$homeUrl = team_home_url();
+$user = auth_user();
+$name = trim((string) ($user['display_name'] ?? '')) ?: (string) ($user['username'] ?? '');
+$host = (string) (parse_url(SITE_URL, PHP_URL_HOST) ?: 'skyfragrances.com');
+$countLabels = ['orders' => 'orders', 'reviews' => 'reviews waiting', 'failed_emails' => 'emails failed'];
 ?>
-<nav class="adm-side" aria-label="Sections">
-  <a class="adm-side__brand" href="<?= e(url($homeUrl)) ?>" aria-label="Sky Fragrances admin home">
-    <img src="<?= e(asset('img/brand/monogram-transparent-256.webp')) ?>" alt="" width="36" height="36" decoding="async">
-    <span><span class="adm-side__brand-name">Sky Fragrances</span><span class="adm-side__brand-sub">Admin</span></span>
-  </a>
-<?php foreach ($groups as $group => $items): ?>
-  <p class="adm-side__group"><?= e($group) ?></p>
-<?php foreach ($items as [$path, $label, $icon, $count, $routeName]): ?>
-<?php $active = $path === '/' ? $currentPath === '/admin' : $isActive($path); ?>
-  <a class="adm-side__link<?= $active ? ' is-active' : '' ?>" href="<?= e(url('/admin' . ($path === '/' ? '' : $path))) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
-    <?php partial('icon.php', ['name' => $icon, 'size' => 18, 'class' => 'adm-side__icon']); ?>
-    <span class="adm-side__label"><?= e($label) ?></span><?php if ($count > 0): ?><span class="adm-nav__badge"><?= e((string) $count) ?></span><?php endif; ?>
-  </a>
-<?php endforeach; ?>
-<?php endforeach; ?>
-  <div class="adm-side__foot">
-    <a class="adm-side__link<?= $isActive('/password') ? ' is-active' : '' ?>" href="<?= e(url('/admin/password')) ?>"><?php partial('icon.php', ['name' => 'key', 'size' => 18, 'class' => 'adm-side__icon']); ?><span class="adm-side__label">Change password</span></a>
-    <form method="post" action="<?= e(url('/admin/logout')) ?>"><?= csrf_field() ?><button type="submit" class="adm-side__link adm-side__link--danger"><?php partial('icon.php', ['name' => 'logout', 'size' => 18, 'class' => 'adm-side__icon']); ?><span class="adm-side__label">Log out</span></button></form>
+<aside class="adm-side" aria-label="Admin">
+  <div class="adm-side__top">
+    <a class="adm-brand" href="<?= e(url(team_home_url($user))) ?>">
+      <span class="adm-brand__mark" aria-hidden="true">S<span>F</span></span>
+      <span class="adm-brand__text"><span class="adm-brand__name">Sky Fragrances</span><span class="adm-brand__sub">Admin · <?= e($host) ?></span></span>
+    </a>
+    <button type="button" class="adm-iconbtn adm-side__toggle" data-side-toggle aria-controls="adm-side-body" aria-expanded="false"><?php partial('icon.php', ['name' => 'menu', 'size' => 18]); ?><span class="u-sr-only">Menu</span></button>
   </div>
-</nav>
+  <div class="adm-side__body" id="adm-side-body">
+    <button type="button" class="adm-searchbtn" data-palette-open aria-haspopup="dialog"><?php partial('icon.php', ['name' => 'search', 'size' => 15]); ?><span class="adm-searchbtn__label">Search or jump to…</span><kbd class="adm-kbd" data-palette-mod>⌘K</kbd></button>
+    <nav class="adm-side__nav" aria-label="Main">
+<?php foreach ($nav as $group): ?>
+      <div class="adm-navgroup adm-tone--<?= e($group['tone']) ?>">
+        <span class="adm-navgroup__label"><?= e($group['label']) ?></span>
+<?php foreach ($group['items'] as $item): $active = admin_nav_matches($currentPath, $item['path']); $count = isset($item['count']) ? (int) ($counts[$item['count']] ?? 0) : 0; ?>
+        <a class="adm-navlink<?= $active ? ' is-active' : '' ?>" href="<?= e(url($item['path'])) ?>"<?= $active ? ' aria-current="page"' : '' ?>>
+          <span class="adm-navlink__icon"><?php partial('icon.php', ['name' => $item['icon'], 'size' => 15]); ?></span>
+          <span class="adm-navlink__label"><?= e($item['label']) ?></span>
+<?php if ($count > 0): ?>
+          <span class="adm-navlink__count<?= $item['count'] !== 'orders' ? ' is-alert' : '' ?>"><?= e((string) $count) ?><span class="u-sr-only"> <?= e($countLabels[$item['count']] ?? '') ?></span></span>
+<?php endif; ?>
+        </a>
+<?php endforeach; ?>
+      </div>
+<?php endforeach; ?>
+    </nav>
+    <div class="adm-side__foot">
+      <div class="adm-user">
+        <span class="adm-user__avatar" aria-hidden="true"><?= e(mb_strtoupper(mb_substr($name, 0, 1))) ?></span>
+        <span class="adm-user__text"><span class="adm-user__name"><?= e($name) ?></span><span class="adm-user__role"><?= e($user !== null ? admin_role_label($user) : '') ?></span></span>
+      </div>
+      <a class="adm-footlink<?= admin_nav_matches($currentPath, '/admin/password') ? ' is-active' : '' ?>" href="<?= e(url('/admin/password')) ?>"><?php partial('icon.php', ['name' => 'key', 'size' => 15]); ?>Change password</a>
+      <form method="post" action="<?= e(url('/admin/logout')) ?>"><?= csrf_field() ?><button type="submit" class="adm-footlink adm-footlink--danger"><?php partial('icon.php', ['name' => 'logout', 'size' => 15]); ?>Log out</button></form>
+    </div>
+  </div>
+</aside>

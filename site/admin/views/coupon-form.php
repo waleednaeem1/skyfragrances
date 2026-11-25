@@ -78,16 +78,16 @@ $isPercent = $form['type'] === 'percent';
         <p class="adm-field__help" id="expires_at-help">Blank never expires.</p>
       </div>
     </div>
-    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'is_active', 'label' => 'Active — customers can apply this code', 'value' => $form['is_active']]); ?>
+    <?php partial_admin('field.php', ['type' => 'switch', 'name' => 'is_active', 'label' => 'Active — customers can apply this code', 'value' => $form['is_active']]); ?>
   </div>
 <?php if ($ledger !== null): ?>
   <div class="adm-card">
     <div class="adm-card__head"><h2 class="adm-card__title">Usage from the ledger</h2></div>
     <div class="adm-grid">
-      <div class="adm-kpi"><span class="adm-kpi__value"><?= e((string) $ledger['applied']) ?></span><span class="adm-kpi__label">Orders using it</span></div>
-      <div class="adm-kpi"><span class="adm-kpi__value"><?php partial_admin('money.php', ['value' => $ledger['discount_total']]); ?></span><span class="adm-kpi__label">Discount given</span></div>
-      <div class="adm-kpi"><span class="adm-kpi__value"><?php partial_admin('money.php', ['value' => $ledger['subtotal_total']]); ?></span><span class="adm-kpi__label">Items sold with it</span></div>
-      <div class="adm-kpi"><span class="adm-kpi__value"><?= e((string) $ledger['phones']) ?></span><span class="adm-kpi__label">Different phones</span></div>
+      <?php partial_admin('kpi-card.php', ['label' => 'Orders using it', 'value' => (string) $ledger['applied'], 'icon' => 'package', 'tone' => 'c1']); ?>
+      <?php partial_admin('kpi-card.php', ['label' => 'Discount given', 'value' => money((string) $ledger['discount_total']), 'icon' => 'tag', 'tone' => 'c3']); ?>
+      <?php partial_admin('kpi-card.php', ['label' => 'Items sold with it', 'value' => money((string) $ledger['subtotal_total']), 'icon' => 'chart', 'tone' => 'c4']); ?>
+      <?php partial_admin('kpi-card.php', ['label' => 'Different phones', 'value' => (string) $ledger['phones'], 'icon' => 'phone', 'tone' => 'c2']); ?>
     </div>
     <p class="adm-note"><?= $ledger['reverted'] > 0 ? e((string) $ledger['reverted']) . ' use' . ($ledger['reverted'] === 1 ? '' : 's') . ' released by cancelled orders. ' : '' ?><?= $ledger['last_used_at'] !== null ? 'Last used ' . e(date_long($ledger['last_used_at'])) . '.' : 'Not used yet.' ?></p>
 <?php if ($ledger['recent'] !== []): ?>

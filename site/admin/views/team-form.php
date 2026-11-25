@@ -4,7 +4,7 @@ $action = $existing !== null ? '/admin/team/' . (int) $existing['id'] : '/admin/
 $err = static fn (string $key): string => (string) ($errors[$key] ?? '');
 $moduleOptions = [];
 foreach (TEAM_MODULES as $key => [$label, $description]) {
-    $moduleOptions[$key] = $label . ' — ' . $description;
+    $moduleOptions[$key] = [$label, $description];
 }
 ?>
 <?php partial_admin('page-header.php', [

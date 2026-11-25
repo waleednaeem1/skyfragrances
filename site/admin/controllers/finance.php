@@ -114,6 +114,17 @@ function finance_commission(DateTimeImmutable $from, DateTimeImmutable $to): int
     return $total;
 }
 
+function finance_collection(array $window): array
+{
+    return [
+        'collected' => money_paisa((string) db_fetch_column('SELECT COALESCE(SUM(amount), 0) FROM order_payments WHERE voided_at IS NULL AND paid_at >= :from AND paid_at < :to', $window)),
+        'outstanding' => money_paisa((string) db_fetch_column(
+            "SELECT COALESCE(SUM(CASE WHEN grand_total > amount_paid THEN grand_total - amount_paid ELSE 0 END), 0) FROM orders WHERE status IN " . DASHBOARD_REVENUE_STATUSES . " AND payment_status <> 'refunded' AND created_at >= :from AND created_at < :to",
+            $window
+        )),
+    ];
+}
+
 function finance_statement(array $period): array
 {
     $sales = finance_sales($period['from'], $period['to']);
@@ -124,11 +135,7 @@ function finance_statement(array $period): array
     $previousCommission = finance_commission($period['compare_from'], $period['compare_to']);
     $window = finance_window($period['from'], $period['to']);
     $dates = finance_dates($period['from'], $period['to']);
-    $collected = money_paisa((string) db_fetch_column('SELECT COALESCE(SUM(amount), 0) FROM order_payments WHERE voided_at IS NULL AND paid_at >= :from AND paid_at < :to', $window));
-    $outstanding = money_paisa((string) db_fetch_column(
-        "SELECT COALESCE(SUM(CASE WHEN grand_total > amount_paid THEN grand_total - amount_paid ELSE 0 END), 0) FROM orders WHERE status IN " . DASHBOARD_REVENUE_STATUSES . " AND payment_status <> 'refunded' AND created_at >= :from AND created_at < :to",
-        $window
-    ));
+    $collection = finance_collection($window);
     $spent = money_paisa((string) db_fetch_column("SELECT COALESCE(SUM(amount), 0) FROM expenses WHERE deleted_at IS NULL AND entry_type = 'expense' AND status = 'paid' AND COALESCE(paid_on, entry_date) >= :from AND COALESCE(paid_on, entry_date) < :to", $dates));
     $spent += money_paisa((string) db_fetch_column('SELECT COALESCE(SUM(commission_paid_amount), 0) FROM orders WHERE commission_paid_at >= :from AND commission_paid_at < :to', $window));
     $billsDue = db_fetch("SELECT COUNT(*) AS n, COALESCE(SUM(amount), 0) AS total FROM expenses WHERE deleted_at IS NULL AND entry_type = 'expense' AND status = 'due'");
@@ -142,8 +149,8 @@ function finance_statement(array $period): array
         'net_profit' => $sales['profit'] - $expenses['operating'] - $commission + $expenses['income'],
         'previous_net_profit' => $previous['profit'] - $previousExpenses['operating'] - $previousCommission + $previousExpenses['income'],
         'cash' => [
-            'collected' => $collected,
-            'outstanding' => $outstanding,
+            'collected' => $collection['collected'],
+            'outstanding' => $collection['outstanding'],
             'spent' => $spent,
             'bills_due' => money_paisa((string) $billsDue['total']),
             'bills_due_count' => (int) $billsDue['n'],
@@ -216,7 +223,7 @@ function finance_methods(array $window): array
          FROM orders WHERE status IN " . DASHBOARD_REVENUE_STATUSES . " AND created_at >= :from AND created_at < :to GROUP BY payment_method ORDER BY revenue DESC",
         $window
     );
-    return array_map(static fn (array $row): array => ['label' => payment_method_label((string) $row['payment_method']), 'orders' => (int) $row['n'], 'revenue' => money_paisa((string) $row['revenue']), 'paid' => money_paisa((string) $row['paid']), 'due' => money_paisa((string) $row['due'])], $rows);
+    return array_map(static fn (array $row): array => ['method' => (string) $row['payment_method'], 'label' => payment_method_label((string) $row['payment_method']), 'orders' => (int) $row['n'], 'revenue' => money_paisa((string) $row['revenue']), 'paid' => money_paisa((string) $row['paid']), 'due' => money_paisa((string) $row['due'])], $rows);
 }
 
 function finance_cities(array $window): array

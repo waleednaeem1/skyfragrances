@@ -172,7 +172,10 @@ $customers = db_fetch_all($built['sql'] . ' ORDER BY ' . $built['order'] . ' LIM
 $overview = db_fetch('SELECT COUNT(*) AS customers, COALESCE(SUM(orders >= 2), 0) AS repeat_customers, COALESCE(SUM(to_collect), 0) AS to_collect FROM (' . customers_query(['q' => '', 'show' => '', 'sort' => 'recent'], $karachi)['sql'] . ') c', ['month' => $built['bind']['month'], 'year' => $built['bind']['year']]);
 $query = array_filter(['q' => $filters['q'], 'show' => $filters['show'], 'sort' => $filters['sort'] === 'recent' ? '' : $filters['sort']], 'strlen');
 
+$owingQuery = customers_query(['q' => '', 'show' => 'owing', 'sort' => 'owed'], $karachi);
 render_admin('customers.php', [
+    'topOwing' => db_fetch_all($owingQuery['sql'] . ' ORDER BY ' . $owingQuery['order'] . ' LIMIT 4', $owingQuery['bind']),
+    'cityMix' => db_fetch_all("SELECT city, COUNT(DISTINCT phone_normalized) AS n FROM orders WHERE status <> 'cancelled' GROUP BY city ORDER BY n DESC LIMIT 4"),
     'customers' => $customers,
     'filters' => $filters,
     'query' => $query,

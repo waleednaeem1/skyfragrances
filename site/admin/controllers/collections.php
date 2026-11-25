@@ -40,4 +40,4 @@ $collections = db_fetch_all(
 render_admin('collections.php', [
     'collections' => $collections,
     'uncollected' => (int) db_fetch_column('SELECT COUNT(*) FROM products WHERE collection_id IS NULL AND deleted_at IS NULL'),
-], ['title' => 'Collections', 'body_class' => 'admin t-light admin-collections', 'create_url' => '/admin/collections/new']);
+], ['title' => 'Collections', 'body_class' => 'admin t-light admin-collections']);

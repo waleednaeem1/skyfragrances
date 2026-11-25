@@ -5,15 +5,12 @@ $p = $statement['previous'];
 $x = $statement['expenses'];
 $cash = $statement['cash'];
 $fm = static fn (int $paisa): string => finance_money($paisa);
-$tile = static function (string $label, string $value, ?array $delta = null, string $note = '', bool $alert = false): void {
-    echo '<div class="adm-kpi adm-kpi--stat"><span class="adm-kpi__label">' . e($label) . '</span><span class="adm-kpi__value' . ($alert ? ' adm-kpi__value--alert' : '') . '">' . e($value) . '</span>';
-    if ($delta !== null || $note !== '') {
-        echo '<p class="adm-delta adm-delta--' . e($delta['tone'] ?? 'flat') . '">' . ($delta !== null ? '<span class="adm-delta__pill">' . e($delta['text']) . '</span> ' : '') . '<span>' . e($note) . '</span></p>';
-    }
-    echo '</div>';
+$tileLooks = ['Net sales' => ['chart', 'c1'], 'Gross profit' => ['trend', 'c4'], 'Net profit' => ['wallet', 'c2'], 'Orders' => ['package', 'c5'], 'Collected' => ['banknote', 'c4'], 'To collect' => ['alert', 'c3'], 'Spent' => ['tag', 'c6'], 'Bills to pay' => ['file', 'c5']];
+$tile = static function (string $label, string $value, ?array $delta = null, string $note = '', bool $alert = false) use ($tileLooks): void {
+    [$icon, $tone] = $tileLooks[$label] ?? ['chart', 'c1'];
+    partial_admin('kpi-card.php', ['label' => $label, 'value' => $value, 'delta' => $delta, 'note' => $note, 'alert' => $alert, 'icon' => $icon, 'tone' => $tone]);
 };
 $vs = ' vs ' . $period['compare_label'];
-$maxExpense = max(1, ...array_map(static fn (array $r): int => $r['amount'], $x['expense_rows'] ?: [['amount' => 1]]));
 ?>
 <?php partial_admin('page-header.php', [
     'title' => 'Statements',
@@ -76,20 +73,16 @@ $maxExpense = max(1, ...array_map(static fn (array $r): int => $r['amount'], $x[
 <?php if ($x['expense_rows'] === [] && $x['income_rows'] === []): ?>
     <p class="adm-muted">No expenses recorded for this period. <a href="<?= e(url('/admin/expenses/new')) ?>">Add an expense</a>.</p>
 <?php else: ?>
-    <ul class="adm-hbars">
-<?php foreach ($x['expense_rows'] as $row): ?>
-      <li><span class="adm-hbars__label"><?= e($row['label']) ?><?= $row['stock'] ? ' <span class="adm-note">stock</span>' : '' ?></span><span class="adm-hbars__track"><span class="adm-hbars__bar" style="width: <?= e((string) round($row['amount'] / $maxExpense * 100, 1)) ?>%"></span></span><span class="adm-hbars__value"><?= e($fm($row['amount'])) ?></span></li>
-<?php endforeach; ?>
-<?php foreach ($x['income_rows'] as $row): ?>
-      <li><span class="adm-hbars__label"><?= e($row['label']) ?> <span class="adm-note">income</span></span><span class="adm-hbars__track"></span><span class="adm-hbars__value adm-hbars__value--in">+ <?= e($fm($row['amount'])) ?></span></li>
-<?php endforeach; ?>
-    </ul>
+    <?php partial_admin('bar-list.php', ['rows' => array_merge(
+        array_map(static fn (array $row): array => ['label' => $row['label'] . ($row['stock'] ? ' · stock' : ''), 'value' => $row['amount'], 'display' => $fm($row['amount'])], $x['expense_rows']),
+        array_map(static fn (array $row): array => ['label' => $row['label'] . ' · income', 'value' => $row['amount'], 'display' => '+ ' . $fm($row['amount']), 'tone' => 'c4'], $x['income_rows'])
+    )]); ?>
 <?php endif; ?>
   </section>
 </div>
 <section class="adm-card adm-card--flush">
   <div class="adm-card__head"><h2 class="adm-card__title">By <?= e($period['unit']) ?></h2></div>
-  <div class="adm-table-wrap adm-table-wrap--always">
+  <div class="adm-table-wrap">
     <table class="adm-table">
       <thead><tr><th class="adm-table__th"><?= e(ucfirst($period['unit'])) ?></th><th class="adm-table__th adm-table__th--right">Orders</th><th class="adm-table__th adm-table__th--right">Net sales</th><th class="adm-table__th adm-table__th--right">Cost of goods</th><th class="adm-table__th adm-table__th--right">Gross profit</th><th class="adm-table__th adm-table__th--right">Expenses</th><th class="adm-table__th adm-table__th--right">Net profit</th></tr></thead>
       <tbody>
@@ -102,7 +95,7 @@ $maxExpense = max(1, ...array_map(static fn (array $r): int => $r['amount'], $x[
 </section>
 <section class="adm-card adm-card--flush">
   <div class="adm-card__head"><h2 class="adm-card__title">Perfumes</h2><span class="adm-muted"><?= e(count($statement['products']) . ' sold') ?></span></div>
-  <div class="adm-table-wrap adm-table-wrap--always">
+  <div class="adm-table-wrap">
     <table class="adm-table">
       <thead><tr><th class="adm-table__th">Perfume</th><th class="adm-table__th">Size</th><th class="adm-table__th adm-table__th--right">Bottles</th><th class="adm-table__th adm-table__th--right">Net sales</th><th class="adm-table__th adm-table__th--right">Cost</th><th class="adm-table__th adm-table__th--right">Profit</th><th class="adm-table__th adm-table__th--right">Margin</th></tr></thead>
       <tbody>
@@ -119,7 +112,7 @@ $maxExpense = max(1, ...array_map(static fn (array $r): int => $r['amount'], $x[
 <div class="adm-duo">
   <section class="adm-card adm-card--flush">
     <div class="adm-card__head"><h2 class="adm-card__title">Payment methods</h2></div>
-    <div class="adm-table-wrap adm-table-wrap--always">
+    <div class="adm-table-wrap">
       <table class="adm-table">
         <thead><tr><th class="adm-table__th">Method</th><th class="adm-table__th adm-table__th--right">Orders</th><th class="adm-table__th adm-table__th--right">Billed</th><th class="adm-table__th adm-table__th--right">Paid</th><th class="adm-table__th adm-table__th--right">Due</th></tr></thead>
         <tbody>
@@ -132,7 +125,7 @@ $maxExpense = max(1, ...array_map(static fn (array $r): int => $r['amount'], $x[
   </section>
   <section class="adm-card adm-card--flush">
     <div class="adm-card__head"><h2 class="adm-card__title">Top cities</h2></div>
-    <div class="adm-table-wrap adm-table-wrap--always">
+    <div class="adm-table-wrap">
       <table class="adm-table">
         <thead><tr><th class="adm-table__th">City</th><th class="adm-table__th adm-table__th--right">Orders</th><th class="adm-table__th adm-table__th--right">Billed</th></tr></thead>
         <tbody>

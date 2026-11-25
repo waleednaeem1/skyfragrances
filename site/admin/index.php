@@ -22,6 +22,7 @@ session_set_cookie_params([
 require dirname(__DIR__) . '/app/bootstrap.php';
 require_once APP_ROOT . '/app/router.php';
 require_once APP_ROOT . '/app/lib/team.php';
+require_once APP_ROOT . '/app/lib/adminnav.php';
 
 header('X-Robots-Tag: noindex, nofollow');
 header_no_store();

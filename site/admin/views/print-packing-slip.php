@@ -1,6 +1,5 @@
 <?php
 defined('SKYFR') || exit;
-$giltLogo = is_file(APP_ROOT . '/assets/img/brand/lockup-gilt-800.png') ? asset('img/brand/lockup-gilt-800.png') : $logoUri;
 $contacts = array_values(array_filter([$store['site'], $store['whatsapp'] !== '' ? 'WhatsApp ' . $store['whatsapp'] : '', $store['phone']]));
 ?>
 <!doctype html>
@@ -11,72 +10,75 @@ $contacts = array_values(array_filter([$store['site'], $store['whatsapp'] !== ''
 <meta name="robots" content="noindex, nofollow">
 <title>Packing slip <?= e((string) $payloads[0]['order']['order_number']) ?> · <?= e($store['name']) ?></title>
 <style>
-@font-face { font-family: "Cormorant Garamond"; src: url("<?= e(asset('fonts/cormorant-garamond-variable.woff2')) ?>") format("woff2"); font-weight: 300 700; font-display: swap; }
-@font-face { font-family: "Jost"; src: url("<?= e(asset('fonts/jost-variable.woff2')) ?>") format("woff2"); font-weight: 100 900; font-display: swap; }
-:root { --ink: #1E1812; --muted: #6E6253; --soft: #8F826E; --bronze: #8A6538; --line: #E6DCCB; --hair: #EFE8DC; --paper: #F6F1E8; --vellum: #FEFCF8; --wash: #FBF8F2; --moss: #2F5D3A; }
+@font-face { font-family: "Geist"; src: url("<?= e(asset('fonts/geist-variable.woff2')) ?>") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("<?= e(asset('fonts/geist-mono-variable.woff2')) ?>") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { --ink: #0B0B0C; --muted: #64645E; --soft: #8A8A83; --line: #E6E6E1; --hair: #EFEFEB; --canvas: #E9E9E4; --paper: #FFFFFF; --wash: #F8F8F6; --accent: #D4F84B; --ok: #13693A; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { background: var(--paper); color: var(--ink); font: 400 10.5pt/1.45 "Jost", "Helvetica Neue", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum" 1, "tnum" 1; }
-.toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; padding: 10px 16px; background: #0A0A0A; color: #F5F0E8; font-size: 13px; }
-.toolbar a, .toolbar button { color: #D4B084; background: none; border: 1px solid #D4B084; border-radius: 6px; padding: 9px 16px; font: 500 13px/1 "Jost", Arial, sans-serif; letter-spacing: .04em; text-decoration: none; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; }
-.toolbar button { background: #D4B084; color: #0A0A0A; }
-.toolbar span { color: #B9AE9C; flex: 1 1 220px; }
-.slip { position: relative; background: var(--vellum); width: 210mm; min-height: 297mm; margin: 18px auto; padding: 15mm 15mm 12mm; box-shadow: 0 1px 2px rgba(58,40,22,.06), 0 18px 40px -18px rgba(58,40,22,.28); display: flex; flex-direction: column; }
-.slip::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: linear-gradient(90deg, #6B4C28, #A27A48 30%, #D8BE92 50%, #A27A48 70%, #6B4C28); }
+body { background: var(--canvas); color: var(--ink); font: 400 10.5pt/1.45 "Geist", "Helvetica Neue", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-variant-numeric: lining-nums tabular-nums; font-feature-settings: "lnum" 1, "tnum" 1; }
+.toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--ink); color: #C9C9C2; font-size: 13px; }
+.toolbar a, .toolbar button { border-color: #B9DD2A; background: var(--accent); color: var(--ink); }
+.toolbar button { border-color: #B9DD2A; background: var(--accent); color: var(--ink); }
+.toolbar span { flex: 1 1 220px; }
+.slip { position: relative; background: var(--paper); width: 210mm; min-height: 297mm; margin: 18px auto; padding: 15mm 15mm 12mm; box-shadow: 0 12px 32px rgba(11, 11, 12, .10); display: flex; flex-direction: column; }
 .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm; }
-.logo { width: 38mm; height: auto; display: block; }
-.brandname { font-family: "Cormorant Garamond", Georgia, serif; font-size: 20pt; letter-spacing: .14em; text-transform: uppercase; margin: 0; }
+.brandmark { display: flex; align-items: center; gap: 3.5mm; }
+.mark { display: flex; align-items: center; justify-content: center; flex: none; width: 11mm; height: 11mm; border-radius: 3mm; background: var(--ink); color: #FFFFFF; font: 600 11pt/1 "Geist", Arial, sans-serif; letter-spacing: -0.04em; }
+.mark span { color: var(--accent); }
+.brandname { margin: 0; font: 600 13pt/1.2 "Geist", Arial, sans-serif; letter-spacing: -0.01em; }
 .doc { text-align: right; }
-.eyebrow { font-size: 7.5pt; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--bronze); margin: 0 0 2mm; }
-.number { font-family: "Jost", Arial, sans-serif; font-weight: 600; font-size: 22pt; letter-spacing: .04em; line-height: 1; margin: 0 0 3mm; }
+.eyebrow { font-size: 7.5pt; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--ink); margin: 0 0 2mm; }
+.number { font-family: "Geist", Arial, sans-serif; font-weight: 600; font-size: 22pt; letter-spacing: .04em; line-height: 1; margin: 0 0 3mm; }
 .meta { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 1.5mm; }
 .chip { display: inline-block; padding: 1mm 2.6mm; border-radius: 999px; border: 1px solid var(--line); background: var(--wash); font-size: 8pt; color: var(--muted); white-space: nowrap; }
-.chip--strong { border-color: var(--bronze); color: var(--bronze); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 7.4pt; }
-.rule { height: 1px; margin: 7mm 0 6mm; background: linear-gradient(90deg, rgba(138,101,56,0), rgba(138,101,56,.55) 20%, rgba(216,190,146,.9) 50%, rgba(138,101,56,.55) 80%, rgba(138,101,56,0)); }
+.chip--strong { border-color: var(--ink); color: var(--ink); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 7.4pt; }
+.rule { height: 1px; margin: 7mm 0 6mm; background: var(--line); }
 .top { display: grid; grid-template-columns: 1.55fr 1fr; gap: 6mm; margin-bottom: 7mm; }
-.label { font-size: 7.2pt; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--bronze); margin: 0 0 2.5mm; }
+.label { font-size: 7.2pt; font-weight: 500; letter-spacing: .24em; text-transform: uppercase; color: var(--ink); margin: 0 0 2.5mm; }
 .ship { position: relative; border: 1px solid var(--line); border-radius: 4px; padding: 5mm 6mm 5mm 7mm; background: #fff; }
-.ship::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--bronze); border-radius: 4px 0 0 4px; }
-.ship .name { font-family: "Cormorant Garamond", Georgia, serif; font-size: 20pt; font-weight: 600; line-height: 1.1; margin: 0 0 2mm; }
+.ship::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--ink); border-radius: 4px 0 0 4px; }
+.ship .name { font-family: "Geist", Arial, sans-serif; font-size: 20pt; font-weight: 600; line-height: 1.1; margin: 0 0 2mm; }
 .ship .addr { font-size: 12pt; line-height: 1.45; margin: 0; }
 .ship .phone { display: inline-block; margin-top: 3.5mm; font-size: 14pt; font-weight: 600; letter-spacing: .06em; padding: 1.2mm 3mm; background: var(--wash); border: 1px solid var(--line); border-radius: 3px; }
 .side { display: grid; gap: 4mm; align-content: start; }
 .stat { border: 1px solid var(--line); border-radius: 4px; padding: 4mm 5mm; background: #fff; }
-.stat .big { font-family: "Cormorant Garamond", Georgia, serif; font-size: 26pt; font-weight: 600; line-height: 1; }
+.stat .big { font-family: "Geist", Arial, sans-serif; font-size: 26pt; font-weight: 600; line-height: 1; }
 .stat .small { font-size: 8.5pt; color: var(--muted); margin-top: 1mm; }
-.collect { border-radius: 4px; padding: 4.5mm 5mm; background: #1E1812; color: #F2E6D2; }
-.collect .label { color: #D4B084; margin-bottom: 1.5mm; }
-.collect .amount { font-family: "Cormorant Garamond", Georgia, serif; font-size: 24pt; font-weight: 600; line-height: 1; }
-.collect .small { font-size: 8.5pt; color: #C9BBA3; margin-top: 1.5mm; }
-.prepaid { border: 1px solid rgba(47,93,58,.35); background: rgba(47,93,58,.06); color: var(--moss); border-radius: 4px; padding: 4mm 5mm; font-weight: 600; font-size: 9.5pt; letter-spacing: .04em; }
+.collect { border-radius: 4px; padding: 4.5mm 5mm; background: #0B0B0C; color: #FFFFFF; }
+.collect .label { color: var(--accent); margin-bottom: 1.5mm; }
+.collect .amount { font-family: "Geist", Arial, sans-serif; font-size: 24pt; font-weight: 600; line-height: 1; }
+.collect .small { font-size: 8.5pt; color: #C9C9C2; margin-top: 1.5mm; }
+.prepaid { border: 1px solid rgba(47,93,58,.35); background: rgba(47,93,58,.06); color: var(--ok); border-radius: 4px; padding: 4mm 5mm; font-weight: 600; font-size: 9.5pt; letter-spacing: .04em; }
 table.items { width: 100%; border-collapse: collapse; }
-.items th { font-size: 7.2pt; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 0 2mm 2.5mm; border-bottom: 1px solid var(--bronze); }
+.items th { font-size: 7.2pt; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 0 2mm 2.5mm; border-bottom: 1px solid var(--ink); }
 .items td { padding: 3.6mm 2mm; border-bottom: 1px solid var(--hair); vertical-align: middle; }
 .items tr { break-inside: avoid; }
 .items thead { display: table-header-group; }
 .tick { width: 10mm; }
 .box { display: inline-block; width: 5mm; height: 5mm; border: 1.5px solid var(--ink); border-radius: 1.2mm; vertical-align: middle; }
-.item-name { font-family: "Cormorant Garamond", Georgia, serif; font-size: 14pt; font-weight: 600; line-height: 1.2; }
+.item-name { font-family: "Geist", Arial, sans-serif; font-size: 14pt; font-weight: 600; line-height: 1.2; }
 .item-sub { font-size: 8.5pt; color: var(--muted); margin-top: .6mm; letter-spacing: .02em; }
 .size { font-size: 10.5pt; white-space: nowrap; }
 .q { text-align: right; width: 22mm; }
-.qty { display: inline-flex; align-items: center; justify-content: center; min-width: 11mm; height: 11mm; padding: 0 2mm; border-radius: 2.5mm; background: #1E1812; color: #F2E6D2; font-size: 15pt; font-weight: 600; }
+.qty { display: inline-flex; align-items: center; justify-content: center; min-width: 11mm; height: 11mm; padding: 0 2mm; border-radius: 2.5mm; background: #0B0B0C; color: #FFFFFF; font-size: 15pt; font-weight: 600; }
 .qty--one { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
 .count { display: flex; justify-content: flex-end; gap: 6mm; font-size: 9pt; color: var(--muted); margin: 3mm 0 0; }
 .count strong { color: var(--ink); }
-.note { margin-top: 6mm; border: 1px dashed #CDBFA6; background: var(--wash); border-radius: 4px; padding: 4.5mm 5mm; break-inside: avoid; }
+.note { margin-top: 6mm; border: 1px dashed #CFCFC8; background: var(--wash); border-radius: 4px; padding: 4.5mm 5mm; break-inside: avoid; }
 .note p { margin: 0; font-size: 11pt; line-height: 1.5; }
 .signoff { margin-top: auto; padding-top: 9mm; display: grid; grid-template-columns: repeat(3, 1fr); gap: 7mm; break-inside: avoid; }
 .sign { border-top: 1px solid var(--ink); padding-top: 1.6mm; font-size: 8pt; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); min-height: 14mm; }
 .sign .val { display: block; margin-top: 1mm; font-size: 9.5pt; letter-spacing: .02em; text-transform: none; color: var(--ink); }
 .brandline { margin: 6mm 0 0; text-align: center; font-size: 8pt; color: var(--soft); letter-spacing: .04em; }
-.brandline span + span::before { content: "·"; color: var(--bronze); margin: 0 2.5mm; }
+.brandline span + span::before { content: "·"; color: var(--ink); margin: 0 2.5mm; }
 @media screen and (max-width: 820px) {
   .slip { width: auto; min-height: 0; margin: 10px; padding: 22px 16px 16px; overflow-wrap: anywhere; }
   .head { flex-direction: column; gap: 12px; }
   .doc { text-align: left; }
   .meta { justify-content: flex-start; }
-  .logo { width: 130px; }
+  .brandmark { display: flex; align-items: center; gap: 3.5mm; }
+.mark { display: flex; align-items: center; justify-content: center; flex: none; width: 11mm; height: 11mm; border-radius: 3mm; background: var(--ink); color: #FFFFFF; font: 600 11pt/1 "Geist", Arial, sans-serif; letter-spacing: -0.04em; }
+.mark span { color: var(--accent); }
   .top { grid-template-columns: 1fr; }
   .signoff { grid-template-columns: 1fr; gap: 14px; }
   .items .sku-col { display: none; }
@@ -84,7 +86,7 @@ table.items { width: 100%; border-collapse: collapse; }
 @media print {
   @page { size: A4; margin: 0; }
   body { background: #fff; }
-  .toolbar { display: none !important; }
+  .toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--ink); color: #C9C9C2; font-size: 13px; }
   .slip { margin: 0; box-shadow: none; width: 210mm; min-height: 297mm; page-break-after: always; }
   .slip:last-of-type { page-break-after: auto; }
 }
@@ -95,7 +97,9 @@ table.items { width: 100%; border-collapse: collapse; }
   .slip::before, .rule, .brandline, .signoff { display: none; }
   .head { flex-direction: column; gap: 2mm; }
   .doc { text-align: left; }
-  .logo { width: 34mm; }
+  .brandmark { display: flex; align-items: center; gap: 3.5mm; }
+.mark { display: flex; align-items: center; justify-content: center; flex: none; width: 11mm; height: 11mm; border-radius: 3mm; background: var(--ink); color: #FFFFFF; font: 600 11pt/1 "Geist", Arial, sans-serif; letter-spacing: -0.04em; }
+.mark span { color: var(--accent); }
   .top { grid-template-columns: 1fr; gap: 3mm; }
   .ship .name { font-size: 14pt; }
   .ship .addr { font-size: 10pt; }
@@ -113,11 +117,7 @@ table.items { width: 100%; border-collapse: collapse; }
 <main class="slip">
   <header class="head">
     <div>
-<?php if ($giltLogo !== ''): ?>
-      <img class="logo" src="<?= e($giltLogo) ?>" alt="<?= e($store['name']) ?>">
-<?php else: ?>
-      <p class="brandname"><?= e($store['name']) ?></p>
-<?php endif; ?>
+<div class="brandmark"><span class="mark" aria-hidden="true">S<span>F</span></span><p class="brandname"><?= e($store['name']) ?></p></div>
     </div>
     <div class="doc">
       <p class="eyebrow">Packing slip</p>

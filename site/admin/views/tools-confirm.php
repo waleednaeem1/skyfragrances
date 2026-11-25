@@ -11,7 +11,7 @@ partial_admin('page-header.php', [
 ?>
 <?php if ($isSample): ?>
 <?php if (!$preview['any']): ?>
-<?php partial_admin('empty.php', ['title' => 'Nothing left to remove', 'text' => 'The sample products, collections, coupons and reviews are already gone.', 'action' => ['label' => 'Back to Tools', 'href' => '/admin/tools']]); ?>
+<?php partial_admin('empty.php', ['icon' => 'check', 'title' => 'Nothing left to remove', 'text' => 'The sample products, collections, coupons and reviews are already gone.', 'action' => ['label' => 'Back to Tools', 'href' => '/admin/tools']]); ?>
 <?php else: ?>
 <div class="adm-card adm-card--danger">
   <div class="adm-card__head"><h2 class="adm-card__title">Will be deleted</h2></div>

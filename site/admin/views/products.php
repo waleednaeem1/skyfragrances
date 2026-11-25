@@ -33,17 +33,16 @@ foreach ($products as $p) {
         . ((int) $p['is_new'] === 1 ? ' ' . $badge('new', ['label' => 'New', 'small' => true]) : '');
     $thumb = '<img class="adm-thumb" src="' . e(catalogue_product_image_url($id, $p['image'], 'thumb')) . '" alt="" width="48" height="60" loading="lazy">';
     $media = '<div class="adm-media">' . $thumb . '<div class="adm-media__body"><span class="adm-media__title">' . e($p['name']) . '</span><span class="adm-media__meta adm-mono">' . e($p['slug']) . '</span></div></div>';
-    $cardTitle = '<div class="adm-media">' . $thumb . '<span class="adm-media__title">' . e($p['name']) . '</span></div>';
     $actions = [
-        ['label' => 'Edit', 'href' => '/admin/products/' . $id],
-        ['label' => 'View on site', 'href' => url('/product/' . $p['slug']), 'external' => true],
-        ['label' => 'Duplicate', 'post' => '/admin/products/' . $id . '/duplicate'],
+        ['label' => 'Edit ' . $p['name'], 'href' => '/admin/products/' . $id, 'icon' => 'pencil'],
+        ['label' => 'View ' . $p['name'] . ' on the site', 'href' => url('/product/' . $p['slug']), 'external' => true, 'icon' => 'external'],
+        ['label' => 'Duplicate ' . $p['name'], 'post' => '/admin/products/' . $id . '/duplicate', 'icon' => 'copy'],
     ];
     if ($p['deleted_at'] !== null) {
-        $actions[] = ['label' => 'Restore', 'post' => '/admin/products/' . $id . '/toggle'];
+        $actions[] = ['label' => 'Restore ' . $p['name'], 'post' => '/admin/products/' . $id . '/toggle', 'icon' => 'refresh'];
     } else {
-        $actions[] = ['label' => (int) $p['is_active'] === 1 ? 'Hide' : 'Make live', 'post' => '/admin/products/' . $id . '/toggle'];
-        $actions[] = ['label' => 'Delete', 'variant' => 'danger', 'post' => '/admin/products/' . $id . '/delete', 'confirm' => "Delete " . $p['name'] . "?\nIf it appears on any order it is hidden instead and kept for order history. Otherwise it and its photos are removed for good.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
+        $actions[] = ['label' => ((int) $p['is_active'] === 1 ? 'Hide ' : 'Make live ') . $p['name'], 'post' => '/admin/products/' . $id . '/toggle', 'icon' => (int) $p['is_active'] === 1 ? 'eye-off' : 'eye'];
+        $actions[] = ['label' => 'Delete ' . $p['name'], 'icon' => 'trash', 'variant' => 'danger', 'post' => '/admin/products/' . $id . '/delete', 'confirm' => "Delete " . $p['name'] . "?\nIf it appears on any order it is hidden instead and kept for order history. Otherwise it and its photos are removed for good.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
     }
     $rows[] = [
         'id' => $id,
@@ -51,23 +50,12 @@ foreach ($products as $p) {
         'class' => $stockState === 'out' ? 'is-out' : '',
         'cells' => [
             'name' => $media,
-            'collection' => e((string) ($p['collection_name'] ?? '—')),
+            'collection' => $p['collection_name'] !== null ? '<span class="adm-tag">' . e((string) $p['collection_name']) . '</span>' : '<span class="adm-muted">—</span>',
             'gender' => e(CATALOGUE_GENDER_LABELS[$p['gender']] ?? ucfirst((string) $p['gender'])),
             'price' => $priceHtml,
             'stock' => $stockHtml,
             'status' => $badge($statusKey, ['label' => $statusLabel, 'tone' => $statusTone]) . $flags,
             'sold' => '<span class="adm-num">' . e((string) (int) $p['sold_30d']) . '</span>',
-        ],
-        'card' => [
-            'title' => $cardTitle,
-            'chip' => $badge($statusKey, ['label' => $statusLabel, 'tone' => $statusTone]),
-            'sub' => trim($flags) !== '' ? trim($flags) : null,
-            'lines' => [
-                ['label' => 'Collection', 'html' => e((string) ($p['collection_name'] ?? '—')) . ' · ' . e(CATALOGUE_GENDER_LABELS[$p['gender']] ?? '')],
-                ['label' => 'Price', 'html' => $priceHtml],
-            ],
-            'money' => '<span class="adm-muted" style="font-weight:400;font-size:.8rem">Stock</span> ' . $stockHtml,
-            'inline_actions' => 1,
         ],
         'actions' => $actions,
     ];
@@ -80,9 +68,10 @@ $bulkButtons = [
     ['label' => 'Delete', 'value' => 'delete', 'variant' => 'danger', 'confirm' => "Delete the selected products?\nProducts on past orders are hidden instead of removed. The rest are deleted with their photos.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'],
 ];
 ?>
-<?php partial_admin('page-header.php', ['title' => 'Products', 'subtitle' => $total . ' in the catalogue', 'actions' => [
-    ['label' => 'Add product', 'href' => '/admin/products/new', 'variant' => 'gold'],
-    ['label' => 'Collections', 'href' => '/admin/collections'],
+<?php partial_admin('page-header.php', ['title' => 'Products', 'subtitle' => (int) $statusCounts['total'] . ' in the catalogue' . ($lowCount > 0 ? ' · ' . $lowCount . ' low on stock' : ''), 'actions' => [
+    ['label' => 'Collections', 'href' => '/admin/collections', 'icon' => 'layers'],
+    ['label' => 'Scent families', 'href' => '/admin/scent-families'],
+    ['label' => 'Add product', 'href' => '/admin/products/new', 'variant' => 'primary', 'icon' => 'plus'],
 ]]); ?>
 <?php if (!empty($bulkMove) && is_array($bulkMove)): ?>
 <div class="adm-card adm-form">
@@ -102,16 +91,36 @@ $bulkButtons = [
   </form>
 </div>
 <?php endif; ?>
-<?php if ($outCount > 0 || $lowCount > 0): ?>
-<div class="adm-rail" aria-label="Stock attention">
-<?php if ($outCount > 0): ?>
-  <a class="adm-chip adm-chip--gold<?= ($filters['stock'] ?? '') === 'out' ? ' is-active' : '' ?>" href="<?= e(url('/admin/products?stock=out')) ?>">Sold out · <?= e((string) $outCount) ?></a>
+<?php
+$pill = static fn (string $label, int $count, string $href, bool $active): string => '<a class="adm-chip' . ($active ? ' is-active' : '') . '" href="' . e(url($href)) . '"' . ($active ? ' aria-current="page"' : '') . '>' . e($label) . ' <span class="adm-tabs__count">' . e((string) $count) . '</span></a>';
+$genderTones = ['unisex' => 'c1', 'him' => 'c2', 'her' => 'c6'];
+?>
+<nav class="adm-rail" aria-label="Product status">
+  <?= $pill('All', (int) $statusCounts['total'], '/admin/products', $activeChips === []) ?>
+  <?= $pill('Live', (int) $statusCounts['live'], '/admin/products?status=live', ($filters['status'] ?? '') === 'live') ?>
+  <?= $pill('Hidden', (int) $statusCounts['hidden'], '/admin/products?status=hidden', ($filters['status'] ?? '') === 'hidden') ?>
+  <?= $pill('Low stock', $lowCount, '/admin/products?stock=low', ($filters['stock'] ?? '') === 'low') ?>
+  <?= $pill('Sold out', $outCount, '/admin/products?stock=out', ($filters['stock'] ?? '') === 'out') ?>
+</nav>
+<div class="adm-bento adm-bento--three">
+  <section class="adm-card" aria-labelledby="stock-health-title">
+    <div class="adm-card__head"><div><h2 class="adm-card__title" id="stock-health-title">Stock health</h2><p class="adm-card__sub">Live products by stock level</p></div></div>
+    <?php partial_admin('donut.php', ['legend' => true, 'center' => (string) (int) $statusCounts['live'], 'caption' => 'live', 'segments' => [['label' => 'Healthy', 'value' => max(0, (int) $statusCounts['live'] - $outCount - $lowCount), 'tone' => 'c4'], ['label' => 'Low', 'value' => $lowCount, 'tone' => 'c5'], ['label' => 'Sold out', 'value' => $outCount, 'tone' => 'c3']]]); ?>
+  </section>
+  <section class="adm-card" aria-labelledby="mix-title">
+    <div class="adm-card__head"><div><h2 class="adm-card__title" id="mix-title">Catalogue mix</h2><p class="adm-card__sub">Products by gender</p></div></div>
+    <?php partial_admin('bar-list.php', ['rows' => array_map(static fn (array $g): array => ['label' => CATALOGUE_GENDER_LABELS[$g['gender']] ?? ucfirst((string) $g['gender']), 'value' => (int) $g['n'], 'display' => (string) (int) $g['n'], 'tone' => $genderTones[$g['gender']] ?? 'c5', 'href' => '/admin/products?gender=' . rawurlencode((string) $g['gender'])], $genderMix)]); ?>
+  </section>
+  <section class="adm-card adm-card--tint adm-tone--c7" aria-labelledby="top-title">
+    <div class="adm-card__head"><h2 class="adm-card__title adm-card__title--tone" id="top-title">Top seller · 30 days</h2></div>
+<?php if ($topSeller !== null): ?>
+    <div class="adm-media"><img class="adm-thumb" src="<?= e(catalogue_product_image_url((int) $topSeller['product_id'], $topSeller['image'], 'thumb')) ?>" alt="" width="48" height="60" loading="lazy"><div class="adm-media__body"><span class="adm-media__title"><?= e((string) $topSeller['name']) ?></span><span class="adm-media__meta"><?= e((int) $topSeller['qty'] . ' sold · ' . (int) $topSeller['stock'] . ' in stock') ?></span></div></div>
+    <p class="adm-cluster adm-cluster--spaced"><?php partial_admin('button.php', ['label' => 'Open product', 'href' => '/admin/products/' . (int) $topSeller['product_id'], 'variant' => 'primary', 'size' => 'sm']); ?></p>
+<?php else: ?>
+    <p class="adm-card__sub">No sales in the last 30 days yet.</p>
 <?php endif; ?>
-<?php if ($lowCount > 0): ?>
-  <a class="adm-chip<?= ($filters['stock'] ?? '') === 'low' ? ' is-active' : '' ?>" href="<?= e(url('/admin/products?stock=low')) ?>">Low stock · <?= e((string) $lowCount) ?></a>
-<?php endif; ?>
+  </section>
 </div>
-<?php endif; ?>
 <?php partial_admin('filters.php', [
     'action' => '/admin/products',
     'search' => ['name' => 'q', 'value' => $filters['q'] ?? '', 'placeholder' => 'Search name, slug or SKU', 'maxlength' => 60],
@@ -145,8 +154,8 @@ $bulkButtons = [
     'rows' => $rows,
     'bulk' => ['action' => '/admin/products/bulk', 'buttons' => $bulkButtons],
     'empty' => $total === 0 && $query === []
-        ? ['title' => 'No products yet', 'text' => 'Add your first perfume. Sizes, prices and photos all live on the product form.', 'action' => ['label' => 'Add product', 'href' => '/admin/products/new']]
-        : ['title' => 'No products match', 'text' => 'Try a different search or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/products', 'variant' => 'ghost']],
+        ? ['icon' => 'package', 'title' => 'No products yet', 'text' => 'Add your first perfume. Sizes, prices and photos all live on the product form.', 'action' => ['label' => 'Add product', 'href' => '/admin/products/new']]
+        : ['icon' => 'package', 'title' => 'No products match', 'text' => 'Try a different search or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/products', 'variant' => 'ghost']],
 ]); ?>
 <?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'products', 'query' => $query]); ?>
 <?php if ($threshold === 0): ?>

@@ -80,12 +80,6 @@ foreach ($rows as $row) {
             'entity' => $entityHtml,
             'summary' => e((string) $row['summary']) . $detail,
         ],
-        'card' => [
-            'title' => e((string) $row['summary']),
-            'chip' => $chip,
-            'sub' => $entityHtml,
-            'lines' => array_values(array_filter([['label' => 'When', 'html' => $when . ' · ' . $who], $detail !== '' ? ['html' => $detail] : null])),
-        ],
     ];
 }
 partial_admin('table.php', [
@@ -96,10 +90,10 @@ partial_admin('table.php', [
         ['key' => 'who', 'label' => 'Who'],
         ['key' => 'action', 'label' => 'Action'],
         ['key' => 'entity', 'label' => 'What'],
-        ['key' => 'summary', 'label' => 'Summary'],
+        ['key' => 'summary', 'label' => 'Summary', 'class' => 'adm-table__col--text'],
     ],
     'rows' => $tableRows,
-    'empty' => ['title' => 'No activity yet', 'text' => $active !== [] || $filters['q'] !== '' ? 'Try clearing the filters.' : 'Changes made in the panel will show up here.'],
+    'empty' => ['icon' => 'activity', 'title' => 'No activity yet', 'text' => $active !== [] || $filters['q'] !== '' ? 'Try clearing the filters.' : 'Changes made in the panel will show up here.'],
 ]);
 if ($total > $per) {
     partial_admin('pagination.php', ['page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'entries', 'path' => '/admin/activity']);

@@ -676,7 +676,6 @@ function adm_print_store(): array
         'whatsapp' => trim((string) setting('whatsapp', '')),
         'email' => trim((string) setting('contact_email', '')),
         'site' => (string) (parse_url(SITE_URL, PHP_URL_HOST) ?: 'skyfragrances.com'),
-        'logo' => is_file(APP_ROOT . '/assets/img/brand/lockup-transparent-800.png') ? asset('img/brand/lockup-transparent-800.png') : '',
     ];
 }
 

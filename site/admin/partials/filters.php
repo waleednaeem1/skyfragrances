@@ -14,27 +14,38 @@ $submitLabel = (string) ($submit_label ?? 'Apply');
 <?php endforeach; ?>
   <div class="adm-filters__bar">
 <?php if ($search !== null): ?>
-    <label class="u-sr-only" for="adm-search"><?= e((string) ($search['label'] ?? 'Search')) ?></label>
-    <input class="adm-input adm-filters__search" id="adm-search" type="search" name="<?= e((string) ($search['name'] ?? 'q')) ?>" value="<?= e((string) ($search['value'] ?? '')) ?>" placeholder="<?= e((string) ($search['placeholder'] ?? 'Search')) ?>" maxlength="<?= e((string) ($search['maxlength'] ?? 60)) ?>" autocomplete="off" enterkeyhint="search">
+    <div class="adm-searchbar">
+      <?php partial('icon.php', ['name' => 'search', 'size' => 16, 'class' => 'adm-searchbar__icon']); ?>
+      <label class="u-sr-only" for="adm-search"><?= e((string) ($search['label'] ?? 'Search')) ?></label>
+      <input class="adm-searchbar__input" id="adm-search" type="search" name="<?= e((string) ($search['name'] ?? 'q')) ?>" value="<?= e((string) ($search['value'] ?? '')) ?>" placeholder="<?= e((string) ($search['placeholder'] ?? 'Search')) ?>" maxlength="<?= e((string) ($search['maxlength'] ?? 60)) ?>" autocomplete="off" enterkeyhint="search">
+    </div>
 <?php endif; ?>
 <?php if ($fields !== []): ?>
-    <button type="button" class="adm-btn adm-btn--ghost adm-filters__toggle" data-filters-toggle aria-expanded="false" aria-controls="adm-filters-panel">Filters<?= $activeCount > 0 ? ' (' . e((string) $activeCount) . ')' : '' ?></button>
+    <button type="button" class="adm-btn adm-btn--secondary adm-filters__toggle" data-filters-toggle aria-expanded="false" aria-controls="adm-filters-panel"><?php partial('icon.php', ['name' => 'filter', 'size' => 15]); ?>Filters<?= $activeCount > 0 ? ' (' . e((string) $activeCount) . ')' : '' ?></button>
 <?php endif; ?>
-    <button type="submit" class="adm-btn adm-btn--ghost adm-filters__submit"><?= e($submitLabel) ?></button>
+    <button type="submit" class="adm-btn adm-btn--secondary adm-filters__submit"><?= e($submitLabel) ?></button>
   </div>
 <?php if ($fields !== []): ?>
   <div class="adm-filters__panel" id="adm-filters-panel" data-filters-panel>
-    <div class="adm-filters__grid">
-<?php foreach ($fields as $field): ?>
-<?php partial_admin('field.php', $field + ['compact' => true, 'autosubmit' => true]); ?>
+<?php foreach ($fields as $i => $field): ?>
+<?php if (($field['type'] ?? '') === 'select'): $fid = 'adm-filter-' . preg_replace('/[^a-z0-9_-]+/i', '-', (string) $field['name']); ?>
+    <div class="adm-fchip<?= (string) ($field['value'] ?? '') !== '' && (string) ($field['value'] ?? '') !== (string) array_key_first((array) ($field['options'] ?? [])) ? ' is-set' : '' ?>">
+      <label class="adm-fchip__label" for="<?= e($fid) ?>"><?= e((string) ($field['label'] ?? '')) ?></label>
+      <select class="adm-fchip__select" id="<?= e($fid) ?>" name="<?= e((string) $field['name']) ?>" data-autosubmit>
+<?php foreach ((array) ($field['options'] ?? []) as $optValue => $optLabel): ?>
+        <option value="<?= e((string) $optValue) ?>"<?= (string) $optValue === (string) ($field['value'] ?? '') ? ' selected' : '' ?>><?= e((string) $optLabel) ?></option>
 <?php endforeach; ?>
+      </select>
+      <?php partial('icon.php', ['name' => 'chevron-down', 'size' => 14, 'class' => 'adm-fchip__chevron']); ?>
     </div>
-    <div class="adm-filters__panel-actions">
-      <button type="submit" class="adm-btn adm-btn--gold"><?= e($submitLabel) ?></button>
-<?php if (!empty($clear_url)): ?>
-      <a class="adm-btn adm-btn--text" href="<?= e(url((string) $clear_url)) ?>">Clear all</a>
+<?php else: ?>
+    <div class="adm-fchip adm-fchip--field"><?php partial_admin('field.php', $field + ['compact' => true, 'autosubmit' => true]); ?></div>
 <?php endif; ?>
-    </div>
+<?php endforeach; ?>
+<?php if (!empty($clear_url) && $activeCount > 0): ?>
+    <a class="adm-btn adm-btn--ghost adm-btn--sm" href="<?= e(url((string) $clear_url)) ?>">Clear all</a>
+<?php endif; ?>
+    <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm adm-filters__apply"><?= e($submitLabel) ?></button>
   </div>
 <?php endif; ?>
 <?php if ($active !== [] || !empty($count_text)): ?>
@@ -44,9 +55,6 @@ $submitLabel = (string) ($submit_label ?? 'Apply');
 <?php foreach ($active as $chip): ?>
       <li><a class="adm-chip adm-chip--remove" href="<?= e(url((string) ($chip['remove_url'] ?? $action))) ?>"><?= e((string) ($chip['label'] ?? '')) ?> <span aria-hidden="true">&times;</span><span class="u-sr-only"> remove filter</span></a></li>
 <?php endforeach; ?>
-<?php if (!empty($clear_url)): ?>
-      <li><a class="adm-chip adm-chip--clear" href="<?= e(url((string) $clear_url)) ?>">Clear all</a></li>
-<?php endif; ?>
     </ul>
 <?php endif; ?>
 <?php if (!empty($count_text)): ?>

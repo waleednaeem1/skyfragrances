@@ -62,7 +62,6 @@ $store = adm_print_store();
 adm_print_render($isInvoice ? 'print-invoice.php' : 'print-packing-slip.php', [
     'payloads' => $payloads,
     'store' => $store,
-    'logoUri' => $store['logo'],
     'printedAt' => adm_order_datetime(now_karachi()),
     'autoprint' => request_query('print', '1') !== '0',
     'returnUrl' => '/admin/orders/' . $orders[0]['order_number'],

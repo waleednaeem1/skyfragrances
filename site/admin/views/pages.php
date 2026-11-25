@@ -21,19 +21,9 @@ foreach ($pages as $p) {
             'updated' => '<span class="adm-note">' . e($updated) . '</span>',
             'status' => $badge($live ? 'live' : 'hidden', ['label' => $live ? 'Live' : 'Hidden']),
         ],
-        'card' => [
-            'title' => e((string) $p['title']),
-            'chip' => $badge($live ? 'live' : 'hidden', ['label' => $live ? 'Live' : 'Hidden', 'small' => true]),
-            'sub' => '<span class="adm-mono">/' . e((string) $p['slug']) . '</span>',
-            'lines' => [
-                ['label' => 'Type', 'html' => e($kind)],
-                ['label' => 'Updated', 'html' => e($updated)],
-            ],
-            'inline_actions' => 2,
-        ],
         'actions' => [
-            ['label' => 'Edit', 'href' => $editUrl],
-            ['label' => 'View on site', 'href' => url('/' . $p['slug']), 'external' => true],
+            ['label' => 'Edit ' . $p['title'], 'href' => $editUrl, 'icon' => 'pencil'],
+            ['label' => 'View ' . $p['title'] . ' on the site', 'icon' => 'external', 'href' => url('/' . $p['slug']), 'external' => true],
         ],
     ];
 }
@@ -48,9 +38,9 @@ foreach ($pages as $p) {
     'columns' => [
         ['key' => 'title', 'label' => 'Page'],
         ['key' => 'kind', 'label' => 'Type'],
-        ['key' => 'updated', 'label' => 'Last edited'],
+        ['key' => 'updated', 'label' => 'Last edited', 'class' => 'adm-nowrap'],
         ['key' => 'status', 'label' => 'Status'],
     ],
     'rows' => $rows,
-    'empty' => ['title' => 'No pages found', 'text' => 'The installer seeds the six standard pages. Run the installer or import db/seed.sql to restore them.'],
+    'empty' => ['icon' => 'file', 'title' => 'No pages found', 'text' => 'The installer seeds the six standard pages. Run the installer or import db/seed.sql to restore them.'],
 ]); ?>

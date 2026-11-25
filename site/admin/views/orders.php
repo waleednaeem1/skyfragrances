@@ -13,6 +13,7 @@ $moneyHtml = static function (string $value, array $extra = []): string {
 $chipUrl = static fn (array $overrides): string => adm_orders_query_url([], $overrides);
 $isChipActive = static fn (string $key, string $value): bool => $key === 'pay' ? $filters['pay'] === $value : ($filters['status'] === [$value] && $filters['pay'] === '');
 $rail = [
+    ['label' => 'All', 'count' => $allCount, 'url' => '/admin/orders', 'tone' => '', 'active' => $activeChips === [], 'hide_zero' => false],
     ['label' => 'Needs payment review', 'count' => $attention['review'], 'url' => $chipUrl(['pay' => 'awaiting_verification']), 'tone' => 'gold', 'active' => $isChipActive('pay', 'awaiting_verification'), 'hide_zero' => true],
     ['label' => 'New orders', 'count' => $attention['pending'], 'url' => $chipUrl(['status' => ['pending']]), 'tone' => 'gold', 'active' => $isChipActive('status', 'pending'), 'hide_zero' => false],
     ['label' => 'To pack', 'count' => $attention['confirmed'], 'url' => $chipUrl(['status' => ['confirmed']]), 'tone' => '', 'active' => $isChipActive('status', 'confirmed'), 'hide_zero' => false],
@@ -35,10 +36,10 @@ $rangeOptions = ['' => 'Any date', 'today' => 'Today', 'yesterday' => 'Yesterday
 $rows = [];
 foreach ($orders as $o) {
     $viewUrl = '/admin/orders/' . $o['order_number'] . '/view';
-    $number = '<a class="adm-mono adm-link" href="' . e(url($viewUrl)) . '">' . e((string) $o['order_number']) . '</a>';
+    $number = '<a class="adm-mono adm-media__title" href="' . e(url($viewUrl)) . '">' . e((string) $o['order_number']) . '</a>';
     $itemsText = (int) $o['item_count'] . ' item' . ((int) $o['item_count'] === 1 ? '' : 's');
-    $dateHtml = '<span style="white-space:nowrap">' . e(adm_order_date_compact((string) $o['created_at'])) . '</span>' . ($o['is_new'] ? ' <span class="adm-badge adm-badge--gold adm-badge--sm">new</span>' : '');
-    $paymentHtml = $badge((string) $o['payment_method'], ['label' => payment_method_label((string) $o['payment_method']), 'small' => true]) . ' ' . $badge((string) $o['payment_status'], ['label' => adm_order_payment_label((string) $o['payment_status']), 'small' => true]) . ((int) $o['has_proof'] === 1 ? ' <span title="Proof attached" aria-label="Proof attached">&#128206;</span>' : '');
+    $dateHtml = '<span class="adm-nowrap">' . e(adm_order_date_compact((string) $o['created_at'])) . '</span>' . ($o['is_new'] ? ' <span class="adm-badge adm-badge--amber adm-badge--sm">new</span>' : '');
+    $paymentHtml = '<span class="adm-tag">' . e(payment_method_label((string) $o['payment_method'])) . '</span> ' . $badge((string) $o['payment_status'], ['label' => adm_order_payment_label((string) $o['payment_status']), 'small' => true]) . ((int) $o['has_proof'] === 1 ? ' <span title="Proof attached" aria-label="Proof attached">&#128206;</span>' : '');
     $due = order_balance($o)['due'];
     if ($o['payment_status'] === 'partial' && $due > 0) {
         $paymentHtml .= '<br><span class="adm-note adm-stock--low">' . e(money(money_from_paisa($due))) . ' due</span>';
@@ -46,33 +47,24 @@ foreach ($orders as $o) {
     $statusHtml = $badge((string) $o['status'], ['label' => adm_order_status_label((string) $o['status'])]) . ($o['on_hold'] ? ' ' . $badge('hold', ['label' => 'Unpaid ' . $o['hold_days'] . 'd', 'tone' => 'red', 'small' => true]) : '');
     $tracking = trim((string) ($o['tracking_number'] ?? ''));
     $courierHtml = $tracking === '' ? '<span class="adm-muted">' . e((string) ($o['courier_name'] ?? '')) . '</span>' : e((string) $o['courier_name']) . ' <span class="adm-mono">' . e(mb_strimwidth($tracking, 0, 14, '…')) . '</span> <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-copy="' . e($tracking) . '">Copy</button>';
-    $actions = [['label' => 'Call', 'href' => 'tel:' . $o['phone_normalized']]];
+    $actions = [['label' => 'Call ' . $o['customer_name'], 'href' => 'tel:' . $o['phone_normalized'], 'icon' => 'phone']];
     if ($o['whatsapp'] !== null) {
-        $actions[] = ['label' => 'WhatsApp', 'href' => $o['whatsapp'], 'external' => true];
+        $actions[] = ['label' => 'WhatsApp ' . $o['customer_name'], 'href' => $o['whatsapp'], 'external' => true, 'icon' => 'whatsapp'];
     }
-    $actions[] = ['label' => 'Edit', 'href' => '/admin/orders/' . $o['order_number'] . '/edit'];
-    $actions[] = ['label' => 'Print slip', 'href' => '/admin/orders/' . $o['order_number'] . '/packing-slip', 'external' => true];
+    $actions[] = ['label' => 'Edit ' . $o['order_number'], 'href' => '/admin/orders/' . $o['order_number'] . '/edit', 'icon' => 'pencil'];
+    $actions[] = ['label' => 'Print packing slip for ' . $o['order_number'], 'href' => '/admin/orders/' . $o['order_number'] . '/packing-slip', 'external' => true, 'icon' => 'printer'];
     $rows[] = [
         'id' => (int) $o['id'],
         'href' => $viewUrl,
         'class' => $o['on_hold'] ? 'is-hold' : '',
         'cells' => [
-            'order' => '<span style="white-space:nowrap">' . $number . '</span><br><span class="adm-muted">' . e($itemsText) . '</span>',
+            'order' => '<span class="adm-nowrap">' . $number . '</span><span class="adm-media__meta">' . e($itemsText) . '</span>',
             'date' => $dateHtml,
-            'customer' => '<a class="adm-link" href="' . e(url('/admin/customers/' . ltrim((string) $o['phone_normalized'], '+'))) . '">' . e((string) $o['customer_name']) . '</a><br><span class="adm-muted"><a href="tel:' . e((string) $o['phone_normalized']) . '">' . e((string) $o['customer_phone']) . '</a> · ' . e((string) $o['city']) . '</span>',
+            'customer' => '<a class="adm-media__title" href="' . e(url('/admin/customers/' . ltrim((string) $o['phone_normalized'], '+'))) . '">' . e((string) $o['customer_name']) . '</a><span class="adm-media__meta">' . e((string) $o['customer_phone']) . ' · ' . e((string) $o['city']) . '</span>',
             'total' => $moneyHtml((string) $o['grand_total']),
             'payment' => $paymentHtml,
             'status' => $statusHtml,
             'courier' => $courierHtml,
-        ],
-        'card' => [
-            'title' => $number,
-            'chip' => $statusHtml,
-            'sub' => e(adm_order_date_compact((string) $o['created_at'])) . ' · ' . e($itemsText) . ($o['is_new'] ? ' · <span class="adm-badge adm-badge--gold adm-badge--sm">new</span>' : ''),
-            'lines' => [['html' => e((string) $o['customer_name']) . ' · ' . e((string) $o['city'])]],
-            'money' => $moneyHtml((string) $o['grand_total']),
-            'aside' => $paymentHtml,
-            'inline_actions' => 2,
         ],
         'actions' => $actions,
     ];
@@ -82,8 +74,8 @@ foreach ($orders as $o) {
     'title' => 'Orders',
     'subtitle' => $total === 0 ? 'No orders yet' : $total . ' ' . ($total === 1 ? 'order' : 'orders') . ' match',
     'actions' => [
-        ['label' => 'New phone order', 'href' => '/admin/orders/new', 'size' => 'sm', 'variant' => 'gold'],
-        ['label' => 'Export CSV', 'href' => $exportUrl, 'size' => 'sm'],
+        ['label' => 'Export CSV', 'href' => $exportUrl, 'icon' => 'download'],
+        ['label' => 'New phone order', 'href' => '/admin/orders/new', 'variant' => 'primary', 'icon' => 'plus'],
     ],
 ]); ?>
 
@@ -142,7 +134,7 @@ foreach ($orders as $o) {
             ['label' => 'Export CSV', 'value' => 'export'],
         ],
     ],
-    'empty' => ['title' => $total === 0 && $activeChips === [] ? 'No orders yet' : 'No orders match', 'text' => $activeChips === [] ? 'New orders appear here the moment a customer places them.' : 'Try removing a filter or widening the date range.', 'action' => $activeChips === [] ? null : ['label' => 'Clear filters', 'href' => '/admin/orders']],
+    'empty' => ['icon' => 'package', 'title' => $total === 0 && $activeChips === [] ? 'No orders yet' : 'No orders match', 'text' => $activeChips === [] ? 'New orders appear here the moment a customer places them.' : 'Try removing a filter or widening the date range.', 'action' => $activeChips === [] ? null : ['label' => 'Clear filters', 'href' => '/admin/orders']],
 ]); ?>
 
 <?php if ($bulkShip !== []): ?>

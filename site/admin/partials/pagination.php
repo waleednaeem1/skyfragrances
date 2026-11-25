@@ -35,9 +35,9 @@ for ($p = 1; $p <= $pages; $p++) {
 <?php if ($pages > 1): ?>
   <div class="adm-pager__links">
 <?php if ($page > 1): ?>
-    <a class="adm-pager__link adm-pager__link--prev" href="<?= e($link($page - 1)) ?>" rel="prev">&lsaquo; Prev</a>
+    <a class="adm-pager__link" href="<?= e($link($page - 1)) ?>" rel="prev">&lsaquo; Prev</a>
 <?php else: ?>
-    <span class="adm-pager__link adm-pager__link--prev is-disabled" aria-disabled="true">&lsaquo; Prev</span>
+    <span class="adm-pager__link is-disabled" aria-disabled="true">&lsaquo; Prev</span>
 <?php endif; ?>
     <span class="adm-pager__pages">
 <?php foreach ($window as $p): ?>
@@ -52,9 +52,9 @@ for ($p = 1; $p <= $pages; $p++) {
     </span>
     <span class="adm-pager__compact">Page <?= e((string) $page) ?> of <?= e((string) $pages) ?></span>
 <?php if ($page < $pages): ?>
-    <a class="adm-pager__link adm-pager__link--next" href="<?= e($link($page + 1)) ?>" rel="next">Next &rsaquo;</a>
+    <a class="adm-pager__link" href="<?= e($link($page + 1)) ?>" rel="next">Next &rsaquo;</a>
 <?php else: ?>
-    <span class="adm-pager__link adm-pager__link--next is-disabled" aria-disabled="true">Next &rsaquo;</span>
+    <span class="adm-pager__link is-disabled" aria-disabled="true">Next &rsaquo;</span>
 <?php endif; ?>
   </div>
 <?php endif; ?>

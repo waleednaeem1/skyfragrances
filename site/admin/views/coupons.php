@@ -14,10 +14,10 @@ $tableRows = [];
 foreach ($coupons as $c) {
     $editUrl = '/admin/coupons/' . (int) $c['id'];
     $actions = [
-        ['label' => 'Edit', 'href' => $editUrl],
+        ['label' => 'Edit ' . $c['code'], 'href' => $editUrl, 'icon' => 'pencil'],
         ['label' => (int) $c['is_active'] === 1 ? 'Disable' : 'Enable', 'post' => '/admin/coupons/' . (int) $c['id'] . '/toggle', 'fields' => ['return' => $returnTo]],
-        ['label' => 'Copy code', 'type' => 'button', 'attr' => ['data-copy' => (string) $c['code']]],
-        ['label' => 'Share on WhatsApp', 'href' => (string) $c['share_url'], 'external' => true],
+        ['label' => 'Copy ' . $c['code'], 'icon' => 'copy', 'type' => 'button', 'attr' => ['data-copy' => (string) $c['code']]],
+        ['label' => 'Share ' . $c['code'] . ' on WhatsApp', 'href' => (string) $c['share_url'], 'external' => true, 'icon' => 'whatsapp'],
     ];
     $minHtml = money_paisa((string) $c['min_order_total']) > 0 ? $moneyHtml((string) $c['min_order_total']) : '<span class="adm-muted">None</span>';
     $perPhone = $c['per_phone_limit'] === null ? '' : ' <span class="adm-muted">(' . e((string) (int) $c['per_phone_limit']) . ' per phone)</span>';
@@ -31,17 +31,6 @@ foreach ($coupons as $c) {
             'usage' => '<span class="adm-num">' . e((string) $c['usage_label']) . '</span>' . $perPhone,
             'window' => '<span class="adm-note">' . e((string) $c['window_label']) . '</span>',
             'status' => $badge($c['state_badge']),
-        ],
-        'card' => [
-            'title' => '<span class="adm-mono">' . e((string) $c['code']) . '</span>',
-            'chip' => $badge($c['state_badge'] + ['small' => true]),
-            'sub' => e((string) $c['window_label']),
-            'lines' => [
-                ['label' => 'Discount', 'html' => e((string) $c['discount_label'])],
-                ['label' => 'Min order', 'html' => $minHtml],
-                ['label' => 'Used', 'html' => e((string) $c['usage_label']) . $perPhone],
-            ],
-            'inline_actions' => 2,
         ],
         'actions' => $actions,
     ];
@@ -58,12 +47,13 @@ $to = min($total, $page * $per);
     'subtitle' => (int) $counts['active'] . ' active · ' . (int) $counts['scheduled'] . ' scheduled',
     'actions' => [['label' => 'New coupon', 'href' => '/admin/coupons/new', 'variant' => 'gold']],
 ]); ?>
-<section class="adm-card adm-promo">
-  <div>
+<section class="adm-card adm-promo adm-promo--ink">
+  <span class="adm-promo__icon" aria-hidden="true"><?php partial('icon.php', ['name' => 'sparkle', 'size' => 18]); ?></span>
+  <div class="adm-promo__body">
     <h2 class="adm-card__title">Thank-you coupon <?php partial_admin('badge.php', ['label' => $reward['enabled'] ? 'On' : 'Off', 'tone' => $reward['enabled'] ? 'green' : 'muted', 'small' => true]); ?></h2>
     <p class="adm-promo__text"><?= $reward['enabled'] ? e($reward['label']) . ' a customer\'s second order, given automatically after their first website order.' : 'Give every first-time website customer a one-time code for their second order.' ?><?= $reward['issued'] > 0 ? ' ' . e($reward['issued'] . ' given, ' . $reward['used'] . ' used.') : '' ?></p>
   </div>
-  <?php partial_admin('button.php', ['label' => $reward['enabled'] ? 'Manage' : 'Set up', 'href' => '/admin/coupons/reward', 'variant' => 'ghost']); ?>
+  <?php partial_admin('button.php', ['label' => $reward['enabled'] ? 'Manage' : 'Set up', 'href' => '/admin/coupons/reward', 'variant' => 'secondary', 'icon' => 'chevron-right']); ?>
 </section>
 <?php partial_admin('filters.php', [
     'action' => '/admin/coupons',
@@ -83,16 +73,16 @@ $to = min($total, $page * $per);
     'list_id' => 'coupons-list',
     'columns' => [
         ['key' => 'code', 'label' => 'Code', 'sort' => 'code'],
-        ['key' => 'discount', 'label' => 'Discount'],
-        ['key' => 'min', 'label' => 'Min order', 'align' => 'right'],
-        ['key' => 'usage', 'label' => 'Used', 'sort' => 'used'],
-        ['key' => 'window', 'label' => 'Valid', 'sort' => 'expires'],
+        ['key' => 'discount', 'label' => 'Discount', 'class' => 'adm-nowrap'],
+        ['key' => 'min', 'label' => 'Min order', 'align' => 'right', 'class' => 'adm-nowrap'],
+        ['key' => 'usage', 'label' => 'Used', 'sort' => 'used', 'class' => 'adm-nowrap'],
+        ['key' => 'window', 'label' => 'Valid', 'sort' => 'expires', 'class' => 'adm-nowrap'],
         ['key' => 'status', 'label' => 'Status'],
     ],
     'sort' => ['param' => 'sort', 'current' => $filters['sort']],
     'rows' => $tableRows,
     'empty' => $activeChips === []
-        ? ['title' => 'No coupons yet', 'text' => 'Create a code your customers can apply at checkout.', 'action' => ['label' => 'New coupon', 'href' => '/admin/coupons/new']]
-        : ['title' => 'No coupons match', 'text' => 'Try a different status or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/coupons', 'variant' => 'ghost']],
+        ? ['icon' => 'tag', 'title' => 'No coupons yet', 'text' => 'Create a code your customers can apply at checkout.', 'action' => ['label' => 'New coupon', 'href' => '/admin/coupons/new']]
+        : ['icon' => 'tag', 'title' => 'No coupons match', 'text' => 'Try a different status or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/coupons', 'variant' => 'ghost']],
 ]); ?>
 <?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'coupons']); ?>

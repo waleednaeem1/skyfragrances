@@ -312,6 +312,7 @@ render_admin('orders.php', [
     'page' => $page,
     'per' => $per,
     'attention' => $attention,
+    'allCount' => (int) db_fetch_column('SELECT COUNT(*) FROM orders'),
     'countText' => $countText,
     'activeChips' => adm_orders_active_chips($filters, $get),
     'holdHours' => $holdHours,
@@ -322,5 +323,4 @@ render_admin('orders.php', [
     'title' => 'Orders',
     'body_class' => 'admin t-light admin-orders',
     'wide' => true,
-    'badges' => ['orders' => $attention['pending'] + $attention['confirmed'], 'reviews' => (int) db_fetch_column("SELECT COUNT(*) FROM reviews WHERE status = 'pending'")],
 ]);

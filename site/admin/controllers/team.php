@@ -387,7 +387,7 @@ if ($routeName === 'admin.team.new' || $routeName === 'admin.team.edit') {
         'form' => $form,
         'errors' => $errors,
         'isSelf' => $existing !== null && (int) $existing['id'] === (int) $admin['id'],
-    ], ['title' => $existing !== null ? 'Edit ' . $existing['display_name'] : 'Add team member', 'body_class' => (string) $route['body_class'] . ' has-actionbar', 'back' => '/admin/team']);
+    ], ['title' => $existing !== null ? 'Edit ' . $existing['display_name'] : 'Add team member', 'body_class' => (string) $route['body_class'], 'back' => '/admin/team']);
 }
 
 $members = db_fetch_all('SELECT id, username, email, display_name, role, permissions, commission_rate, job_title, phone, is_active, last_login_at FROM admin_users ORDER BY is_active DESC, role = \'owner\' DESC, display_name ASC');
@@ -410,4 +410,4 @@ render_admin('team.php', [
     'paidMonth' => $paidMonth,
     'monthLabel' => $karachi->format('F'),
     'selfId' => (int) $admin['id'],
-], ['title' => 'Team', 'body_class' => (string) $route['body_class'], 'create_url' => '/admin/team/new']);
+], ['title' => 'Team', 'body_class' => (string) $route['body_class']]);

@@ -59,7 +59,7 @@ $labels = ['name' => 'Name', 'slug' => 'Link name', 'tagline' => 'Tagline', 'des
   <div class="adm-form__section">
     <h2 class="adm-form__section-title">Visibility</h2>
     <?php partial_admin('field.php', ['type' => 'segment', 'name' => 'is_active', 'label' => 'Status', 'value' => (string) (int) $form['is_active'], 'options' => ['1' => 'Live', '0' => 'Hidden'], 'help' => 'Hidden collections disappear from menus and their landing page; the products in them stay live.']); ?>
-    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'show_on_home', 'label' => 'Show in the home page collection band', 'value' => (int) $form['show_on_home'] === 1]); ?>
+    <?php partial_admin('field.php', ['type' => 'switch', 'name' => 'show_on_home', 'label' => 'Show in the home page collection band', 'value' => (int) $form['show_on_home'] === 1]); ?>
     <?php partial_admin('field.php', ['type' => 'int', 'name' => 'sort_order', 'label' => 'Sort order', 'value' => (string) $form['sort_order'], 'placeholder' => 'Next available', 'help' => 'Lower numbers show first. You can also use Move up / Move down on the list.', 'error' => $err('sort_order')]); ?>
   </div>
   <div class="adm-form__section">

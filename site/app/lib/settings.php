@@ -11,6 +11,7 @@ function settings_defaults(): array
         'address_line' => '',
         'footer_blurb' => 'Luxury fragrance, made for Pakistan.',
         'currency_prefix' => 'Rs.',
+        'monthly_sales_goal' => '0.00',
         'timezone' => 'Asia/Karachi',
         'contact_phone' => '',
         'whatsapp' => '',

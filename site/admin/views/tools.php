@@ -12,26 +12,10 @@ partial_admin('page-header.php', ['title' => 'Tools', 'subtitle' => 'Housekeepin
 <div class="adm-banner adm-banner--warn" role="status">Maintenance mode is on. <a href="<?= e(url('/admin/settings?tab=advanced')) ?>">Turn it off in Settings › Advanced</a>.</div>
 <?php endif; ?>
 <div class="adm-grid">
-  <div class="adm-kpi">
-    <span class="adm-kpi__value<?= !empty($storage['red']) ? ' adm-stock--low' : '' ?>"><?= e($storage['used_label']) ?></span>
-    <span class="adm-kpi__label">storage/ in use</span>
-    <p class="adm-note"><?= $storage['percent'] !== null ? 'Disk ' . e((string) $storage['percent']) . '% full' : 'Disk quota not reported' ?><?= !empty($storage['red']) ? ' — run the privacy purge' : '' ?></p>
-  </div>
-  <div class="adm-kpi">
-    <span class="adm-kpi__value"><?= e((string) $storage['proof_files']) ?></span>
-    <span class="adm-kpi__label">Payment proofs on disk</span>
-    <p class="adm-note"><?= e($storage['proof_label']) ?></p>
-  </div>
-  <div class="adm-kpi">
-    <span class="adm-kpi__value<?= $outbox['failed'] > 0 ? ' adm-stock--low' : '' ?>"><?= e((string) ($outbox['queued'] + $outbox['failed'])) ?></span>
-    <span class="adm-kpi__label">Emails not yet sent</span>
-    <p class="adm-note"><?= e((string) $outbox['queued']) ?> waiting · <?= e((string) $outbox['failed']) ?> failed</p>
-  </div>
-  <div class="adm-kpi">
-    <span class="adm-kpi__value"><?= e((string) $regen['total']) ?></span>
-    <span class="adm-kpi__label">Images on the site</span>
-    <p class="adm-note"><?= $webp ? 'WebP available' : 'JPEG only on this server' ?></p>
-  </div>
+  <?php partial_admin('kpi-card.php', ['label' => 'storage/ in use', 'value' => $storage['used_label'], 'icon' => 'tool', 'tone' => 'c2', 'alert' => !empty($storage['red']), 'note' => ($storage['percent'] !== null ? 'Disk ' . $storage['percent'] . '% full' : 'Disk quota not reported') . (!empty($storage['red']) ? ' — run the privacy purge' : '')]); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Payment proofs on disk', 'value' => (string) $storage['proof_files'], 'icon' => 'banknote', 'tone' => 'c4', 'note' => $storage['proof_label']]); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Emails not yet sent', 'value' => (string) ($outbox['queued'] + $outbox['failed']), 'icon' => 'mail', 'tone' => 'c3', 'alert' => $outbox['failed'] > 0, 'note' => $outbox['queued'] . ' waiting · ' . $outbox['failed'] . ' failed']); ?>
+  <?php partial_admin('kpi-card.php', ['label' => 'Images on the site', 'value' => (string) $regen['total'], 'icon' => 'layers', 'tone' => 'c1', 'note' => $webp ? 'WebP available' : 'JPEG only on this server']); ?>
 </div>
 <div class="adm-card" id="mail-test">
   <div class="adm-card__head"><h2 class="adm-card__title">Send a test email</h2></div>
@@ -118,9 +102,6 @@ foreach ($stock['pending'] as $order) {
     ob_start();
     partial_admin('money.php', ['value' => (string) $order['grand_total'], 'strong' => true]);
     $moneyHtml = ob_get_clean();
-    ob_start();
-    partial_admin('badge.php', ['status' => 'cancelled', 'small' => true]);
-    $chip = ob_get_clean();
     $when = e(date_long((string) $order['cancelled_at']));
     $reason = trim((string) ($order['cancel_reason'] ?? ''));
     $auditRows[] = [
@@ -132,13 +113,6 @@ foreach ($stock['pending'] as $order) {
             'items' => e((string) $order['item_count']),
             'cancelled' => $when . ($reason !== '' ? '<br><span class="adm-note">' . e($reason) . '</span>' : ''),
             'total' => $moneyHtml,
-        ],
-        'card' => [
-            'title' => '<span class="adm-mono">' . e((string) $order['order_number']) . '</span>',
-            'chip' => $chip,
-            'sub' => e((string) $order['customer_name']) . ' · ' . e((string) $order['city']),
-            'lines' => [['label' => 'Cancelled', 'html' => $when], ['label' => 'Items', 'html' => e((string) $order['item_count'])]],
-            'money' => $moneyHtml,
         ],
     ];
 }

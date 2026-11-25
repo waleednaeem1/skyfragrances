@@ -49,7 +49,7 @@ partial_admin('tabs.php', ['tabs' => $tabs, 'label' => 'Settings sections']);
 <?php endif; ?>
     </div>
 <?php elseif ($def['type'] === 'bool'): ?>
-<?php partial_admin('field.php', ['type' => 'checkbox', 'name' => $key, 'id' => $key, 'label' => $def['label'], 'value' => $value === '1', 'error' => $error, 'help' => $help]); ?>
+<?php partial_admin('field.php', ['type' => 'switch', 'name' => $key, 'id' => $key, 'label' => $def['label'], 'value' => $value === '1', 'error' => $error, 'help' => $help]); ?>
 <?php elseif ($def['type'] === 'image'): $preview = $imagePreview($value); ?>
     <div class="adm-field<?= $error !== '' ? ' adm-field--error' : '' ?>" id="<?= e($key) ?>">
       <label class="adm-field__label" for="image_<?= e($key) ?>"><?= e($def['label']) ?></label>

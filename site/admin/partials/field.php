@@ -40,15 +40,17 @@ $wrapClass = 'adm-field' . (!empty($compact) ? ' adm-field--compact' : '') . ($e
 $inputType = match ($type) { 'money', 'int' => 'text', 'phone' => 'tel', 'email' => 'email', 'url' => 'url', 'date' => 'date', 'datetime' => 'datetime-local', 'password' => 'password', 'number' => 'number', 'search' => 'search', default => 'text' };
 ?>
 <div class="<?= e($wrapClass) ?>">
-<?php if ($type === 'checkbox'): ?>
-  <label class="adm-check">
-    <input type="checkbox" class="adm-check__input" id="<?= e($id) ?>" name="<?= e($name) ?>" value="<?= e((string) ($checked_value ?? '1')) ?>"<?= !empty($value) ? ' checked' : '' ?><?= $extra ?>>
-    <span class="adm-check__box" aria-hidden="true"></span>
+<?php if ($type === 'checkbox' || $type === 'switch'): ?>
+  <label class="<?= $type === 'switch' ? 'adm-switch' : 'adm-check' ?>">
+    <input type="checkbox" class="adm-check__input" id="<?= e($id) ?>" name="<?= e($name) ?>" value="<?= e((string) ($checked_value ?? '1')) ?>"<?= !empty($value) ? ' checked' : '' ?><?= $type === 'switch' ? ' role="switch"' : '' ?><?= $extra ?>>
+    <span class="<?= $type === 'switch' ? 'adm-switch__track' : 'adm-check__box' ?>" aria-hidden="true"></span>
     <span class="adm-check__label"><?= e($label) ?></span>
   </label>
 <?php else: ?>
 <?php if ($label !== ''): ?>
+  <div class="adm-field__top">
   <<?= in_array($type, ['radio', 'segment', 'checkgroup'], true) ? 'span' : 'label' ?> class="adm-field__label"<?= in_array($type, ['radio', 'segment', 'checkgroup'], true) ? ' id="' . e($id) . '-label"' : ' for="' . e($id) . '"' ?>><?= e($label) ?><?php if ($required): ?> <span class="adm-field__req" aria-hidden="true">*</span><?php endif; ?></<?= in_array($type, ['radio', 'segment', 'checkgroup'], true) ? 'span' : 'label' ?>>
+  </div>
 <?php endif; ?>
 <?php if ($type === 'select'): ?>
   <select class="adm-input adm-select" id="<?= e($id) ?>" name="<?= e($name) ?>"<?= $extra ?>>
@@ -68,10 +70,10 @@ $inputType = match ($type) { 'money', 'int' => 'text', 'phone' => 'tel', 'email'
 <?php endforeach; ?>
   </div>
 <?php elseif ($type === 'checkgroup'): ?>
-  <div class="adm-checks" role="group" aria-labelledby="<?= e($id) ?>-label">
+  <div class="adm-checks<?= is_array(reset($options)) ? ' adm-checks--tiles' : '' ?>" role="group" aria-labelledby="<?= e($id) ?>-label">
 <?php $selected = is_array($value) ? array_map('strval', $value) : array_filter(array_map('trim', explode(',', (string) $value))); ?>
 <?php foreach ($options as $optValue => $optLabel): ?>
-    <label class="adm-check"><input type="checkbox" class="adm-check__input" name="<?= e($name) ?>[]" value="<?= e((string) $optValue) ?>"<?= in_array((string) $optValue, $selected, true) ? ' checked' : '' ?>><span class="adm-check__box" aria-hidden="true"></span><span class="adm-check__label"><?= e((string) $optLabel) ?></span></label>
+    <label class="adm-check"><input type="checkbox" class="adm-check__input" name="<?= e($name) ?>[]" value="<?= e((string) $optValue) ?>"<?= in_array((string) $optValue, $selected, true) ? ' checked' : '' ?>><span class="adm-check__box" aria-hidden="true"></span><span class="adm-check__label"><?php if (is_array($optLabel)): ?><strong><?= e((string) $optLabel[0]) ?></strong><span class="adm-check__hint"><?= e((string) $optLabel[1]) ?></span><?php else: ?><?= e((string) $optLabel) ?><?php endif; ?></span></label>
 <?php endforeach; ?>
   </div>
 <?php elseif ($type === 'money'): ?>

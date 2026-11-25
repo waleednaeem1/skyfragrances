@@ -320,6 +320,12 @@ if (request_method() === 'POST') {
         try {
             $result = order_edit_save($order, $form, order_edit_lines($form), $phoneNormalized);
             $fresh = order_find((int) $order['id']);
+            $chosenSeller = (int) request_post('sales_member_id', -1);
+            if ($chosenSeller >= 0 && team_is_owner() && $order['commission_paid_at'] === null && $chosenSeller !== (int) ($order['sales_member_id'] ?? 0)) {
+                $seller = team_new_order_member(auth_user(), $chosenSeller);
+                team_assign_order((int) $order['id'], $seller, now_karachi());
+                adm_order_log($order, 'commission.assign', $seller === null ? $order['order_number'] . ' credited to the company' : $order['order_number'] . ' credited to ' . (string) db_fetch_column('SELECT display_name FROM admin_users WHERE id = :id', ['id' => $seller]));
+            }
             adm_order_log($order, 'order.edit', 'Edited order ' . $order['order_number'] . ': ' . order_edit_items_summary($result['before']) . ' → ' . order_edit_items_summary(order_items((int) $order['id'])) . '; total ' . money((string) $order['grand_total']) . ' → ' . money((string) $result['after_total']), $order, $fresh);
             flash('success', 'Order ' . $order['order_number'] . ' saved. Total ' . money((string) $result['after_total']) . '. Reprint the invoice if you already sent one.');
             redirect($detailPath, 303);
@@ -352,4 +358,5 @@ render_admin('order-edit.php', [
     'paymentStatusOptions' => $paymentStatuses,
     'cities' => checkout_cities(),
     'fixedItems' => $fixedItems,
-], ['title' => 'Edit ' . $order['order_number'], 'body_class' => 'admin t-light admin-order-edit has-actionbar']);
+    'salesField' => team_sales_field(auth_user(), $order, (int) request_post('sales_member_id', -1)),
+], ['title' => 'Edit ' . $order['order_number'], 'body_class' => 'admin t-light admin-order-edit']);

@@ -20,7 +20,7 @@ foreach ($reviews as $r) {
     if ($r['status'] !== 'pending') {
         $actions[] = ['label' => 'Return to pending', 'post' => $statusPost, 'fields' => ['to' => 'pending']];
     }
-    $actions[] = ['label' => 'Delete', 'variant' => 'danger', 'post' => $statusPost, 'fields' => ['to' => 'delete'], 'confirm' => "Delete this review?\nThe words by " . $r['customer_name'] . " are removed for good and the product rating is recalculated.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
+    $actions[] = ['label' => 'Delete the review by ' . $r['customer_name'], 'icon' => 'trash', 'variant' => 'danger', 'post' => $statusPost, 'fields' => ['to' => 'delete'], 'confirm' => "Delete this review?\nThe words by " . $r['customer_name'] . " are removed for good and the product rating is recalculated.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
     $product = '<a class="adm-media" href="' . e(url('/admin/products/' . (int) $r['product_id'])) . '"><img class="adm-thumb adm-thumb--sm" src="' . e((string) $r['thumb']) . '" alt="" width="40" height="50" loading="lazy"><span class="adm-media__body"><span class="adm-media__title">' . e((string) $r['product_name']) . '</span></span></a>';
     $customer = '<strong>' . e((string) $r['customer_name']) . '</strong>' . ($r['customer_city'] !== null && $r['customer_city'] !== '' ? '<br><span class="adm-muted">' . e((string) $r['customer_city']) . '</span>' : '');
     $rating = '<span class="adm-num" aria-label="' . e((string) (int) $r['rating']) . ' out of 5">' . e((string) $r['stars']) . ' ' . e((string) (int) $r['rating']) . '</span>';
@@ -37,16 +37,6 @@ foreach ($reviews as $r) {
             'received' => $when,
             'status' => $badge((string) $r['status']) . $sample,
         ],
-        'card' => [
-            'title' => e((string) $r['customer_name']) . ($r['customer_city'] !== null && $r['customer_city'] !== '' ? ' <span class="adm-muted">· ' . e((string) $r['customer_city']) . '</span>' : ''),
-            'chip' => $badge((string) $r['status'], ['small' => true]) . $sample,
-            'sub' => $product,
-            'lines' => [
-                ['html' => $rating . ' <span class="adm-muted">· </span>' . $when],
-                ['html' => $text],
-            ],
-            'inline_actions' => 2,
-        ],
         'actions' => $actions,
     ];
 }
@@ -57,10 +47,10 @@ if ($sampleCount > 0) {
 }
 $statusNoun = $filters['status'] === 'all' ? 'reviews' : $filters['status'] . ' reviews';
 $emptyByStatus = [
-    'pending' => ['title' => 'No reviews waiting', 'text' => 'New reviews from the shop land here. Nothing shows on the site until you approve it.'],
-    'approved' => ['title' => 'No approved reviews yet', 'text' => 'Approve a pending review and it appears on the product page.'],
-    'rejected' => ['title' => 'No rejected reviews', 'text' => 'Rejected reviews stay here for the record.'],
-    'all' => ['title' => 'No reviews yet', 'text' => 'Customers can leave a review on any product page.'],
+    'pending' => ['icon' => 'star', 'title' => 'No reviews waiting', 'text' => 'New reviews from the shop land here. Nothing shows on the site until you approve it.'],
+    'approved' => ['icon' => 'star', 'title' => 'No approved reviews yet', 'text' => 'Approve a pending review and it appears on the product page.'],
+    'rejected' => ['icon' => 'star', 'title' => 'No rejected reviews', 'text' => 'Rejected reviews stay here for the record.'],
+    'all' => ['icon' => 'star', 'title' => 'No reviews yet', 'text' => 'Customers can leave a review on any product page.'],
 ];
 ?>
 <?php partial_admin('page-header.php', [
@@ -91,7 +81,7 @@ $emptyByStatus = [
         ['key' => 'product', 'label' => 'Product'],
         ['key' => 'customer', 'label' => 'Customer'],
         ['key' => 'rating', 'label' => 'Rating', 'sort' => 'rating'],
-        ['key' => 'review', 'label' => 'Review'],
+        ['key' => 'review', 'label' => 'Review', 'class' => 'adm-table__col--text'],
         ['key' => 'received', 'label' => 'Received', 'sort' => 'date'],
         ['key' => 'status', 'label' => 'Status'],
     ],
@@ -107,6 +97,6 @@ $emptyByStatus = [
     ],
     'empty' => $activeChips === []
         ? $emptyByStatus[$filters['status']]
-        : ['title' => 'No reviews match', 'text' => 'Try another product or rating, or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/reviews', 'variant' => 'ghost']],
+        : ['icon' => 'star', 'title' => 'No reviews match', 'text' => 'Try another product or rating, or clear the filters.', 'action' => ['label' => 'Clear filters', 'href' => '/admin/reviews', 'variant' => 'ghost']],
 ]); ?>
 <?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'reviews']); ?>

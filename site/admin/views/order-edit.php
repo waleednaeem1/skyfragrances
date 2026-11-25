@@ -11,7 +11,7 @@ $detailPath = '/admin/orders/' . $order['order_number'];
 <form method="post" action="<?= e(url($detailPath . '/edit')) ?>" class="adm-form" novalidate>
   <?= csrf_field() ?>
   <input type="hidden" name="idem_key" value="<?= e($form['idem_key']) ?>">
-<?php partial_admin('order-form-fields.php', ['form' => $form, 'errors' => $errors, 'problems' => $problems, 'priced' => $priced, 'sizeOptions' => $sizeOptions, 'methods' => $methods, 'cities' => $cities, 'itemsEditable' => true, 'priceEditable' => true, 'paymentStatusOptions' => $paymentStatusOptions, 'showCoupon' => false, 'problemsTitle' => 'Before these changes are saved:']); ?>
+<?php partial_admin('order-form-fields.php', ['form' => $form, 'errors' => $errors, 'problems' => $problems, 'sizeOptions' => $sizeOptions, 'methods' => $methods, 'cities' => $cities, 'itemsEditable' => true, 'priceEditable' => true, 'paymentStatusOptions' => $paymentStatusOptions, 'showCoupon' => false, 'problemsTitle' => 'Before these changes are saved:', 'salesField' => $salesField]); ?>
 <?php if ($fixedItems !== []): ?>
   <div class="adm-form__section">
     <h2 class="adm-form__section-title">Kept as they are</h2>

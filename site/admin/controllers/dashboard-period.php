@@ -206,7 +206,7 @@ function dashboard_delta(int $value, int $previous): array
         return ['text' => 'No change', 'tone' => 'flat'];
     }
     $shown = (string) preg_replace('/\.0$/', '', number_format(abs($percent), abs($percent) < 10 ? 1 : 0));
-    return ['text' => ($percent > 0 ? '▲ ' : '▼ ') . $shown . '%', 'tone' => $percent > 0 ? 'up' : 'down'];
+    return ['text' => ($percent > 0 ? '↑ ' : '↓ ') . $shown . '%', 'tone' => $percent > 0 ? 'up' : 'down'];
 }
 
 function dashboard_kpis(array $period): array
@@ -216,14 +216,14 @@ function dashboard_kpis(array $period): array
     $cards = [];
     foreach (['revenue' => ['Revenue', true], 'orders' => ['Orders', false], 'average' => ['Average order', true], 'bottles' => ['Bottles sold', false]] as $key => [$label, $isMoney]) {
         $show = static fn (int $value): string => $isMoney ? money(money_from_paisa($value)) : number_format($value);
-        $cards[] = [
+        $cards[$key] = [
             'label' => $label,
             'value' => $show($current[$key]),
             'delta' => dashboard_delta($current[$key], $previous[$key]),
             'compare' => 'vs ' . $show($previous[$key]) . ' ' . $period['compare_label'],
         ];
     }
-    return ['cards' => $cards, 'revenue' => $current['revenue'], 'orders' => $current['orders']];
+    return ['cards' => $cards, 'current' => $current];
 }
 
 function dashboard_axis_step(int $rupees): int
@@ -254,7 +254,7 @@ function dashboard_bucket_sql(string $unit, string $column): string
     return ['hour' => 'HOUR(' . $column . ')', 'day' => 'DATE(' . $column . ')', 'month' => 'DATE_FORMAT(' . $column . ", '%Y-%m')", 'year' => 'YEAR(' . $column . ')'][$unit];
 }
 
-function dashboard_chart(array $period, DateTimeImmutable $now): array
+function dashboard_chart(array $period, DateTimeImmutable $now, string $measure = 'revenue'): array
 {
     $rows = db_fetch_all(
         'SELECT ' . dashboard_bucket_sql($period['unit'], 'created_at') . ' AS k, COUNT(*) AS c, COALESCE(SUM(grand_total), 0) AS v FROM orders WHERE status IN ' . DASHBOARD_REVENUE_STATUSES . ' AND created_at >= :from AND created_at < :to GROUP BY k',
@@ -262,12 +262,12 @@ function dashboard_chart(array $period, DateTimeImmutable $now): array
     );
     $byKey = [];
     foreach ($rows as $row) {
-        $byKey[(string) $row['k']] = ['orders' => (int) $row['c'], 'paisa' => money_paisa((string) $row['v'])];
+        $byKey[(string) $row['k']] = ['orders' => (int) $row['c'], 'amount' => $measure === 'orders' ? (int) $row['c'] : money_paisa((string) $row['v'])];
     }
-    return dashboard_chart_build($period, $now, $byKey, 'Revenue');
+    return dashboard_chart_build($period, $now, $byKey, $measure === 'orders' ? 'Orders' : 'Revenue', '/admin', $measure !== 'orders');
 }
 
-function dashboard_chart_build(array $period, DateTimeImmutable $now, array $byKey, string $measure, string $base = '/admin'): array
+function dashboard_chart_build(array $period, DateTimeImmutable $now, array $byKey, string $measure, string $base = '/admin', bool $isMoney = true): array
 {
     $unit = $period['unit'];
     $step = ['hour' => '+1 hour', 'day' => '+1 day', 'month' => 'first day of next month', 'year' => '+1 year'][$unit];
@@ -290,13 +290,14 @@ function dashboard_chart_build(array $period, DateTimeImmutable $now, array $byK
             'month' => $at->format('Y-m'),
             default => $at->format('Y'),
         };
-        $data = ($byKey[$key] ?? []) + ['orders' => 0, 'paisa' => 0];
-        $max = max($max, intdiv(max(0, $data['paisa']), 100));
+        $data = ($byKey[$key] ?? []) + ['orders' => 0, 'amount' => 0];
+        $max = max($max, $isMoney ? intdiv(max(0, $data['amount']), 100) : max(0, $data['amount']));
         $bars[] = [
             'key' => $key,
-            'paisa' => $data['paisa'],
+            'at' => $at,
+            'amount' => $data['amount'],
             'orders' => $data['orders'],
-            'value' => money(money_from_paisa($data['paisa'])),
+            'value' => $isMoney ? money(money_from_paisa($data['amount'])) : number_format($data['amount']) . ' ' . ($data['amount'] === 1 ? 'order' : 'orders'),
             'axis' => $index % $every === 0 ? match ($unit) {
                 'hour' => $at->format('ga'),
                 'day' => count($slots) <= 7 ? $at->format('D j') : $at->format('j M'),
@@ -325,7 +326,8 @@ function dashboard_chart_build(array $period, DateTimeImmutable $now, array $byK
     }
     return [
         'bars' => $bars,
-        'top_paisa' => $top * 100,
+        'top' => $isMoney ? $top * 100 : $top,
+        'money' => $isMoney,
         'ticks' => $ticks,
         'caption' => $measure . ' by ' . $unit . ', ' . $period['label'],
         'unit_label' => ucfirst($unit),

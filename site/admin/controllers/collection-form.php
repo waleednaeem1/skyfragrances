@@ -183,4 +183,4 @@ render_admin('collection-form.php', [
     'errors' => $errors,
     'productCount' => $productCount,
     'slugHistory' => $collection === null ? [] : catalogue_slug_history('collection', (int) $collection['id']),
-], ['title' => $isNew ? 'New collection' : 'Edit collection', 'body_class' => 'admin t-light admin-collection-form', 'back' => '/admin/collections', 'create_url' => '/admin/collections/new']);
+], ['title' => $isNew ? 'New collection' : 'Edit collection', 'body_class' => 'admin t-light admin-collection-form', 'back' => '/admin/collections']);

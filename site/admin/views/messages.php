@@ -33,7 +33,7 @@ foreach ($messages as $m) {
     if ($m['status'] === 'archived' || $m['status'] === 'read') {
         $actions[] = ['label' => 'Mark as new', 'post' => $statusPost, 'fields' => ['to' => 'new', 'return' => $returnTo]];
     }
-    $actions[] = ['label' => 'Delete', 'variant' => 'danger', 'post' => $statusPost, 'fields' => ['to' => 'delete'], 'confirm' => "Delete this message?\nThe message from " . $m['name'] . " and their contact details are removed for good.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
+    $actions[] = ['label' => 'Delete the message from ' . $m['name'], 'icon' => 'trash', 'variant' => 'danger', 'post' => $statusPost, 'fields' => ['to' => 'delete'], 'confirm' => "Delete this message?\nThe message from " . $m['name'] . " and their contact details are removed for good.", 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete'];
     $rows[] = [
         'id' => $id,
         'href' => $detailUrl,
@@ -44,17 +44,6 @@ foreach ($messages as $m) {
             'contact' => $contactHtml,
             'received' => $when,
             'status' => $badge((string) $m['status']),
-        ],
-        'card' => [
-            'title' => e((string) $m['name']),
-            'chip' => $badge((string) $m['status'], ['small' => true]),
-            'sub' => '<span style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' . e($preview) . '</span>',
-            'lines' => [
-                ['label' => 'Subject', 'html' => $subjectHtml],
-                ['label' => 'Phone', 'html' => !empty($m['phone']) ? '<span class="adm-mono">' . e((string) $m['phone']) . '</span>' : '<span class="adm-muted">None</span>'],
-                ['label' => 'Received', 'html' => $when],
-            ],
-            'inline_actions' => 1,
         ],
         'actions' => $actions,
     ];
@@ -81,16 +70,16 @@ $noun = $filters['status'] === 'all' ? 'messages' : $filters['status'] . ' messa
     'list_id' => 'messages-list',
     'columns' => [
         ['key' => 'name', 'label' => 'From'],
-        ['key' => 'subject', 'label' => 'Subject'],
+        ['key' => 'subject', 'label' => 'Subject', 'class' => 'adm-table__col--text'],
         ['key' => 'contact', 'label' => 'Contact'],
-        ['key' => 'received', 'label' => 'Received'],
+        ['key' => 'received', 'label' => 'Received', 'class' => 'adm-nowrap'],
         ['key' => 'status', 'label' => 'Status'],
     ],
     'rows' => $rows,
     'empty' => $activeChips === []
         ? ($filters['status'] === 'new'
-            ? ['title' => 'No new messages', 'text' => 'Messages from the Contact page appear here. You are all caught up.']
-            : ['title' => 'Nothing here', 'text' => 'No ' . $noun . ' yet.'])
-        : ['title' => 'No messages match', 'text' => 'Try another name, phone number or word.', 'action' => ['label' => 'Clear search', 'href' => '/admin/messages', 'variant' => 'ghost']],
+            ? ['icon' => 'mail', 'title' => 'No new messages', 'text' => 'Messages from the Contact page appear here. You are all caught up.']
+            : ['icon' => 'mail', 'title' => 'Nothing here', 'text' => 'No ' . $noun . ' yet.'])
+        : ['icon' => 'mail', 'title' => 'No messages match', 'text' => 'Try another name, phone number or word.', 'action' => ['label' => 'Clear search', 'href' => '/admin/messages', 'variant' => 'ghost']],
 ]); ?>
 <?php partial_admin('pagination.php', ['info' => false, 'page' => $page, 'per' => $per, 'total' => $total, 'noun' => 'messages']); ?>

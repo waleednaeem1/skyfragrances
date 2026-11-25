@@ -4,7 +4,6 @@ $s = $statement['sales'];
 $x = $statement['expenses'];
 $cash = $statement['cash'];
 $fm = static fn (int $paisa): string => finance_money($paisa);
-$giltLogo = is_file(APP_ROOT . '/assets/img/brand/lockup-gilt-800.png') ? asset('img/brand/lockup-gilt-800.png') : (string) $store['logo'];
 $maxRow = max(1, ...array_map(static fn (array $r): int => max(0, $r['net']), $rows ?: [['net' => 1]]));
 ?>
 <!doctype html>
@@ -15,30 +14,32 @@ $maxRow = max(1, ...array_map(static fn (array $r): int => max(0, $r['net']), $r
 <meta name="robots" content="noindex, nofollow">
 <title>Statement <?= e($period['label']) ?> · <?= e($store['name']) ?></title>
 <style>
-@font-face { font-family: "Cormorant Garamond"; src: url("<?= e(asset('fonts/cormorant-garamond-variable.woff2')) ?>") format("woff2"); font-weight: 300 700; font-display: swap; }
-@font-face { font-family: "Jost"; src: url("<?= e(asset('fonts/jost-variable.woff2')) ?>") format("woff2"); font-weight: 100 900; font-display: swap; }
-:root { --ink: #1E1812; --muted: #6E6253; --bronze: #8A6538; --line: #E6DCCB; --hair: #EFE8DC; --paper: #F6F1E8; --vellum: #FEFCF8; --moss: #2F5D3A; --maroon: #7A2A22; --gold: #A87F4E; }
+@font-face { font-family: "Geist"; src: url("<?= e(asset('fonts/geist-variable.woff2')) ?>") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Geist Mono"; src: url("<?= e(asset('fonts/geist-mono-variable.woff2')) ?>") format("woff2"); font-weight: 100 900; font-display: swap; }
+:root { --ink: #0B0B0C; --muted: #64645E; --line: #E6E6E1; --hair: #EFEFEB; --canvas: #E9E9E4; --paper: #FFFFFF; --accent: #D4F84B; --ok: #13693A; --bad: #B42318; --bar: #7B61FF; }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { background: var(--paper); color: var(--ink); font: 400 9.5pt/1.45 "Jost", "Helvetica Neue", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-variant-numeric: lining-nums tabular-nums; }
-.toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; padding: 10px 16px; background: #0A0A0A; color: #F5F0E8; font: 400 13px/1.4 "Jost", Arial, sans-serif; }
-.toolbar a, .toolbar button { color: #D4B084; background: none; border: 1px solid #D4B084; border-radius: 6px; padding: 9px 16px; font: 500 13px/1 "Jost", Arial, sans-serif; letter-spacing: .04em; text-decoration: none; cursor: pointer; }
-.toolbar button { background: #D4B084; color: #0A0A0A; }
-.toolbar span { color: #B9AE9C; flex: 1 1 260px; }
-.sheet { position: relative; background: var(--vellum); width: 210mm; min-height: 297mm; margin: 18px auto; padding: 15mm 15mm 13mm; box-shadow: 0 18px 40px -18px rgba(58,40,22,.25); }
-.sheet::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: linear-gradient(90deg, #6B4C28, #A27A48 30%, #D8BE92 50%, #A27A48 70%, #6B4C28); }
+body { background: var(--canvas); color: var(--ink); font: 400 9.5pt/1.45 "Geist", "Helvetica Neue", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-variant-numeric: lining-nums tabular-nums; }
+.toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--ink); color: #C9C9C2; font-size: 13px; }
+.toolbar a, .toolbar button { border-color: #B9DD2A; background: var(--accent); color: var(--ink); }
+.toolbar button { border-color: #B9DD2A; background: var(--accent); color: var(--ink); }
+.toolbar span { flex: 1 1 260px; }
+.sheet { position: relative; background: var(--paper); width: 210mm; min-height: 297mm; margin: 18px auto; padding: 15mm 15mm 13mm; box-shadow: 0 12px 32px rgba(11, 11, 12, .10); }
 .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10mm; margin-bottom: 7mm; }
-.logo { width: 40mm; height: auto; display: block; }
+.brandmark { display: flex; align-items: center; gap: 3mm; }
+.mark { display: flex; align-items: center; justify-content: center; flex: none; width: 10mm; height: 10mm; border-radius: 2.5mm; background: var(--ink); color: #FFFFFF; font: 600 10pt/1 "Geist", Arial, sans-serif; letter-spacing: -0.04em; }
+.mark span { color: var(--accent); }
+.brandname { font-size: 12pt; font-weight: 600; }
 .doc { text-align: right; }
-.eyebrow { font-size: 7.5pt; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--bronze); margin: 0 0 1.5mm; }
-.doc h1 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 500; font-size: 26pt; line-height: 1; margin: 0 0 2mm; }
+.eyebrow { font-size: 7.5pt; font-weight: 500; letter-spacing: .28em; text-transform: uppercase; color: var(--ink); margin: 0 0 1.5mm; }
+.doc h1 { font-family: "Geist", Arial, sans-serif; font-weight: 500; font-size: 26pt; line-height: 1; margin: 0 0 2mm; }
 .doc p { margin: 0; color: var(--muted); font-size: 8.5pt; }
 .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin-bottom: 6mm; }
 .tile { border: 1px solid var(--line); border-radius: 2.5mm; padding: 3mm 3.5mm; background: #fff; }
 .tile span { display: block; font-size: 6.8pt; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.tile strong { display: block; margin-top: 1mm; font-family: "Cormorant Garamond", Georgia, serif; font-size: 15pt; font-weight: 600; line-height: 1.1; }
-.tile.loss strong { color: var(--maroon); }
-h2 { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 600; font-size: 13pt; margin: 6mm 0 2.5mm; }
+.tile strong { display: block; margin-top: 1mm; font-family: "Geist", Arial, sans-serif; font-size: 15pt; font-weight: 600; line-height: 1.1; }
+.tile.loss strong { color: var(--bad); }
+h2 { font-family: "Geist", Arial, sans-serif; font-weight: 600; font-size: 13pt; margin: 6mm 0 2.5mm; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; }
 table { width: 100%; border-collapse: collapse; }
 th { text-align: left; font-size: 6.8pt; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 500; padding: 1.6mm 1.5mm; border-bottom: 1px solid var(--line); }
@@ -46,10 +47,10 @@ td { padding: 1.5mm 1.5mm; border-bottom: 1px solid var(--hair); }
 .r { text-align: right; white-space: nowrap; }
 .pl td:last-child { text-align: right; white-space: nowrap; }
 .pl .total td { font-weight: 600; border-top: 1px solid var(--line); }
-.pl .grand td { font-family: "Cormorant Garamond", Georgia, serif; font-size: 13pt; font-weight: 600; border-top: 1.5px solid var(--ink); border-bottom: 0; }
-.pl .grand.loss td { color: var(--maroon); }
+.pl .grand td { font-family: "Geist", Arial, sans-serif; font-size: 13pt; font-weight: 600; border-top: 1.5px solid var(--ink); border-bottom: 0; }
+.pl .grand.loss td { color: var(--bad); }
 .pl .aside td { color: var(--muted); font-size: 8.5pt; }
-.bar { display: block; height: 2.2mm; background: var(--gold); border-radius: 1mm; min-width: .6mm; }
+.bar { display: block; height: 2.2mm; background: var(--bar); border-radius: 1mm; min-width: .6mm; }
 .note { font-size: 7.8pt; color: var(--muted); margin: 2mm 0 0; }
 .foot { margin-top: 8mm; padding-top: 3mm; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 7.5pt; color: var(--muted); }
 @media screen and (max-width: 820px) {
@@ -62,7 +63,7 @@ td { padding: 1.5mm 1.5mm; border-bottom: 1px solid var(--hair); }
 @media print {
   @page { size: A4; margin: 0; }
   body { background: #fff; }
-  .toolbar { display: none !important; }
+  .toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--ink); color: #C9C9C2; font-size: 13px; }
   .sheet { margin: 0; box-shadow: none; }
   tr { page-break-inside: avoid; }
 }
@@ -76,7 +77,7 @@ td { padding: 1.5mm 1.5mm; border-bottom: 1px solid var(--hair); }
 </div>
 <main class="sheet">
   <header class="head">
-    <div><?php if ($giltLogo !== ''): ?><img class="logo" src="<?= e($giltLogo) ?>" alt="<?= e($store['name']) ?>"><?php else: ?><strong><?= e($store['name']) ?></strong><?php endif; ?></div>
+    <div class="brandmark"><span class="mark" aria-hidden="true">S<span>F</span></span><span class="brandname"><?= e($store['name']) ?></span></div>
     <div class="doc">
       <p class="eyebrow">Financial statement</p>
       <h1><?= e($period['label']) ?></h1>

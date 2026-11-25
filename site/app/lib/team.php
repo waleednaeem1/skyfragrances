@@ -18,6 +18,8 @@ const TEAM_MODULES = [
     'activity' => ['Activity log', 'Who changed what', '/admin/activity'],
 ];
 
+const TEAM_COMPANY_LABEL = 'Company — 100% of profit to the company';
+
 const TEAM_ROUTE_ACCESS = [
     'admin.login' => '',
     'admin.logout' => '',
@@ -192,6 +194,36 @@ function team_commission_for_order(int $orderId): ?array
 function team_sellers(): array
 {
     return db_fetch_all('SELECT id, display_name, commission_rate, is_active FROM admin_users WHERE commission_rate IS NOT NULL ORDER BY is_active DESC, display_name ASC');
+}
+
+function team_rate_label(?string $rate): string
+{
+    return rtrim(rtrim((string) $rate, '0'), '.') . '%';
+}
+
+function team_sales_field(?array $user, ?array $order, int $posted): array
+{
+    $current = $order !== null && $order['sales_member_id'] !== null ? (int) $order['sales_member_id'] : 0;
+    $paid = $order !== null && $order['commission_paid_at'] !== null;
+    if (team_is_owner($user) && !$paid) {
+        $options = ['0' => TEAM_COMPANY_LABEL];
+        foreach (team_sellers() as $seller) {
+            if ((int) $seller['is_active'] === 1 || (int) $seller['id'] === $current) {
+                $options[(string) $seller['id']] = $seller['display_name'] . ' · ' . team_rate_label((string) $seller['commission_rate']) . ' of profit';
+            }
+        }
+        return [
+            'mode' => 'choose',
+            'options' => $options,
+            'value' => (string) ($posted >= 0 && isset($options[(string) $posted]) ? $posted : $current),
+            'help' => count($options) > 1 ? 'Who got this order. They earn their share of its profit; Company keeps 100% of it.' : 'No salespeople yet. Add them in Team to credit orders to them; until then 100% of the profit goes to the company.',
+        ];
+    }
+    if ($order === null && team_is_seller($user)) {
+        return ['mode' => 'text', 'text' => 'You · ' . team_rate_label((string) $user['commission_rate']) . ' of profit', 'help' => 'Orders you enter are credited to you.'];
+    }
+    $name = $current > 0 ? (string) db_fetch_column('SELECT display_name FROM admin_users WHERE id = :id', ['id' => $current]) : '';
+    return ['mode' => 'text', 'text' => $name !== '' ? $name : TEAM_COMPANY_LABEL, 'help' => $paid ? 'The share on this order is already paid, so it stays with this person.' : 'Only a super admin can credit an order to a salesperson.'];
 }
 
 function team_new_order_member(?array $user, int $chosenId): ?int

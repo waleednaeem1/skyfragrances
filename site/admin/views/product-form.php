@@ -47,23 +47,15 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
       </div>
     </div>
     <input type="hidden" name="<?= e($n('id')) ?>" value="<?= e((string) ($size['id'] ?? '')) ?>">
-    <div class="adm-field--pair">
+    <div class="adm-sizegrid">
       <?php partial_admin('field.php', ['type' => 'text', 'name' => $n('size_label'), 'id' => $id('size_label'), 'label' => 'Label', 'value' => $size['size_label'] ?? '', 'required' => true, 'placeholder' => '50ml', 'maxlength' => 20, 'error' => $err($id('size_label')), 'attr' => ['data-size-label' => '1', 'autocapitalize' => 'none']]); ?>
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('size_ml'), 'id' => $id('size_ml'), 'label' => 'Millilitres', 'value' => $size['size_ml'] ?? '', 'placeholder' => '50', 'error' => $err($id('size_ml')), 'attr' => ['data-size-ml' => '1']]); ?>
-    </div>
     <?php partial_admin('field.php', ['type' => 'text', 'name' => $n('sku'), 'id' => $id('sku'), 'label' => 'SKU', 'value' => $size['sku'] ?? '', 'placeholder' => 'Leave blank to generate', 'maxlength' => 40, 'help' => 'Your stock code. Must be unique across the shop.', 'error' => $err($id('sku')), 'attr' => ['data-size-sku' => '1', 'autocapitalize' => 'characters', 'spellcheck' => 'false', 'class' => 'adm-mono']]); ?>
-    <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'money', 'name' => $n('price'), 'id' => $id('price'), 'label' => 'Price', 'value' => $size['price'] ?? '', 'required' => true, 'error' => $err($id('price'))]); ?>
       <?php partial_admin('field.php', ['type' => 'money', 'name' => $n('sale_price'), 'id' => $id('sale_price'), 'label' => 'Sale price', 'value' => $size['sale_price'] ?? '', 'help' => 'Blank = not on sale.', 'error' => $err($id('sale_price'))]); ?>
-    </div>
-    <div class="adm-field--pair">
       <?php if (team_can('statements')) { partial_admin('field.php', ['type' => 'money', 'name' => $n('cost_price'), 'id' => $id('cost_price'), 'label' => 'Cost per bottle', 'value' => $size['cost_price'] ?? '', 'help' => 'What one bottle costs you to make and pack. Used for profit in Statements; customers never see it.', 'error' => $err($id('cost_price'))]); } ?>
-    </div>
-    <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('stock'), 'id' => $id('stock'), 'label' => 'Stock', 'value' => $size['stock'] ?? '0', 'required' => true, 'error' => $err($id('stock')), 'help' => ($size['stock'] ?? '') !== '' && is_numeric($size['stock']) && (int) $size['stock'] <= 0 ? 'Sold out — customers see SOLD OUT for this size.' : ((($size['low_stock_threshold'] ?? '') !== '' ? (int) $size['low_stock_threshold'] : $threshold) > 0 && is_numeric($size['stock'] ?? '') && (int) $size['stock'] > 0 && (int) $size['stock'] <= (($size['low_stock_threshold'] ?? '') !== '' ? (int) $size['low_stock_threshold'] : $threshold) ? 'Low stock — at or below the alert level.' : '')]); ?>
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('low_stock_threshold'), 'id' => $id('low_stock_threshold'), 'label' => 'Low-stock alert at', 'value' => $size['low_stock_threshold'] ?? '', 'placeholder' => (string) $threshold, 'help' => 'Blank uses the shop default (' . $threshold . ').', 'error' => $err($id('low_stock_threshold'))]); ?>
-    </div>
-    <div class="adm-field--pair">
       <?php partial_admin('field.php', ['type' => 'int', 'name' => $n('display_stock'), 'id' => $id('display_stock'), 'label' => 'Stock shown on the shop', 'value' => $size['display_stock'] ?? '', 'placeholder' => 'Same as stock', 'help' => 'What customers see. Under 10 shows as "Only N left", 10 or more as "In stock". Blank shows the real stock. Orders always use the real stock, and the size shows Out of stock when the real stock is 0.', 'error' => $err($id('display_stock'))]); ?>
     </div>
     <label class="adm-check"><input type="radio" class="adm-check__input" name="default_size" value="<?= e($i) ?>"<?= !empty($size['is_default']) ? ' checked' : '' ?>><span class="adm-check__box" aria-hidden="true"></span><span class="adm-check__label">Default size (selected first on the product page)</span></label>
@@ -90,6 +82,11 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
 <?php endif; ?>
 <form method="post" action="<?= e(url($isNew ? '/admin/products/new' : '/admin/products/' . $productId)) ?>" class="adm-form" id="product-form" data-guard novalidate>
   <?= csrf_field() ?>
+  <nav class="adm-subnav" aria-label="Sections">
+    <a href="#basics">Basics</a><a href="#sizes">Sizes &amp; stock</a><?php if (!$isNew): ?><a href="#images">Photos</a><?php endif; ?><a href="#scent">Scent profile</a><a href="#visibility">Visibility</a><a href="#seo">SEO</a>
+  </nav>
+  <div class="adm-split">
+  <div class="adm-split__main">
   <div class="adm-form__section" id="basics">
     <h2 class="adm-form__section-title">Basics</h2>
     <?php partial_admin('field.php', ['type' => 'text', 'name' => 'name', 'label' => 'Name', 'value' => $form['name'], 'required' => true, 'maxlength' => 120, 'error' => $err('name'), 'attr' => ['autocomplete' => 'off']]); ?>
@@ -98,7 +95,7 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
     <p class="adm-note">Old links that redirect here: <?php foreach ($slugHistory as $i => $old): ?><?= $i > 0 ? ', ' : '' ?><span class="adm-mono"><?= e($old['old_slug']) ?></span> (<?= e((string) (int) $old['hit_count']) ?> visits)<?php endforeach; ?></p>
 <?php endif; ?>
     <?php partial_admin('field.php', ['type' => 'select', 'name' => 'collection_id', 'label' => 'Collection', 'value' => $form['collection_id'], 'options' => $collectionsOptions, 'required' => true, 'error' => $err('collection_id')]); ?>
-    <?php partial_admin('field.php', ['type' => 'radio', 'name' => 'gender', 'label' => 'Gender', 'value' => $form['gender'], 'options' => CATALOGUE_GENDER_LABELS, 'required' => true, 'error' => $err('gender')]); ?>
+    <?php partial_admin('field.php', ['type' => 'segment', 'name' => 'gender', 'label' => 'Gender', 'value' => $form['gender'], 'options' => CATALOGUE_GENDER_LABELS, 'required' => true, 'error' => $err('gender')]); ?>
     <?php partial_admin('field.php', ['type' => 'select', 'name' => 'scent_family', 'label' => 'Scent family', 'value' => $form['scent_family'], 'options' => $familyOptions, 'help' => 'Drives the /scent landing pages and the Scent Finder. Manage the list under Scent families.', 'error' => $err('scent_family')]); ?>
     <?php partial_admin('field.php', ['type' => 'textarea', 'name' => 'short_description', 'label' => 'Short description', 'value' => $form['short_description'], 'rows' => 2, 'maxlength' => 200, 'help' => 'One line under the name on cards and in search results.', 'error' => $err('short_description')]); ?>
     <?php partial_admin('field.php', ['type' => 'textarea', 'name' => 'description', 'label' => 'Description', 'value' => $form['description'], 'rows' => 8, 'help' => 'Plain text. Leave a blank line between paragraphs.', 'error' => $err('description')]); ?>
@@ -156,16 +153,6 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
     <?php partial_admin('field.php', ['type' => 'checkgroup', 'name' => 'best_season', 'label' => 'Best season', 'value' => catalogue_csv_parse($form['best_season']), 'options' => $seasonOptions]); ?>
     <?php partial_admin('field.php', ['type' => 'checkgroup', 'name' => 'occasion', 'label' => 'Occasion', 'value' => catalogue_csv_parse($form['occasion']), 'options' => $occasionOptions]); ?>
   </div>
-  <div class="adm-form__section" id="visibility">
-    <h2 class="adm-form__section-title">Visibility</h2>
-    <?php partial_admin('field.php', ['type' => 'segment', 'name' => 'is_active', 'label' => 'Status', 'value' => (string) (int) $form['is_active'], 'options' => ['1' => 'Live', '0' => 'Hidden'], 'help' => 'Hidden products keep their link but never show in the shop.']); ?>
-    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'is_featured', 'label' => 'Featured on the home page', 'value' => (int) $form['is_featured'] === 1]); ?>
-    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'is_new', 'label' => 'Show the NEW badge', 'value' => (int) $form['is_new'] === 1, 'help' => 'NEW also shows automatically for 30 days after the publish date.']); ?>
-    <div class="adm-field--pair">
-      <?php partial_admin('field.php', ['type' => 'date', 'name' => 'published_at', 'label' => 'Publish date', 'value' => $form['published_at'], 'help' => 'Orders New Arrivals. Blank sorts last.', 'error' => $err('published_at')]); ?>
-      <?php partial_admin('field.php', ['type' => 'int', 'name' => 'sort_order', 'label' => 'Sort order', 'value' => (string) $form['sort_order'], 'help' => 'Lower numbers show first.', 'error' => $err('sort_order')]); ?>
-    </div>
-  </div>
   <div class="adm-form__section" id="seo">
     <h2 class="adm-form__section-title">Search engines</h2>
     <?php partial_admin('field.php', ['type' => 'text', 'name' => 'seo_title', 'label' => 'SEO title', 'value' => $form['seo_title'], 'maxlength' => 60, 'attr' => ['data-counter-warn' => '55'], 'help' => 'Blank uses "Name — Family perfume". "| Sky Fragrances" is added automatically.', 'error' => $err('seo_title')]); ?>
@@ -177,6 +164,44 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
       <p class="adm-muted" data-seo-desc style="margin:0"></p>
     </div>
   </div>
+  </div>
+  <aside class="adm-split__side">
+<?php if (!$isNew): ?>
+<?php $stockTotal = array_sum(array_map(static fn (array $s): int => (int) ($s['stock'] ?? 0), $sizes)); $prices = array_filter(array_map(static fn (array $s): int => money_paisa((string) ($s['price'] ?? '0')), $sizes)); ?>
+<section class="adm-card" aria-label="Product summary">
+  <div class="adm-media"><img class="adm-thumb" src="<?= e(catalogue_product_image_url($productId, $images[0]['filename'] ?? null, 'thumb')) ?>" alt="" width="48" height="60"><div class="adm-media__body"><span class="adm-media__title"><?= e((string) $product['name']) ?></span><span class="adm-media__meta"><?= e(count($sizes) . ' ' . (count($sizes) === 1 ? 'size' : 'sizes') . ' · ' . $stockTotal . ' in stock') ?></span></div></div>
+  <dl class="adm-dl adm-cluster--spaced">
+    <dt>On order lines</dt><dd><?= e((string) $orderLines) ?></dd>
+    <dt>Price range</dt><dd><?= $prices === [] ? '—' : e(money(money_from_paisa(min($prices))) . (min($prices) !== max($prices) ? ' – ' . money(money_from_paisa(max($prices))) : '')) ?></dd>
+  </dl>
+</section>
+<?php endif; ?>
+  <div class="adm-form__section" id="visibility">
+    <h2 class="adm-form__section-title">Visibility</h2>
+    <?php partial_admin('field.php', ['type' => 'segment', 'name' => 'is_active', 'label' => 'Status', 'value' => (string) (int) $form['is_active'], 'options' => ['1' => 'Live', '0' => 'Hidden'], 'help' => 'Hidden products keep their link but never show in the shop.']); ?>
+    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'is_featured', 'label' => 'Featured on the home page', 'value' => (int) $form['is_featured'] === 1]); ?>
+    <?php partial_admin('field.php', ['type' => 'checkbox', 'name' => 'is_new', 'label' => 'Show the NEW badge', 'value' => (int) $form['is_new'] === 1, 'help' => 'NEW also shows automatically for 30 days after the publish date.']); ?>
+    <div class="adm-field--pair">
+      <?php partial_admin('field.php', ['type' => 'date', 'name' => 'published_at', 'label' => 'Publish date', 'value' => $form['published_at'], 'help' => 'Orders New Arrivals. Blank sorts last.', 'error' => $err('published_at')]); ?>
+      <?php partial_admin('field.php', ['type' => 'int', 'name' => 'sort_order', 'label' => 'Sort order', 'value' => (string) $form['sort_order'], 'help' => 'Lower numbers show first.', 'error' => $err('sort_order')]); ?>
+    </div>
+  </div>
+<?php if (!$isNew): ?>
+<section class="adm-card adm-card--danger" aria-labelledby="product-remove-title">
+  <h2 class="adm-card__title" id="product-remove-title">Remove this product</h2>
+<?php if ($hasOrders): ?>
+  <p class="adm-muted">This perfume is on <?= e((string) $orderLines) ?> order line<?= $orderLines === 1 ? '' : 's' ?>, so it cannot be deleted. Deleting hides it from the shop and keeps it on your past orders and invoices.</p>
+<?php else: ?>
+  <p class="adm-muted">No orders reference it yet, so deleting removes the product, its sizes and its photos for good. Prefer hiding it if you might bring it back.</p>
+<?php endif; ?>
+  <div class="adm-cluster">
+    <?php partial_admin('button.php', ['label' => (int) $form['is_active'] === 1 ? 'Hide from shop' : 'Make live', 'size' => 'sm', 'icon' => (int) $form['is_active'] === 1 ? 'eye-off' : 'eye', 'attr' => ['form' => 'product-toggle-form']]); ?>
+    <?php partial_admin('button.php', ['label' => $hasOrders ? 'Delete (hides it)' : 'Delete for good', 'variant' => 'danger', 'size' => 'sm', 'icon' => 'trash', 'attr' => ['form' => 'product-delete-form'], 'confirm' => 'Delete ' . $product['name'] . "?\n" . ($hasOrders ? 'It stays on past orders and is hidden from the shop.' : 'The product, its sizes and photos are removed. This cannot be undone.'), 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete']); ?>
+  </div>
+</section>
+<?php endif; ?>
+  </aside>
+  </div>
   <?php partial_admin('action-bar.php', ['note' => $isNew ? 'Photos can be added after saving.' : 'Saves every section above.', 'buttons' => [
       ['label' => $isNew ? 'Create product' : 'Save', 'name' => 'after', 'value' => $isNew ? 'stay' : 'list'],
       ['label' => 'Save & add another', 'name' => 'after', 'value' => 'add', 'variant' => 'ghost'],
@@ -186,17 +211,11 @@ $sizeRow = static function (string $i, array $size, int $threshold) use ($err): 
 <form method="post" action="<?= e(url('/admin/products/' . $productId . '/images')) ?>" enctype="multipart/form-data" id="product-upload-form" hidden>
   <?= csrf_field() ?>
 </form>
-<div class="adm-card adm-card--danger adm-form">
-  <h2 class="adm-card__title">Remove this product</h2>
-<?php if ($hasOrders): ?>
-  <p class="adm-muted">This perfume is on <?= e((string) $orderLines) ?> order line<?= $orderLines === 1 ? '' : 's' ?>, so it cannot be deleted. Deleting hides it from the shop and keeps it on your past orders and invoices.</p>
-<?php else: ?>
-  <p class="adm-muted">No orders reference it yet, so deleting removes the product, its sizes and its photos for good. Prefer hiding it if you might bring it back.</p>
-<?php endif; ?>
-  <div class="adm-cluster">
-    <?php partial_admin('button.php', ['label' => (int) $form['is_active'] === 1 ? 'Hide from shop' : 'Make live', 'post' => '/admin/products/' . $productId . '/toggle']); ?>
-    <?php partial_admin('button.php', ['label' => $hasOrders ? 'Delete (hides it)' : 'Delete for good', 'variant' => 'danger', 'post' => '/admin/products/' . $productId . '/delete', 'confirm' => 'Delete ' . $product['name'] . "?\n" . ($hasOrders ? 'It stays on past orders and is hidden from the shop.' : 'The product, its sizes and photos are removed. This cannot be undone.'), 'confirm_word' => 'DELETE', 'confirm_label' => 'Yes, delete']); ?>
-  </div>
-</div>
+<form method="post" action="<?= e(url('/admin/products/' . $productId . '/toggle')) ?>" id="product-toggle-form" hidden>
+  <?= csrf_field() ?>
+</form>
+<form method="post" action="<?= e(url('/admin/products/' . $productId . '/delete')) ?>" id="product-delete-form" hidden>
+  <?= csrf_field() ?>
+</form>
 <?php endif; ?>
 <script src="<?= e(asset('js/admin-catalogue.js')) ?>" defer></script>

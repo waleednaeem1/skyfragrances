@@ -349,7 +349,7 @@ function catalogue_tile_html(array $image, array $product, array $sizes): string
     $html = '<li class="adm-tile' . ($primary ? ' is-primary' : '') . '" data-sortable-item data-id="' . $id . '">';
     $html .= '<img class="adm-tile__img" src="' . e($thumb) . '" alt="" width="' . (int) ($image['width'] ?? 0) . '" height="' . (int) ($image['height'] ?? 0) . '" loading="lazy">';
     $html .= '<button type="button" class="adm-tile__handle" data-sortable-handle aria-label="Drag to reorder">&#8801;</button>';
-    $html .= '<span class="adm-tile__primary" data-tile-primary-badge' . ($primary ? '' : ' hidden') . '><span class="adm-badge adm-badge--gold adm-badge--sm">Primary</span></span>';
+    $html .= '<span class="adm-tile__primary" data-tile-primary-badge' . ($primary ? '' : ' hidden') . '><span class="adm-badge adm-badge--ink adm-badge--sm">Primary</span></span>';
     $html .= '<div class="adm-tile__tools">';
     $html .= '<button type="button" class="adm-btn adm-btn--ghost adm-btn--sm" data-move="up" aria-label="Move earlier">&uarr;</button>';
     $html .= '<button type="button" class="adm-btn adm-btn--ghost adm-btn--sm" data-move="down" aria-label="Move later">&darr;</button>';

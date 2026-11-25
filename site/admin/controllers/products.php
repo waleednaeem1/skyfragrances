@@ -2,6 +2,7 @@
 defined('SKYFR') || exit;
 
 require_once __DIR__ . '/catalogue.php';
+require_once __DIR__ . '/dashboard-period.php';
 
 const PRODUCTS_SORTS = ['date_desc', 'date_asc', 'name_asc', 'name_desc', 'price_asc', 'price_desc', 'stock_asc', 'stock_desc', 'best'];
 const PRODUCTS_BULK_ACTIONS = ['live', 'hide', 'feature', 'unfeature', 'new', 'clear_new', 'move', 'delete'];
@@ -327,4 +328,15 @@ render_admin('products.php', [
     'outCount' => $outCount,
     'lowCount' => $lowCount,
     'bulkMove' => $bulkMove ?? null,
+    'statusCounts' => db_fetch('SELECT COALESCE(SUM(deleted_at IS NULL), 0) AS total, COALESCE(SUM(deleted_at IS NULL AND is_active = 1), 0) AS live, COALESCE(SUM(deleted_at IS NULL AND is_active = 0), 0) AS hidden FROM products'),
+    'genderMix' => db_fetch_all('SELECT gender, COUNT(*) AS n FROM products WHERE deleted_at IS NULL GROUP BY gender ORDER BY n DESC'),
+    'topSeller' => db_fetch(
+        'SELECT oi.product_id, MAX(oi.product_name) AS name, SUM(oi.quantity) AS qty,
+                (SELECT COALESCE(SUM(s.stock), 0) FROM product_sizes s WHERE s.product_id = oi.product_id AND s.is_active = 1) AS stock,
+                (SELECT i.filename FROM product_images i WHERE i.product_id = oi.product_id ORDER BY i.is_primary DESC, i.sort_order ASC LIMIT 1) AS image
+         FROM order_items oi JOIN orders o ON o.id = oi.order_id
+         WHERE oi.product_id IS NOT NULL AND o.status IN ' . DASHBOARD_REVENUE_STATUSES . ' AND o.created_at >= :since
+         GROUP BY oi.product_id ORDER BY qty DESC LIMIT 1',
+        ['since' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Karachi')))->modify('-30 days')->format('Y-m-d H:i:s')]
+    ),
 ], ['title' => 'Products', 'body_class' => 'admin t-light admin-products', 'wide' => true]);

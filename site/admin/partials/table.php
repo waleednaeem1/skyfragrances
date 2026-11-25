@@ -25,7 +25,7 @@ $sortLink = static function (array $column) use ($sortParam, $sortCurrent): arra
     return ['href' => url(request_path()) . '?' . http_build_query($q), 'active' => $active, 'dir' => $dir];
 };
 $rowForms = [];
-$renderAction = static function (array $action, array $defaults) use ($bulk, &$rowForms): void {
+$renderAction = static function (array $action) use ($bulk, &$rowForms): void {
     if ($bulk !== null && !empty($action['post'])) {
         $fields = (array) ($action['fields'] ?? []);
         $formId = 'row-form-' . substr(md5((string) $action['post'] . '?' . http_build_query($fields)), 0, 12);
@@ -33,13 +33,10 @@ $renderAction = static function (array $action, array $defaults) use ($bulk, &$r
         $action['attr'] = (array) ($action['attr'] ?? []) + ['form' => $formId];
         unset($action['post'], $action['fields']);
     }
+    $defaults = empty($action['icon']) ? ['variant' => 'text', 'size' => 'sm'] : ['variant' => 'secondary', 'size' => 'sm', 'icon_only' => true];
     partial_admin('button.php', $action + $defaults);
 };
-$renderActions = static function (array $actions, string $rowId, string $variantDefault) use ($renderAction): void {
-    foreach ($actions as $action) {
-        $renderAction($action, ['variant' => $variantDefault, 'size' => 'sm']);
-    }
-};
+$hasActions = !empty(array_filter(array_column($rows, 'actions')));
 ?>
 <div class="adm-data" data-list id="<?= e($listId) ?>">
 <?php if ($rows === []): ?>
@@ -51,10 +48,7 @@ $renderActions = static function (array $actions, string $rowId, string $variant
 <?php foreach ((array) ($bulk['fields'] ?? []) as $bulkField => $bulkValue): ?>
   <input type="hidden" name="<?= e((string) $bulkField) ?>" value="<?= e((string) $bulkValue) ?>">
 <?php endforeach; ?>
-  <div class="adm-data__toolbar">
-    <button type="button" class="adm-btn adm-btn--text adm-btn--sm" data-select-toggle aria-pressed="false" aria-controls="<?= e($listId) ?>">Select</button>
-    <label class="adm-check adm-data__selectall" data-select-all-wrap hidden><input type="checkbox" class="adm-check__input" data-select-all><span class="adm-check__box" aria-hidden="true"></span><span class="adm-check__label">All on this page</span></label>
-  </div>
+<?php partial_admin('action-bar.php', ['mode' => 'bulk', 'buttons' => (array) ($bulk['buttons'] ?? [])]); ?>
 <?php endif; ?>
   <div class="adm-table-wrap">
     <table class="adm-table">
@@ -62,7 +56,7 @@ $renderActions = static function (array $actions, string $rowId, string $variant
       <thead>
         <tr>
 <?php if ($bulk !== null): ?>
-          <th scope="col" class="adm-table__th adm-table__th--check"><span class="u-sr-only">Select</span></th>
+          <th scope="col" class="adm-table__th adm-table__th--check"><label class="adm-check adm-check--bare"><input type="checkbox" class="adm-check__input" data-select-all><span class="adm-check__box" aria-hidden="true"></span><span class="u-sr-only">Select all rows on this page</span></label></th>
 <?php endif; ?>
 <?php foreach ($columns as $column): ?>
 <?php $th = 'adm-table__th' . (($column['align'] ?? '') === 'right' ? ' adm-table__th--right' : '') . (!empty($column['class']) ? ' ' . $column['class'] : ''); ?>
@@ -72,7 +66,7 @@ $renderActions = static function (array $actions, string $rowId, string $variant
           <th scope="col" class="<?= e($th) ?>"><?= e((string) $column['label']) ?></th>
 <?php endif; ?>
 <?php endforeach; ?>
-<?php if (!empty(array_filter(array_column($rows, 'actions')))): ?>
+<?php if ($hasActions): ?>
           <th scope="col" class="adm-table__th adm-table__th--actions"><span class="u-sr-only">Actions</span></th>
 <?php endif; ?>
         </tr>
@@ -86,62 +80,15 @@ $renderActions = static function (array $actions, string $rowId, string $variant
 <?php foreach ($columns as $column): $key = (string) $column['key']; ?>
           <td class="adm-table__td<?= ($column['align'] ?? '') === 'right' ? ' adm-table__td--right' : '' ?><?= !empty($column['class']) ? ' ' . e((string) $column['class']) : '' ?>"><?= $row['cells'][$key] ?? '' ?></td>
 <?php endforeach; ?>
-<?php if ($actions !== []): ?>
-          <td class="adm-table__td adm-table__td--actions"><div class="adm-table__actions"><?php $renderActions($actions, $rowId, 'text'); ?></div></td>
+<?php if ($hasActions): ?>
+          <td class="adm-table__td adm-table__td--actions"><div class="adm-table__actions"><?php foreach ($actions as $action) { $renderAction($action); } ?></div></td>
 <?php endif; ?>
         </tr>
 <?php endforeach; ?>
       </tbody>
     </table>
   </div>
-  <ul class="adm-cards">
-<?php foreach ($rows as $row): $rowId = (string) ($row[$idKey] ?? ''); $href = (string) ($row['href'] ?? ''); $card = is_array($row['card'] ?? null) ? $row['card'] : []; $actions = is_array($row['actions'] ?? null) ? $row['actions'] : []; $menuId = $listId . '-menu-' . preg_replace('/[^a-z0-9_-]/i', '', $rowId); ?>
-    <li class="adm-rowcard<?= !empty($row['class']) ? ' ' . e((string) $row['class']) : '' ?>"<?= $href !== '' ? ' data-href="' . e(url($href)) . '"' : '' ?>>
 <?php if ($bulk !== null): ?>
-      <label class="adm-check adm-check--bare adm-rowcard__check"><input type="checkbox" class="adm-check__input" name="ids[]" value="<?= e($rowId) ?>" data-select-row><span class="adm-check__box" aria-hidden="true"></span><span class="u-sr-only">Select</span></label>
-<?php endif; ?>
-      <div class="adm-rowcard__body">
-        <div class="adm-rowcard__head">
-          <div class="adm-rowcard__title"><?php if ($href !== ''): ?><a class="adm-rowcard__link" href="<?= e(url($href)) ?>"><?= $card['title'] ?? '' ?></a><?php else: ?><?= $card['title'] ?? '' ?><?php endif; ?></div>
-<?php if (!empty($card['chip'])): ?>
-          <div class="adm-rowcard__chip"><?= $card['chip'] ?></div>
-<?php endif; ?>
-        </div>
-<?php if (!empty($card['sub'])): ?>
-        <p class="adm-rowcard__sub"><?= $card['sub'] ?></p>
-<?php endif; ?>
-<?php foreach (array_slice((array) ($card['lines'] ?? []), 0, 3) as $line): ?>
-        <p class="adm-rowcard__line"><?php if (!empty($line['label'])): ?><span class="adm-rowcard__label"><?= e((string) $line['label']) ?>:</span> <?php endif; ?><?= $line['html'] ?? '' ?></p>
-<?php endforeach; ?>
-<?php if (!empty($card['money']) || !empty($card['aside'])): ?>
-        <div class="adm-rowcard__figures"><span class="adm-rowcard__money"><?= $card['money'] ?? '' ?></span><span class="adm-rowcard__aside"><?= $card['aside'] ?? '' ?></span></div>
-<?php endif; ?>
-      </div>
-<?php if ($actions !== []): ?>
-      <div class="adm-rowcard__actions">
-<?php $renderActions(array_slice($actions, 0, (int) ($card['inline_actions'] ?? 2)), $rowId, 'ghost'); ?>
-<?php if (count($actions) > (int) ($card['inline_actions'] ?? 2)): ?>
-        <button type="button" class="adm-btn adm-btn--ghost adm-btn--sm adm-rowcard__more" data-sheet-open="<?= e($menuId) ?>" aria-controls="<?= e($menuId) ?>" aria-expanded="false" aria-label="More actions">&#8942;</button>
-<?php endif; ?>
-      </div>
-<?php if (count($actions) > (int) ($card['inline_actions'] ?? 2)): ?>
-      <div class="adm-sheet" id="<?= e($menuId) ?>" hidden data-sheet>
-        <div class="adm-sheet__panel adm-sheet__panel--menu" role="dialog" aria-modal="true" aria-label="Actions" tabindex="-1">
-          <div class="adm-sheet__handle" aria-hidden="true"></div>
-          <p class="adm-sheet__title"><?= strip_tags((string) ($card['title'] ?? '')) ?></p>
-<?php foreach ($actions as $action): ?>
-<?php $renderAction($action, ['variant' => 'sheet', 'block' => true]); ?>
-<?php endforeach; ?>
-          <button type="button" class="adm-sheet__item adm-sheet__item--close" data-sheet-close>Close</button>
-        </div>
-      </div>
-<?php endif; ?>
-<?php endif; ?>
-    </li>
-<?php endforeach; ?>
-  </ul>
-<?php if ($bulk !== null): ?>
-<?php partial_admin('action-bar.php', ['mode' => 'bulk', 'buttons' => (array) ($bulk['buttons'] ?? [])]); ?>
 </form>
 <?php foreach ($rowForms as $formId => $rowForm): ?>
 <form id="<?= e($formId) ?>" method="post" action="<?= e(url($rowForm['post'])) ?>" hidden>
