@@ -21,7 +21,7 @@ $cartTrustItems = [
 ];
 ?>
 <section class="section section--tight">
-  <div class="container">
+  <div class="shell">
     <header class="page-head">
       <h1 class="page-head__title"><?= e($pageHeading) ?></h1>
 <?php if (!$cart['is_empty']): ?>
@@ -141,17 +141,14 @@ $cartTrustItems = [
         </div>
       </aside>
     </div>
-    <div class="trust trust--row sf-reveal sf-reveal--stagger">
+    <ul class="cart-trust" data-reveal>
 <?php foreach ($cartTrustItems as [$trustIcon, $trustTitle, $trustText]): ?>
-      <div class="trust__item">
-        <?php partial('icon.php', ['name' => $trustIcon, 'size' => 24, 'class' => 'trust__icon']); ?>
-        <div>
-          <h3 class="trust__title"><?= e($trustTitle) ?></h3>
-          <p class="trust__text"><?= e($trustText) ?></p>
-        </div>
-      </div>
+      <li class="cart-trust__item">
+        <?php partial('icon.php', ['name' => $trustIcon, 'size' => 22, 'class' => 'cart-trust__icon']); ?>
+        <span><strong class="cart-trust__title"><?= e($trustTitle) ?></strong><?= e($trustText) ?></span>
+      </li>
 <?php endforeach; ?>
-    </div>
+    </ul>
 <?php if ($cart['can_checkout']): ?>
 <div class="sticky-bar js-sticky-bar" data-sticky-when-hidden aria-label="Checkout">
   <div class="sticky-bar__info">

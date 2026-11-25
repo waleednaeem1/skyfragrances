@@ -14,7 +14,7 @@ $classes = 'newsletter' . ($variant === 'compact' ? ' newsletter--compact' : ' n
 ?>
 <div class="<?= e($classes) ?>"<?= $variant === 'compact' ? '' : ' id="newsletter"' ?>>
 <?php if ($heading !== ''): ?>
-  <<?= $headingTag ?> class="<?= $variant === 'compact' ? 'h4' : 'h2' ?>"<?= $headingId !== '' ? ' id="' . e($headingId) . '"' : '' ?>><?= e($heading) ?></<?= $headingTag ?>>
+  <<?= $headingTag ?> class="<?= $variant === 'compact' ? 'h4' : 'h2' ?>"<?= $headingId !== '' ? ' id="' . e($headingId) . '"' : '' ?>><?= em_tail($heading, $variant === 'compact' ? 0 : 2) ?></<?= $headingTag ?>>
 <?php endif; ?>
 <?php if ($text !== '' && $variant !== 'compact'): ?>
   <p class="text-muted"><?= e($text) ?></p>

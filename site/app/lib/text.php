@@ -159,3 +159,12 @@ function sanitize_html(?string $html): string
     }
     return trim($out);
 }
+
+function em_tail(string $title, int $words = 1): string
+{
+    $parts = preg_split('/\s+/u', trim($title)) ?: [];
+    if ($words < 1 || count($parts) <= $words) {
+        return e(trim($title));
+    }
+    return e(implode(' ', array_slice($parts, 0, -$words))) . ' <em>' . e(implode(' ', array_slice($parts, -$words))) . '</em>';
+}

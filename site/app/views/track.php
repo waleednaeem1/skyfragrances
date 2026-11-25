@@ -15,7 +15,7 @@ $checkIcon = '<svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill=
 $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M15 9V5.5A1.5 1.5 0 0 0 13.5 4h-8A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H9"/></svg>';
 ?>
 <section class="section section--tight">
-  <div class="container container--narrow">
+  <div class="shell shell--narrow">
     <header class="page-head page-head--center">
       <h1 class="page-head__title"><?= e($pageHeading) ?></h1>
       <p class="page-head__intro">Enter your order number and the phone number you ordered with. Both are on your confirmation page.</p>
@@ -70,7 +70,19 @@ $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="
 <?php endif; ?>
       </div>
 <?php else: ?>
-      <ol class="timeline">
+<?php
+    $timelineSteps = count($order['timeline']);
+    $reached = 0;
+    foreach ($order['timeline'] as $stepIndex => $step) {
+        if ($step['state'] === 'done' || $step['state'] === 'current') {
+            $reached = $stepIndex;
+        }
+    }
+    $progress = $timelineSteps > 1 ? round($reached / ($timelineSteps - 1), 3) : 0;
+?>
+      <div class="timeline" style="--progress:<?= e((string) $progress) ?>;--steps:<?= e((string) max(1, $timelineSteps)) ?>" data-inview>
+        <span class="timeline__rail" aria-hidden="true"><span class="timeline__fill"></span><span class="timeline__truck"><?php partial('icon.php', ['name' => 'truck', 'size' => 22]); ?></span></span>
+        <ol class="timeline__steps">
 <?php foreach ($order['timeline'] as $step): ?>
         <li class="timeline__step<?= $step['state'] === 'done' ? ' is-done' : ($step['state'] === 'current' ? ' is-current' : '') ?>"<?= $step['state'] === 'current' ? ' aria-current="step"' : '' ?>>
           <span class="timeline__dot" aria-hidden="true"></span>
@@ -80,7 +92,8 @@ $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="
 <?php endif; ?>
         </li>
 <?php endforeach; ?>
-      </ol>
+        </ol>
+      </div>
 <?php if ($order['status_copy'] !== ''): ?>
       <div class="callout" role="status"><?php echo $checkIcon; ?><p><?= e($order['status_copy']) ?><?= $order['status'] === 'shipped' && $order['delivery_time'] !== '' ? ' Delivery usually takes ' . e($order['delivery_time']) . '.' : '' ?></p></div>
 <?php endif; ?>

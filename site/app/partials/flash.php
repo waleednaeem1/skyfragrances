@@ -5,7 +5,7 @@ if ($messages === []) {
     return;
 }
 ?>
-<div class="flash-stack container">
+<div class="flash-stack shell">
 <?php foreach ($messages as $flashItem): ?>
 <?php
     $flashType = (string) ($flashItem['type'] ?? 'info');

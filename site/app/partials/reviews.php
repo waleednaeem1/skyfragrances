@@ -9,10 +9,9 @@ $trapField = (string) ($trapField ?? '');
 $total = count($reviews);
 $starPath = 'M12 2.6l2.85 6.05 6.65.8-4.9 4.6 1.3 6.55L12 17.35l-5.9 3.25 1.3-6.55-4.9-4.6 6.65-.8L12 2.6z';
 ?>
-<header class="section-header sf-reveal">
-  <p class="section-header__eyebrow">What customers say</p>
-  <h2 class="section-header__title h2" id="reviews-title">Customer Reviews</h2>
-</header>
+<?php partial('section-header.php', ['eyebrow' => 'What customers say', 'title' => 'Customer reviews', 'titleId' => 'reviews-title']); ?>
+<div class="reviews-layout">
+<div class="reviews-layout__main">
 <?php if ($rating['count'] >= 1): ?>
 <div class="review-summary">
   <div class="review-summary__score">
@@ -54,9 +53,10 @@ $starPath = 'M12 2.6l2.85 6.05 6.65.8-4.9 4.6 1.3 6.55L12 17.35l-5.9 3.25 1.3-6.
   <p class="empty-state__text">Be the first to review <?= e($productName) ?>.</p>
 </div>
 <?php endif; ?>
-<div class="accordion" id="review-form-wrap">
+</div>
+<div class="accordion reviews-layout__form" id="review-form-wrap">
   <div class="accordion__item">
-    <h3 class="accordion__title h4"><button class="accordion__trigger js-accordion-trigger" type="button" aria-expanded="<?= $rating['count'] >= 1 ? 'false' : 'true' ?>" aria-controls="review-form-panel" id="review-form-trigger">Write a review<span class="accordion__glyph" aria-hidden="true"></span></button></h3>
+    <h3 class="accordion__title"><button class="accordion__trigger js-accordion-trigger" type="button" aria-expanded="<?= $rating['count'] >= 1 ? 'false' : 'true' ?>" aria-controls="review-form-panel" id="review-form-trigger">Write a review<span class="accordion__glyph" aria-hidden="true"></span></button></h3>
     <div class="accordion__panel" id="review-form-panel" role="region" aria-labelledby="review-form-trigger">
       <div class="accordion__inner">
         <div class="accordion__body">
@@ -108,4 +108,5 @@ $starPath = 'M12 2.6l2.85 6.05 6.65.8-4.9 4.6 1.3 6.55L12 17.35l-5.9 3.25 1.3-6.
       </div>
     </div>
   </div>
+</div>
 </div>

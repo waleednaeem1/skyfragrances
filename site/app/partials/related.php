@@ -20,18 +20,16 @@ $cardSrcset = static function (array $image, string $ext): string {
     return implode(', ', $parts);
 };
 ?>
-<section class="section section--divided" id="<?= e($sectionId) ?>" aria-labelledby="<?= e($sectionId) ?>-title">
-  <div class="container">
-    <header class="section-header sf-reveal">
-      <p class="section-header__eyebrow">Keep exploring</p>
-      <h2 class="section-header__title h2" id="<?= e($sectionId) ?>-title">You May Also Like</h2>
-      <a class="section-header__link" href="<?= e(url('/shop')) ?>">View all <?php partial('icon.php', ['name' => 'arrow-right', 'size' => 18]); ?></a>
-    </header>
-    <div class="rail rail--cards sf-reveal sf-reveal--stagger">
+<section class="section section--ruled" id="<?= e($sectionId) ?>" aria-labelledby="<?= e($sectionId) ?>-title">
+  <div class="shell">
+    <?php partial('section-header.php', ['eyebrow' => 'Keep exploring', 'title' => 'You may also like', 'em' => 2, 'titleId' => $sectionId . '-title', 'linkHref' => url('/shop'), 'linkLabel' => 'View all', 'rail' => 'rail-' . $sectionId]); ?>
+    <div class="rail" id="rail-<?= e($sectionId) ?>" data-rail tabindex="0" aria-label="Related fragrances, scroll sideways">
 <?php foreach ($related as $card): ?>
-      <article class="product-card<?= $card['sold_out'] ? ' is-sold-out' : '' ?>">
+      <div class="rail__item">
+      <article class="product-card tone--<?= e(scent_tone($card['family'])) ?><?= $card['sold_out'] ? ' is-sold-out' : '' ?>">
 <?php if ($card['image'] !== null): ?>
         <a class="product-card__media" href="<?= e($card['url']) ?>" tabindex="-1" aria-hidden="true">
+          <span class="product-card__glow"></span>
 <?php $webpSrcset = $cardSrcset($card['image'], 'webp'); $jpgSrcset = $cardSrcset($card['image'], 'jpg'); ?>
           <picture>
 <?php if ($webpSrcset !== ''): ?>
@@ -45,6 +43,7 @@ $cardSrcset = static function (array $image, string $ext): string {
 <?php if ($card['badges'] !== []): ?>
           <div class="badge-stack"><?php foreach ($card['badges'] as $badge): ?><span class="badge <?= e($badge['class']) ?>"><?= e($badge['text']) ?></span><?php endforeach; ?></div>
 <?php endif; ?>
+          <span class="product-card__sweep"></span>
         </a>
 <?php else: ?>
         <div class="placeholder product-card__media" role="img" aria-label="<?= e($card['name']) ?> — image coming soon">
@@ -55,15 +54,8 @@ $cardSrcset = static function (array $image, string $ext): string {
         </div>
 <?php endif; ?>
         <div class="product-card__body">
+          <p class="product-card__meta"><?= e(implode(' · ', array_filter([$card['family'], $card['size_labels']]))) ?></p>
           <h3 class="product-card__name"><a class="product-card__link" href="<?= e($card['url']) ?>"><?= e($card['name']) ?></a></h3>
-          <p class="product-card__meta">
-<?php if ($card['family'] !== ''): ?>
-            <span class="product-card__family"><?= e($card['family']) ?></span>
-<?php endif; ?>
-<?php if ($card['size_labels'] !== ''): ?>
-            <span><?= e($card['size_labels']) ?></span>
-<?php endif; ?>
-          </p>
 <?php if ($card['rating_count'] >= 1): ?>
           <p class="product-card__rating"><?php partial('stars.php', ['rating' => $card['rating_avg'], 'count' => $card['rating_count']]); ?></p>
 <?php endif; ?>
@@ -78,6 +70,7 @@ $cardSrcset = static function (array $image, string $ext): string {
           <a class="btn btn--ghost btn--block btn--card" href="<?= e($card['url']) ?>"><span class="btn__label"><?= $card['sold_out'] ? 'View details' : 'Choose size' ?></span></a>
         </div>
       </article>
+      </div>
 <?php endforeach; ?>
     </div>
   </div>

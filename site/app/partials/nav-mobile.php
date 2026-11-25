@@ -19,6 +19,10 @@ $secondaryLinks = [
 <div class="drawer-overlay js-nav-overlay" hidden></div>
 <nav id="site-nav" class="nav-mobile js-nav-mobile" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true" hidden>
   <div class="nav-mobile__head">
+    <a class="nav-mobile__brand" href="<?= e(url('/')) ?>">
+      <img src="<?= e(asset(brand_asset('img/brand/monogram-transparent-256.png'))) ?>" alt="" width="30" height="30" loading="lazy" decoding="async">
+      <?= e((string) setting('store_name', 'Sky Fragrances')) ?>
+    </a>
     <button class="nav-mobile__close js-nav-close" type="button" aria-label="Close menu">
       <?php partial('icon.php', ['name' => 'close']); ?>
     </button>

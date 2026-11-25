@@ -7,24 +7,23 @@ $shareUrl = (string) ($shareUrl ?? '');
 $retakeUrl = (string) ($retakeUrl ?? url('/scent-finder'));
 $whatsappUrl = (string) ($whatsappUrl ?? '');
 ?>
-<div class="container container--narrow">
+<div class="shell shell--narrow">
   <?php partial('breadcrumb.php', ['items' => [['label' => 'Home', 'url' => '/'], ['label' => 'Scent Finder', 'url' => '/scent-finder'], ['label' => 'Your match', 'url' => '']]]); ?>
   <header class="page-head page-head--center">
-    <p class="u-track text-muted">Scent Finder</p>
-    <h1 class="page-head__title h1 text-gold-grad" id="result-title"><?= e((string) $heading) ?></h1>
-    <p class="page-head__intro lead measure"><?= e((string) ($readout ?? '')) ?></p>
+    <p class="eyebrow">Scent Finder</p>
+    <h1 class="page-head__title" id="result-title"><?= em_tail((string) $heading) ?></h1>
+    <p class="page-head__intro"><?= e((string) ($readout ?? '')) ?></p>
   </header>
 </div>
 <?php if ($hero !== null): ?>
 <?php $product = $hero['product']; ?>
-<section class="section section--flush-top" aria-labelledby="match-title">
-  <div class="container">
-    <article class="split split--pdp" data-motion="quiz">
-      <div class="split__media quiz-card">
-        <div class="quiz-card__inner">
-          <div class="quiz-card__back" aria-hidden="true"><span class="quiz-card__frame"></span><span class="quiz-card__sigil">SF</span></div>
+<section class="section section--tight" aria-labelledby="match-title">
+  <div class="shell">
+    <article class="match" data-reveal>
+      <div class="match__media">
+        <span class="match__glow" aria-hidden="true"></span>
 <?php if ($hero['image_set'] !== null): ?>
-      <a class="product-card__media quiz-card__front" href="<?= e($product['url']) ?>" tabindex="-1" aria-hidden="true">
+      <a class="product-card__media" href="<?= e($product['url']) ?>" tabindex="-1" aria-hidden="true">
         <picture>
 <?php if (product_card_image_srcset($hero['image_set'], 'webp') !== ''): ?>
           <source type="image/webp" srcset="<?= e(product_card_image_srcset($hero['image_set'], 'webp')) ?>" sizes="(min-width: 768px) 50vw, 100vw">
@@ -33,16 +32,13 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
         </picture>
       </a>
 <?php else: ?>
-      <?php partial('placeholder.php', ['label' => (string) $product['name'], 'class' => 'product-card__media quiz-card__front']); ?>
+      <?php partial('placeholder.php', ['label' => (string) $product['name'], 'class' => 'product-card__media']); ?>
 <?php endif; ?>
-        </div>
-        <span class="quiz-card__glow" aria-hidden="true"></span>
-        <span class="quiz-card__mist" aria-hidden="true"></span>
       </div>
-      <div class="split__aside stack">
-        <p class="u-track text-muted">Your top match<?php if ((int) ($hero['match'] ?? 0) > 0): ?> <span class="quiz-match" data-match="<?= e((string) $hero['match']) ?>"><span class="u-sr-only">· <?= e((string) $hero['match']) ?>% match</span><span aria-hidden="true">· <span class="quiz-match__tick"><?= e((string) $hero['match']) ?></span>% match</span></span><?php endif; ?></p>
-        <h2 class="h2" id="match-title"><a class="product-card__link" href="<?= e($product['url']) ?>"><?= e((string) $product['name']) ?></a></h2>
-        <p class="text-muted">
+      <div class="match__body">
+        <p class="eyebrow">Your top match<?php if ((int) ($hero['match'] ?? 0) > 0): ?> <span class="quiz-match" data-match="<?= e((string) $hero['match']) ?>"><span class="u-sr-only">· <?= e((string) $hero['match']) ?>% match</span><span aria-hidden="true">· <span class="quiz-match__tick"><?= e((string) $hero['match']) ?></span>% match</span></span><?php endif; ?></p>
+        <h2 class="match__name" id="match-title"><a href="<?= e($product['url']) ?>"><?= e((string) $product['name']) ?></a></h2>
+        <p class="match__meta">
 <?php if (trim((string) ($product['collection_name'] ?? '')) !== ''): ?>
           <a href="<?= e(url('/collections/' . $product['collection_slug'])) ?>"><?= e((string) $product['collection_name']) ?></a> ·
 <?php endif; ?>
@@ -54,11 +50,11 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php endif; ?>
         </p>
 <?php if (trim((string) ($product['short_description'] ?? '')) !== ''): ?>
-        <p class="lead"><?= e((string) $product['short_description']) ?></p>
+        <p class="match__tagline"><?= e((string) $product['short_description']) ?></p>
 <?php endif; ?>
 <?php $pyramidLine = array_filter([implode(', ', $hero['notes']['top']), implode(', ', $hero['notes']['heart']), implode(', ', $hero['notes']['base'])]); ?>
 <?php if ($pyramidLine !== []): ?>
-        <p class="text-small quiz-notes"><span class="u-track text-muted">Notes</span>
+        <p class="quiz-notes"><span class="quiz-notes__label">Notes</span>
 <?php foreach (array_values($pyramidLine) as $noteIndex => $noteGroup): ?>
           <span class="quiz-notes__group"><?= $noteIndex > 0 ? '→ ' : '' ?><?= e($noteGroup) ?></span>
 <?php endforeach; ?>
@@ -74,10 +70,10 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php if ($hero['is_sale']): ?>
           <s class="price__was"><?= e($hero['was_display']) ?></s>
 <?php endif; ?>
-          <span class="price__tax">Inclusive of all taxes.</span>
+          <span class="price__tax">Inclusive of all taxes</span>
         </p>
 <?php endif; ?>
-        <div class="btn-row">
+        <div class="match__actions">
 <?php if ($hero['sold_out']): ?>
           <button class="btn btn--ghost btn--block" type="button" disabled><span class="btn__label">Sold Out</span></button>
 <?php elseif ($hero['single_size_id'] > 0): ?>
@@ -99,9 +95,9 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php endif; ?>
 <?php if ($alsoTrying !== []): ?>
 <section class="section section--divided" aria-labelledby="also-title">
-  <div class="container">
-    <?php partial('section-header.php', ['eyebrow' => 'Close seconds', 'title' => 'Also worth trying', 'titleId' => 'also-title']); ?>
-    <div class="grid grid--products sf-reveal sf-reveal--stagger">
+  <div class="shell">
+    <?php partial('section-header.php', ['eyebrow' => 'Close seconds', 'title' => 'Also worth trying', 'em' => 2, 'titleId' => 'also-title']); ?>
+    <div class="product-grid product-grid--stagger" data-inview>
 <?php foreach ($alsoTrying as $product): ?>
       <?php partial('product-card.php', ['product' => $product]); ?>
 <?php endforeach; ?>
@@ -111,9 +107,9 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php endif; ?>
 <?php if ($fillers !== []): ?>
 <section class="section section--divided" aria-labelledby="popular-title">
-  <div class="container">
+  <div class="shell">
     <?php partial('section-header.php', ['eyebrow' => $hero === null ? 'Nothing scored yet' : 'To round it out', 'title' => 'Popular right now', 'titleId' => 'popular-title', 'sub' => $hero === null ? 'Your answers did not match anything in stock just now, so here is what everyone else is wearing.' : '', 'linkHref' => url('/best-sellers'), 'linkLabel' => 'View all']); ?>
-    <div class="grid grid--products sf-reveal sf-reveal--stagger">
+    <div class="product-grid product-grid--stagger" data-inview>
 <?php foreach ($fillers as $product): ?>
       <?php partial('product-card.php', ['product' => $product]); ?>
 <?php endforeach; ?>
@@ -123,7 +119,7 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 <?php endif; ?>
 <?php if ($hero === null && $fillers === []): ?>
 <section class="section" aria-labelledby="result-title">
-  <div class="container">
+  <div class="shell">
     <div class="empty-state">
       <?php partial('icon.php', ['name' => 'compass', 'size' => 40, 'class' => 'empty-state__icon']); ?>
       <p class="empty-state__title">No fragrances match that combination.</p>
@@ -139,7 +135,7 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
 </section>
 <?php endif; ?>
 <section class="section section--tight" aria-label="Share or retake">
-  <div class="container container--narrow">
+  <div class="shell shell--narrow">
     <div class="btn-row cluster cluster--center">
       <button class="btn btn--ghost js-copy" type="button" data-copy="<?= e($shareUrl) ?>"><span class="btn__label">Share your match</span></button>
       <a class="btn btn--text" href="<?= e($retakeUrl) ?>"><span class="btn__label">Retake the quiz</span></a>
@@ -148,7 +144,7 @@ $whatsappUrl = (string) ($whatsappUrl ?? '');
   </div>
 </section>
 <section class="section section--divided" aria-label="Newsletter">
-  <div class="container container--narrow">
+  <div class="shell shell--narrow">
     <?php partial('newsletter.php', ['variant' => 'band', 'source' => 'home']); ?>
   </div>
 </section>

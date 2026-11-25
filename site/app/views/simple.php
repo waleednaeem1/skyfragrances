@@ -8,7 +8,7 @@ $pageMessage = trim((string) ($message ?? ''));
 $actions = is_array($actions ?? null) ? $actions : [['/shop', 'Continue shopping'], ['/contact', 'Contact us']];
 ?>
 <section class="section" aria-labelledby="simple-title">
-  <div class="container container--narrow">
+  <div class="shell shell--narrow">
     <div class="panel panel--sunken center">
       <h1 class="h2" id="simple-title"><?= e($pageHeading) ?></h1>
 <?php if ($pageMessage !== ''): ?>

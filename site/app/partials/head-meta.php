@@ -104,13 +104,18 @@ foreach (['jost-variable.woff2', 'cormorant-garamond-variable.woff2'] as $fontFi
 $googleVerification = (string) setting('google_verification', '');
 $siteTheme = storefront_theme();
 $bodyClasses = preg_split('/\s+/', (string) ($head['body_class'] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-$motionPage = array_intersect(['home', 'listing', 'collections', 'product', 'quiz'], $bodyClasses) !== [];
-$isHomePage = in_array('home', $bodyClasses, true);
-$hasCriticalCss = is_file(APP_ROOT . '/assets/css/critical.css');
-$deferSiteCss = $hasCriticalCss && array_intersect(['home', 'listing', 'product'], $bodyClasses) !== [] && !str_starts_with(request_path(), '/search');
-$motionVersion = 0;
-foreach (array_merge(glob(APP_ROOT . '/assets/js/motion/*.js') ?: [], glob(APP_ROOT . '/assets/js/vendor/*.js') ?: []) as $motionFile) {
-    $motionVersion = max($motionVersion, (int) @filemtime($motionFile));
+$pageSheets = [
+    'store-home.css' => ['home'],
+    'store-shop.css' => ['listing', 'collections'],
+    'store-product.css' => ['product'],
+    'store-checkout.css' => ['cart', 'checkout', 'confirmation', 'track'],
+    'store-pages.css' => ['quiz', 'page', 'contact', 'error', 'simple'],
+];
+$pageStyles = [];
+foreach ($pageSheets as $sheet => $sheetPages) {
+    if (array_intersect($sheetPages, $bodyClasses) !== [] && is_file(APP_ROOT . '/assets/css/' . $sheet)) {
+        $pageStyles[] = $sheet;
+    }
 }
 $heroPreloads = [];
 if (in_array('home', $bodyClasses, true)) {
@@ -161,27 +166,11 @@ if (in_array('home', $bodyClasses, true)) {
 <?php foreach ($heroPreloads as [$heroHref, $heroMedia]): ?>
 <link rel="preload" as="image" href="<?= e($heroHref) ?>" media="<?= e($heroMedia) ?>" fetchpriority="high">
 <?php endforeach; ?>
-<script src="<?= e(asset('js/motion/gate.js')) ?>"<?= $isHomePage ? ' data-page="home" data-intro="' . e(asset('js/intro.js')) . '"' : '' ?>></script>
-<?php if ($deferSiteCss): ?>
-<link rel="stylesheet" href="<?= e(asset('css/critical.css')) ?>">
-<link rel="preload" href="<?= e(asset('css/site.css')) ?>" as="style" fetchpriority="low">
-<link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>" media="print" data-media="all">
-<noscript><link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>"></noscript>
-<?php elseif ($hasCriticalCss): ?>
-<link rel="stylesheet" href="<?= e(asset('css/critical.css')) ?>">
-<link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
-<?php else: ?>
-<link rel="stylesheet" href="<?= e(asset('css/site.css')) ?>">
-<?php endif; ?>
-<?php if ($motionPage): ?>
-<link id="sf-motion-css" rel="stylesheet" href="<?= e(asset('css/motion.css')) ?>">
-<?php endif; ?>
+<link rel="stylesheet" href="<?= e(asset('css/store.css')) ?>">
+<?php foreach ($pageStyles as $pageStyle): ?>
+<link rel="stylesheet" href="<?= e(asset('css/' . $pageStyle)) ?>">
+<?php endforeach; ?>
 <script>document.documentElement.classList.add('js');</script>
-<?php if ($deferSiteCss): ?>
-<script src="<?= e(asset('js/css.js')) ?>" async></script>
-<?php endif; ?>
-<script src="<?= e(asset('js/motion/config.js')) ?>" defer></script>
-<script type="module" src="<?= e(asset('js/motion/core.js')) ?>" defer data-motion-v="<?= e((string) $motionVersion) ?>"></script>
 <?php foreach ($jsonld as $block): ?>
 <script type="application/ld+json"><?= ejs($block) ?></script>
 <?php endforeach; ?>

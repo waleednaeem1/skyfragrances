@@ -39,14 +39,17 @@ $paymentStatusLabel = match ((string) ($paymentStatus ?? '')) {
 $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M15 9V5.5A1.5 1.5 0 0 0 13.5 4h-8A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H9"/></svg>';
 $checkIcon = '<svg class="callout__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 ?>
-<section class="section section--tight">
-  <div class="container container--narrow">
+<section class="section section--tight confirm">
+<?php if (!$isCancelled): ?>
+  <div class="petals" aria-hidden="true" data-loop><?php for ($petal = 0; $petal < 14; $petal++): ?><i></i><?php endfor; ?></div>
+<?php endif; ?>
+  <div class="shell shell--narrow">
 <?php if ($notice !== null): ?>
     <div class="callout<?= ($notice['type'] ?? 'info') === 'error' ? ' callout--danger' : ' callout--success' ?>" role="<?= ($notice['type'] ?? 'info') === 'error' ? 'alert' : 'status' ?>"><p><?= e((string) $notice['text']) ?></p></div>
 <?php endif; ?>
     <header class="page-head page-head--center">
-      <svg class="icon text-gold-grad" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
-      <h1 class="page-head__title"><?= e($pageHeading) ?></h1>
+      <span class="success-ring<?= $isCancelled ? ' success-ring--muted' : '' ?>" aria-hidden="true"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M6 12.5l4 4L18 8"/></svg></span>
+      <h1 class="page-head__title"><?= em_tail($pageHeading, str_contains($pageHeading, ',') ? 1 : 0) ?></h1>
       <p class="page-head__intro"><?= $isCancelled ? 'This order was cancelled.' : 'Your order is in. Here is everything you need to keep.' ?></p>
       <p class="order-number"><?= e($orderNumber) ?> <button class="copy-btn js-copy" type="button" data-copy="<?= e($orderNumber) ?>" aria-label="Copy order number"><?php echo $copyIcon; ?></button></p>
       <p class="text-muted text-small">Placed <?= e((string) ($placedAt ?? '')) ?> · <span class="status-pill <?= e($statusPillClass) ?>"><?= e((string) ($statusLabel ?? '')) ?></span> <span class="status-pill <?= e($paymentPillClass) ?>"><?= e($paymentStatusLabel) ?></span></p>

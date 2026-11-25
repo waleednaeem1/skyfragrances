@@ -539,16 +539,6 @@
       button.hidden = true;
     });
   }
-  function initHeroCue() {
-    var cue = SF.qs('.js-hero-cue');
-    if (!cue) {
-      return;
-    }
-    window.addEventListener('scroll', function onScroll() {
-      cue.classList.add('is-hidden');
-      window.removeEventListener('scroll', onScroll);
-    }, { passive: true });
-  }
   function init() {
     bindDialogTriggers();
     initAccordions();
@@ -557,7 +547,6 @@
     initMegaPanel();
     initCopyButtons();
     initReadMore();
-    initHeroCue();
     if (window.location.hash === '#cart' && SF.qs('.js-cart-drawer')) {
       SF.openDialog(SF.qs('.js-cart-drawer'), { overlay: SF.qs('.js-cart-overlay') });
     }

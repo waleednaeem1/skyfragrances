@@ -34,7 +34,7 @@ $invalid = static fn (string $key): string => isset($errors[$key]) ? ' aria-inva
 $copyIcon = '<svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M15 9V5.5A1.5 1.5 0 0 0 13.5 4h-8A1.5 1.5 0 0 0 4 5.5v8A1.5 1.5 0 0 0 5.5 15H9"/></svg>';
 ?>
 <section class="section section--tight">
-  <div class="container">
+  <div class="shell">
     <header class="page-head">
       <h1 class="page-head__title"><?= e($pageHeading) ?></h1>
       <p class="page-head__intro text-muted">No account needed. Delivery in <?= e($deliveryTime) ?>, anywhere in Pakistan.</p>

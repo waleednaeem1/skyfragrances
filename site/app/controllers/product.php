@@ -150,14 +150,6 @@ function product_pick_default_size(array $sizes, int $requestedId): ?array
     return $firstInStock ?? $sizes[0];
 }
 
-function product_split_list(?string $raw): array
-{
-    if ($raw === null || trim($raw) === '') {
-        return [];
-    }
-    return array_values(array_filter(array_map('trim', explode(',', $raw)), static fn (string $v): bool => $v !== ''));
-}
-
 function product_note_fragments(array $notes): array
 {
     $words = [];

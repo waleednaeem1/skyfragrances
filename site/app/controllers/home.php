@@ -47,12 +47,45 @@ function home_attach_sizes_and_images(array ...$sets): array
     return $sets;
 }
 
+function home_hero_products(array $fallback): array
+{
+    $chosen = array_map(static fn (string $value): string => basename(trim(trim($value), '/')), explode(',', (string) setting('hero_products', '')));
+    $slugs = array_slice(array_values(array_filter($chosen)), 0, 3);
+    $keys = $slugs !== [] ? $slugs : array_map(static fn (array $row): string => (string) $row['slug'], array_slice($fallback, 0, 3));
+    if ($keys === []) {
+        return [];
+    }
+    $params = [];
+    foreach ($keys as $index => $key) {
+        $params['s' . $index] = $key;
+    }
+    $rows = db_fetch_all('SELECT id, name, slug, gender, scent_family, notes_top, notes_heart, notes_base FROM products WHERE is_active = 1 AND deleted_at IS NULL AND slug IN (:' . implode(', :', array_keys($params)) . ')', $params);
+    $bySlug = array_column($rows, null, 'slug');
+    $genders = ['him' => 'For Him', 'her' => 'For Her', 'unisex' => 'Unisex'];
+    $products = [];
+    foreach ($keys as $key) {
+        if (!isset($bySlug[$key])) {
+            continue;
+        }
+        $row = $bySlug[$key];
+        $products[] = [
+            'name' => (string) $row['name'],
+            'url' => url('/product/' . $row['slug']),
+            'family' => trim((string) $row['scent_family']),
+            'tone' => scent_tone($row['scent_family']),
+            'gender' => $genders[(string) $row['gender']] ?? '',
+            'notes' => product_notes_flat($row, 8),
+        ];
+    }
+    return $products;
+}
+
 $productSelect = 'SELECT p.id, p.name, p.slug, p.gender, p.scent_family, p.short_description, p.is_new, p.is_featured, p.rating_avg, p.rating_count, p.published_at
     FROM products p WHERE p.is_active = 1 AND p.deleted_at IS NULL';
 
-$collections = db_fetch_all('SELECT id, name, slug, tagline, image FROM collections WHERE is_active = 1 AND show_on_home = 1 ORDER BY sort_order ASC, name ASC LIMIT 5');
+$collections = db_fetch_all('SELECT id, name, slug, tagline, description, image FROM collections WHERE is_active = 1 AND show_on_home = 1 ORDER BY sort_order ASC, name ASC LIMIT 5');
 if (count($collections) < 3) {
-    $collections = db_fetch_all('SELECT id, name, slug, tagline, image FROM collections WHERE is_active = 1 ORDER BY sort_order ASC, name ASC LIMIT 5');
+    $collections = db_fetch_all('SELECT id, name, slug, tagline, description, image FROM collections WHERE is_active = 1 ORDER BY sort_order ASC, name ASC LIMIT 5');
 }
 if ($collections !== []) {
     $counts = db_fetch_pairs('SELECT collection_id, COUNT(*) FROM products WHERE is_active = 1 AND deleted_at IS NULL AND collection_id IS NOT NULL GROUP BY collection_id');
@@ -68,6 +101,16 @@ $bestSellers = db_fetch_all($productSelect . ' ORDER BY p.is_featured DESC, CASE
 $newArrivals = db_fetch_all($productSelect . ' ORDER BY p.published_at DESC, p.id DESC LIMIT ' . $newLimit);
 [$bestSellers, $newArrivals] = home_attach_sizes_and_images($bestSellers, $newArrivals);
 $hasCatalogue = count($bestSellers) >= 4;
+$heroProducts = home_hero_products($bestSellers);
+$families = db_fetch_all('SELECT name, slug, intro FROM scent_families WHERE is_active = 1 ORDER BY sort_order ASC, name ASC');
+$genderCounts = db_fetch_pairs('SELECT gender, COUNT(*) FROM products WHERE is_active = 1 AND deleted_at IS NULL GROUP BY gender');
+$doorProducts = [];
+foreach (['him', 'her', 'unisex'] as $doorGender) {
+    $doorProducts[$doorGender] = db_fetch('SELECT id, name, slug FROM products WHERE is_active = 1 AND deleted_at IS NULL AND gender = :gender ORDER BY is_featured DESC, sales_count DESC, id DESC LIMIT 1', ['gender' => $doorGender]);
+}
+[$doorRows] = home_attach_sizes_and_images(array_values(array_filter($doorProducts)));
+$doorImages = array_column($doorRows, null, 'slug');
+$marqueeNotes = array_slice(array_values(array_unique(array_merge(...array_column($heroProducts, 'notes')))), 0, 10);
 
 $reviews = [];
 if (setting_bool('home_reviews_enabled', true)) {
@@ -146,15 +189,30 @@ render($route['view'], [
         'image_mobile' => (string) setting('hero_image_mobile', ''),
         'overlay_opacity' => max(0, min(100, setting_int('hero_overlay_opacity', 60))),
         'trust' => $heroTrust,
+        'products' => $heroProducts,
+        'notes' => $marqueeNotes,
     ],
     'collections' => $collections,
     'bestSellers' => $hasCatalogue ? $bestSellers : [],
     'newArrivals' => $hasCatalogue ? $newArrivals : [],
-    'genderTiles' => [
-        ['slug' => 'for-him', 'name' => 'For Him', 'image' => (string) setting('gender_tile_men_image', ''), 'tagline' => (string) setting('gender_tile_men_caption', 'Bold. Grounded. Warm.')],
-        ['slug' => 'for-her', 'name' => 'For Her', 'image' => (string) setting('gender_tile_women_image', ''), 'tagline' => (string) setting('gender_tile_women_caption', 'Luminous. Soft. Certain.')],
-        ['slug' => 'unisex', 'name' => 'Unisex', 'image' => (string) setting('gender_tile_unisex_image', ''), 'tagline' => (string) setting('gender_tile_unisex_caption', 'Neither. Both. Entirely yours.')],
-    ],
+    'genderTiles' => array_map(static function (array $tile) use ($genderCounts, $doorProducts, $doorImages): array {
+        $doorProduct = $doorProducts[$tile['gender']] ?? null;
+        $tile['count'] = (int) ($genderCounts[$tile['gender']] ?? 0);
+        $tile['product'] = $doorProduct !== null ? ($doorImages[$doorProduct['slug']] ?? null) : null;
+        return $tile;
+    }, [
+        ['slug' => 'for-him', 'gender' => 'him', 'tone' => 'him', 'name' => 'For Him', 'image' => (string) setting('gender_tile_men_image', ''), 'tagline' => (string) setting('gender_tile_men_caption', 'Bold. Grounded. Warm.')],
+        ['slug' => 'for-her', 'gender' => 'her', 'tone' => 'her', 'name' => 'For Her', 'image' => (string) setting('gender_tile_women_image', ''), 'tagline' => (string) setting('gender_tile_women_caption', 'Luminous. Soft. Certain.')],
+        ['slug' => 'unisex', 'gender' => 'unisex', 'tone' => 'unisex', 'name' => 'Unisex', 'image' => (string) setting('gender_tile_unisex_image', ''), 'tagline' => (string) setting('gender_tile_unisex_caption', 'Neither. Both. Entirely yours.')],
+    ]),
+    'families' => $families,
+    'perks' => array_values(array_filter([
+        'Free delivery over ' . $thresholdDisplay,
+        trim((string) setting('delivery_time', '2–4 working days')),
+        max(0, setting_int('returns_days', 7)) > 0 ? max(0, setting_int('returns_days', 7)) . '-day exchange' : '',
+        'Made for Pakistan',
+        setting_bool('cod_enabled', false) ? 'Cash on delivery' : '',
+    ])),
     'quizBand' => setting_bool('quiz_band_enabled', true) ? [
         'eyebrow' => (string) setting('quiz_band_heading', 'Not sure where to start?'),
         'heading' => 'Find your signature scent in 60 seconds',

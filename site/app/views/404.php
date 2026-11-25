@@ -29,7 +29,7 @@ if ($status === 404 && function_exists('db_fetch_all')) {
 }
 ?>
 <section class="section" aria-labelledby="not-found-title">
-  <div class="container container--narrow">
+  <div class="shell shell--narrow">
     <div class="empty-state">
       <p class="h-display text-gold-grad" aria-hidden="true"><?= e((string) $status) ?></p>
       <h1 class="empty-state__title h2" id="not-found-title"><?= e($pageHeading) ?></h1>
@@ -61,9 +61,9 @@ if ($status === 404 && function_exists('db_fetch_all')) {
 </section>
 <?php if ($popular !== []): ?>
 <section class="section section--divided section--tight" aria-labelledby="popular-title">
-  <div class="container">
+  <div class="shell">
     <?php partial('section-header.php', ['eyebrow' => 'Meanwhile', 'title' => 'Popular right now', 'titleId' => 'popular-title', 'linkHref' => url('/best-sellers'), 'linkLabel' => 'View all', 'reveal' => false]); ?>
-    <div class="grid grid--products">
+    <div class="product-grid">
 <?php foreach ($popular as $product): ?>
       <?php partial('product-card.php', ['product' => $product]); ?>
 <?php endforeach; ?>

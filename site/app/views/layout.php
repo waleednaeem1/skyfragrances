@@ -28,18 +28,17 @@ $noJsNavLinks = [
 <?php partial('head-meta.php', ['head' => $head]); ?>
 <meta name="csrf-token" content="<?= session_status() === PHP_SESSION_ACTIVE ? e(csrf_token()) : '' ?>">
 </head>
-<body class="<?= e($head['body_class']) ?>" data-base="<?= e(BASE_PATH) ?>" data-motion="micro">
+<body class="<?= e($head['body_class']) ?>" data-base="<?= e(BASE_PATH) ?>">
 <a class="skip-link" href="#main">Skip to content</a>
-<?php if ($isHome) { partial('intro.php'); } ?>
 <?php partial('announcement-bar.php'); ?>
 <div class="header-sentinel" aria-hidden="true"></div>
-<?php partial('header.php', ['isHome' => $isHome, 'collections' => $chromeCollections]); ?>
+<?php partial('header.php', ['collections' => $chromeCollections]); ?>
 <?php partial('nav-mobile.php', ['collections' => $chromeCollections]); ?>
 <main id="main" class="site-main" tabindex="-1">
 <?php partial('flash.php'); ?>
 <?php echo $content; ?>
 </main>
-<nav class="site-footer__nav-fallback container" id="site-nav-fallback" aria-label="Site">
+<nav class="site-footer__nav-fallback shell" id="site-nav-fallback" aria-label="Site">
   <ul class="cluster">
 <?php foreach ($noJsNavLinks as [$fallbackPath, $fallbackLabel]): ?>
     <li><a class="btn btn--text" href="<?= e(url($fallbackPath)) ?>"><span class="btn__label"><?= e($fallbackLabel) ?></span></a></li>
@@ -50,10 +49,16 @@ $noJsNavLinks = [
 <?php partial('cart-drawer.php'); ?>
 <?php partial('whatsapp-button.php'); ?>
 <?php partial('toast-region.php'); ?>
-<?php partial('transition-overlay.php', ['bodyClasses' => $bodyClasses]); ?>
 <script src="<?= e(asset('js/reveal.js')) ?>" defer></script>
 <script src="<?= e(asset('js/ui.js')) ?>" defer></script>
+<script src="<?= e(asset('js/store.js')) ?>" defer></script>
 <script src="<?= e(asset('js/cart.js')) ?>" defer></script>
+<?php if ($isHome): ?>
+<script src="<?= e(asset('js/home.js')) ?>" defer></script>
+<?php endif; ?>
+<?php if (in_array('quiz', $bodyClasses, true) && !in_array('quiz-result', $bodyClasses, true)): ?>
+<script src="<?= e(asset('js/quiz.js')) ?>" defer></script>
+<?php endif; ?>
 <?php if ($isProduct): ?>
 <script src="<?= e(asset('js/product.js')) ?>" defer></script>
 <?php endif; ?>

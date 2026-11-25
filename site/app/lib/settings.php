@@ -35,6 +35,7 @@ function settings_defaults(): array
         'hero_image_desktop' => '',
         'hero_image_mobile' => '',
         'hero_trust_line' => 'Cash on delivery · Nationwide',
+        'hero_products' => '',
         'home_bestsellers_count' => '8',
         'home_new_count' => '8',
         'home_reviews_enabled' => '1',

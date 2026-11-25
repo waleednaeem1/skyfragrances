@@ -3,64 +3,65 @@ defined('SKYFR') || exit;
 $questions = is_array($questions ?? null) ? $questions : [];
 $total = max(1, (int) ($total ?? count($questions)));
 ?>
-<div class="container container--narrow">
-  <?php partial('breadcrumb.php', ['items' => [['label' => 'Home', 'url' => '/'], ['label' => 'Scent Finder', 'url' => '']]]); ?>
-  <header class="page-head page-head--center">
-    <p class="u-track text-muted">Scent Finder</p>
-    <h1 class="page-head__title h1" id="quiz-title"><?= e((string) $heading) ?></h1>
-    <p class="page-head__intro lead measure">Five quick questions. No email, nothing stored — just three perfumes that agree with you.</p>
-  </header>
-</div>
-<section class="section section--flush-top" aria-labelledby="quiz-title">
-  <div class="container container--narrow">
-    <form class="form js-validate js-quiz stack" method="get" action="<?= e((string) $resultUrl) ?>" data-motion="quiz">
-      <div class="form__summary js-form-summary" role="alert" hidden></div>
-      <p class="u-sr-only js-quiz-live" aria-live="polite"></p>
-      <div class="quiz-deck">
+<section class="finder" aria-labelledby="quiz-title">
+  <div class="finder__mist" aria-hidden="true" data-loop><span></span><span></span></div>
+  <div class="shell finder__grid">
+    <div class="finder__main">
+      <?php partial('breadcrumb.php', ['items' => [['label' => 'Home', 'url' => '/'], ['label' => 'Scent Finder', 'url' => '']]]); ?>
+      <p class="eyebrow">Scent Finder</p>
+      <h1 class="finder__title" id="quiz-title"><?= em_tail((string) $heading) ?></h1>
+      <p class="finder__intro">Five quick questions. No email, nothing stored — just three perfumes that agree with you.</p>
+      <form class="form js-validate js-quiz finder__form" method="get" action="<?= e((string) $resultUrl) ?>" data-quiz>
+        <div class="form__summary js-form-summary" role="alert" hidden></div>
+        <p class="u-sr-only js-quiz-live" aria-live="polite"></p>
 <?php foreach ($questions as $index => $question): ?>
-<?php $step = $index + 1; $fieldName = 'q' . $step; $percent = (int) round($step * 100 / $total); ?>
-      <fieldset class="form__section stack" id="question-<?= e((string) $step) ?>" data-motion-step="<?= e((string) $step) ?>">
-        <div class="progress" aria-hidden="true">
-          <p class="progress__label"><span>Question <?= e((string) $step) ?> of <?= e((string) $total) ?></span><span><?= e((string) $percent) ?>%</span></p>
-          <div class="progress__track"><div class="progress__fill" style="--fill:<?= e((string) $percent) ?>%"></div></div>
-        </div>
-        <legend class="form__legend h3"><?= e((string) $question['question']) ?></legend>
+<?php $step = $index + 1; $fieldName = 'q' . $step; ?>
+        <fieldset class="quiz-step" id="question-<?= e((string) $step) ?>" data-quiz-step>
+          <div class="quiz-step__progress" aria-hidden="true">
+            <p class="quiz-step__count"><span>Question <?= e((string) $step) ?> of <?= e((string) $total) ?></span><span><?= e((string) round($step * 100 / $total)) ?>%</span></p>
+            <span class="quiz-step__track"><span class="quiz-step__fill" style="--fill:<?= e((string) round($step / $total, 3)) ?>"></span></span>
+          </div>
+          <legend class="quiz-step__question"><?= e((string) $question['question']) ?></legend>
 <?php if (trim((string) ($question['helper'] ?? '')) !== ''): ?>
-        <p class="text-muted text-small"><?= e((string) $question['helper']) ?></p>
+          <p class="quiz-step__helper"><?= e((string) $question['helper']) ?></p>
 <?php endif; ?>
-        <div class="field">
-        <div class="choice-group choice-group--answers" role="radiogroup" aria-describedby="err-<?= e($fieldName) ?>">
-<?php foreach ($question['options'] as $optionIndex => [$label, $copy, $icon]): ?>
+          <div class="field">
+            <div class="quiz-options" role="radiogroup" aria-describedby="err-<?= e($fieldName) ?>">
+<?php foreach ($question['options'] as $optionIndex => [$label, $copy]): ?>
 <?php $value = $optionIndex + 1; ?>
-          <label class="choice choice--answer">
-            <input class="choice__input" id="<?= e($fieldName) ?>-<?= e((string) $value) ?>" type="radio" name="<?= e($fieldName) ?>" value="<?= e((string) $value) ?>"<?= $optionIndex === 0 ? ' required data-msg-required="Pick one answer to continue."' : '' ?>>
-            <span class="choice__card">
-              <span class="choice__dot" aria-hidden="true"></span>
-              <?php partial('icon.php', ['name' => $icon, 'size' => 22, 'class' => 'choice__icon']); ?>
-              <span class="choice__title"><?= e($label) ?></span>
-              <span class="choice__text"><?= e($copy) ?></span>
-            </span>
-          </label>
+              <label class="quiz-option">
+                <input class="quiz-option__input" id="<?= e($fieldName) ?>-<?= e((string) $value) ?>" type="radio" name="<?= e($fieldName) ?>" value="<?= e((string) $value) ?>"<?= $optionIndex === 0 ? ' required data-msg-required="Pick one answer to continue."' : '' ?>>
+                <span class="quiz-option__card">
+                  <span class="quiz-option__letter" aria-hidden="true"><?= e(chr(65 + $optionIndex)) ?></span>
+                  <span class="quiz-option__text"><span class="quiz-option__title"><?= e($label) ?></span><span class="quiz-option__copy"><?= e($copy) ?></span></span>
+                  <span class="quiz-option__dot" aria-hidden="true"></span>
+                </span>
+              </label>
 <?php endforeach; ?>
-        </div>
-        <p class="field__error" id="err-<?= e($fieldName) ?>"></p>
-        </div>
-        <p class="cluster cluster--between text-small">
+            </div>
+            <p class="field__error" id="err-<?= e($fieldName) ?>"></p>
+          </div>
+          <div class="quiz-step__nav">
 <?php if ($step > 1): ?>
-          <a class="btn btn--text btn--sm" href="#question-<?= e((string) ($step - 1)) ?>"><span class="btn__label">← Back</span></a>
+            <a class="btn btn--text btn--sm" href="#question-<?= e((string) ($step - 1)) ?>" data-quiz-back><span class="btn__label"><?php partial('icon.php', ['name' => 'arrow-left', 'size' => 16]); ?>Back</span></a>
 <?php else: ?>
-          <span></span>
+            <span></span>
 <?php endif; ?>
 <?php if ($step < $total): ?>
-          <a class="btn btn--text btn--sm" href="#question-<?= e((string) ($step + 1)) ?>"><span class="btn__label">Next →</span></a>
+            <a class="btn btn--ghost btn--sm" href="#question-<?= e((string) ($step + 1)) ?>" data-quiz-next><span class="btn__label">Next<?php partial('icon.php', ['name' => 'arrow-right', 'size' => 16]); ?></span></a>
 <?php endif; ?>
-        </p>
-      </fieldset>
+          </div>
+        </fieldset>
 <?php endforeach; ?>
-      </div>
-      <div class="form__actions">
-        <button class="btn btn--primary btn--block" type="submit"><?php partial('icon.php', ['name' => 'compass', 'size' => 18, 'class' => 'btn__icon']); ?><span class="btn__label">Show my matches</span></button>
-      </div>
-    </form>
+        <div class="form__actions finder__submit">
+          <button class="btn btn--primary btn--block" type="submit"><span class="btn__label">Show my matches<?php partial('icon.php', ['name' => 'arrow-right', 'size' => 16]); ?></span></button>
+        </div>
+      </form>
+    </div>
+    <div class="finder__visual" aria-hidden="true" data-loop>
+      <span class="finder__glow"></span>
+      <span class="finder__orbit"><i class="tone--citrus"></i><i class="tone--floral"></i><i class="tone--amber"></i><i class="tone--oud"></i><i class="tone--green"></i></span>
+      <span class="finder__bottle"><?php partial('bottle.php', ['name' => '?', 'tone' => 'gold']); ?></span>
+    </div>
   </div>
 </section>

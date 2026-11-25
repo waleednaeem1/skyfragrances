@@ -7,7 +7,7 @@ if ($meters === []) {
 ?>
 <div class="meters">
 <?php foreach ($meters as $meter): ?>
-  <div class="meter sf-reveal" role="img" aria-label="<?= e($meter['aria']) ?>">
+  <div class="meter" role="img" data-inview aria-label="<?= e($meter['aria']) ?>">
     <div class="meter__head">
       <span class="meter__label"><?= e($meter['label']) ?></span>
       <span class="meter__value"><?= e($meter['word']) ?></span>

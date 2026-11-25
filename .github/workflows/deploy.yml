@@ -52,7 +52,7 @@ jobs:
             --exclude '.git*' \
             site/ "$TARGET:$REMOTE_DIR/"
           ssh -p "$PORT" -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes "$TARGET" \
-            "cd '$REMOTE_DIR' && rm -f storage/cache/settings.json storage/cache/sitemap.xml 2>/dev/null; ls -la index.php assets/css/motion.css assets/js/motion/core.js | awk '{print \$5, \$9}'"
+            "cd '$REMOTE_DIR' && rm -f storage/cache/settings.json storage/cache/sitemap.xml 2>/dev/null; rm -f assets/css/critical.css assets/css/site.css assets/css/motion.css assets/js/css.js assets/js/intro.js app/partials/intro.php app/partials/transition-overlay.php; rm -rf assets/js/motion assets/js/vendor assets/css/motion assets/img/motion; ls -la index.php assets/css/store.css assets/js/home.js | awk '{print \$5, \$9}'"
 
       - name: Verify the live site
         run: |
@@ -60,4 +60,4 @@ jobs:
           code=$(curl -s -o /tmp/home.html -w '%{http_code}' https://skyfragrances.com/)
           echo "home HTTP $code"
           test "$code" = "200"
-          grep -q 'motion/core.js' /tmp/home.html && echo "motion layer served" || { echo "motion layer NOT served"; exit 1; }
+          grep -q 'css/store.css' /tmp/home.html && echo "storefront stylesheet served" || { echo "storefront stylesheet NOT served"; exit 1; }

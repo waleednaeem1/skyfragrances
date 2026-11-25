@@ -87,25 +87,20 @@ $collection = is_array($collection ?? null) ? $collection : [];
 if ($collection === [] || !isset($collection['name'], $collection['slug'])) {
     return;
 }
-$variant = (string) ($variant ?? '');
-$eyebrow = trim((string) ($eyebrow ?? ''));
+$feature = ($variant ?? '') === 'feature';
 $count = (int) ($collection['product_count'] ?? -1);
 $imageSet = collection_image_set($collection['image'] ?? null);
 $href = trim((string) ($href ?? url('/collections/' . $collection['slug'])));
-$variantClasses = '';
-foreach (preg_split('/\s+/', $variant, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $variantName) {
-    if (in_array($variantName, ['large', 'wide', 'gender', 'empty'], true)) {
-        $variantClasses .= ' collection-card--' . $variantName;
-    }
-}
-$classes = 'collection-card' . $variantClasses . ($imageSet === null && !str_contains($variantClasses, '--empty') ? ' collection-card--empty' : '');
 $sizes = (string) ($sizes ?? '(min-width: 1024px) 24vw, (min-width: 768px) 33vw, 78vw');
 $alt = trim((string) ($collection['image_alt'] ?? ($collection['name'] . ' collection — ' . (string) setting('store_name', 'Sky Fragrances'))));
 $jpgSrcset = collection_image_srcset($imageSet, 'jpg');
 $webpSrcset = collection_image_srcset($imageSet, 'webp');
 $eager = (bool) ($eager ?? false);
+$tagline = trim((string) ($collection['tagline'] ?? ''));
+$description = $feature ? truncate_on_word(trim((string) ($collection['description'] ?? '')), 120) : '';
+$countLabel = $count >= 0 ? ($count === 1 ? '1 fragrance' : $count . ' fragrances') : '';
 ?>
-<a class="<?= e($classes) ?>" href="<?= e($href) ?>">
+<a class="collection-card<?= $feature ? ' collection-card--feature' : '' ?><?= $imageSet === null ? ' collection-card--empty' : '' ?>" href="<?= e($href) ?>">
   <span class="collection-card__media">
 <?php if ($imageSet !== null): ?>
     <picture>
@@ -115,19 +110,16 @@ $eager = (bool) ($eager ?? false);
       <img class="collection-card__img" src="<?= e(collection_image_src($imageSet, 'jpg')) ?>"<?= $jpgSrcset !== '' ? ' srcset="' . e($jpgSrcset) . '" sizes="' . e($sizes) . '"' : '' ?> alt="<?= e($alt) ?>" width="800" height="450" <?= $eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
     </picture>
 <?php endif; ?>
+    <span class="collection-card__sweep" aria-hidden="true"></span>
   </span>
-  <span class="collection-card__scrim" aria-hidden="true"></span>
   <span class="collection-card__body">
-<?php if ($eyebrow !== ''): ?>
-    <span class="collection-card__eyebrow"><?= e($eyebrow) ?></span>
+<?php if ($tagline !== ''): ?>
+    <span class="collection-card__tagline"><?= e($tagline) ?></span>
 <?php endif; ?>
     <span class="collection-card__name"><?= e((string) $collection['name']) ?></span>
-<?php if (trim((string) ($collection['tagline'] ?? '')) !== ''): ?>
-    <span class="collection-card__tagline"><?= e((string) $collection['tagline']) ?></span>
+<?php if ($description !== '' || $countLabel !== ''): ?>
+    <span class="collection-card__meta"><?= e(implode(' ', array_filter([$description, $countLabel !== '' ? ($description !== '' ? $countLabel . '.' : $countLabel) : '']))) ?></span>
 <?php endif; ?>
-<?php if ($count >= 0): ?>
-    <span class="collection-card__count"><?= e($count === 1 ? '1 fragrance' : $count . ' fragrances') ?></span>
-<?php endif; ?>
-    <span class="collection-card__rule" aria-hidden="true"></span>
+    <span class="collection-card__cta" aria-hidden="true">Discover<?php partial('icon.php', ['name' => 'arrow-right', 'size' => 14]); ?></span>
   </span>
 </a>

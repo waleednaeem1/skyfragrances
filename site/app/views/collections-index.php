@@ -3,68 +3,53 @@ defined('SKYFR') || exit;
 $collections = is_array($collections ?? null) ? $collections : [];
 $intro = trim((string) ($intro ?? ''));
 ?>
-<div class="container">
-  <?php partial('breadcrumb.php', ['items' => $breadcrumbs ?? []]); ?>
-  <header class="page-head page-head--center">
-    <p class="u-track text-muted">Curated</p>
-    <h1 class="page-head__title h1" id="collections-title"><?= e((string) $heading) ?></h1>
-<?php if ($intro !== ''): ?>
-    <p class="page-head__intro lead measure"><?= e($intro) ?></p>
-<?php endif; ?>
-  </header>
-</div>
-<section class="section section--flush-top" aria-labelledby="collections-title">
-  <div class="container">
-    <div class="grid grid--2 sf-reveal sf-reveal--stagger">
+<?php partial('page-hero.php', ['crumbs' => $breadcrumbs ?? [], 'eyebrow' => 'Curated', 'title' => (string) $heading, 'titleId' => 'collections-title', 'intro' => $intro]); ?>
+<section class="section collections-list" aria-labelledby="collections-title">
+  <div class="shell">
 <?php foreach ($collections as $index => $collection): ?>
 <?php $sources = $collection['image_sources']; $thumbs = $collection['thumbs']; $count = (int) $collection['product_count']; ?>
-      <article class="stack" aria-labelledby="collection-<?= e((string) $collection['id']) ?>">
-        <a class="collection-card collection-card--wide<?= $sources === null ? ' collection-card--empty' : '' ?>" href="<?= e($collection['url']) ?>" aria-labelledby="collection-<?= e((string) $collection['id']) ?>">
-          <span class="collection-card__media">
+    <article class="edition<?= $index % 2 ? ' edition--flip' : '' ?>" aria-labelledby="collection-<?= e((string) $collection['id']) ?>" data-reveal>
+      <a class="edition__media" href="<?= e($collection['url']) ?>" tabindex="-1" aria-hidden="true">
 <?php if ($sources !== null): ?>
-            <picture>
+        <picture>
 <?php if ($sources['srcset_webp'] !== ''): ?>
-              <source type="image/webp" srcset="<?= e($sources['srcset_webp']) ?>" sizes="(min-width: 768px) 50vw, 100vw">
+          <source type="image/webp" srcset="<?= e($sources['srcset_webp']) ?>" sizes="(min-width: 1024px) 640px, 100vw">
 <?php endif; ?>
-              <img class="collection-card__img" src="<?= e($sources['src']) ?>"<?= $sources['srcset'] !== '' ? ' srcset="' . e($sources['srcset']) . '" sizes="(min-width: 768px) 50vw, 100vw"' : '' ?> alt="<?= e($collection['name'] . ' collection — ' . (string) setting('store_name', 'Sky Fragrances')) ?>" width="800" height="450" <?= $index === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
-            </picture>
+          <img src="<?= e($sources['src']) ?>"<?= $sources['srcset'] !== '' ? ' srcset="' . e($sources['srcset']) . '" sizes="(min-width: 1024px) 640px, 100vw"' : '' ?> alt="<?= e($collection['name'] . ' collection — ' . (string) setting('store_name', 'Sky Fragrances')) ?>" width="800" height="450" <?= $index === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
+        </picture>
 <?php endif; ?>
-          </span>
-          <span class="collection-card__scrim" aria-hidden="true"></span>
-          <span class="collection-card__body">
+        <span class="collection-card__sweep" aria-hidden="true"></span>
+      </a>
+      <div class="edition__body">
+        <span class="edition__index" aria-hidden="true"><?= e(sprintf('%02d', $index + 1)) ?></span>
 <?php if (trim((string) ($collection['tagline'] ?? '')) !== ''): ?>
-            <span class="collection-card__eyebrow u-track"><?= e((string) $collection['tagline']) ?></span>
+        <p class="edition__tagline"><?= e((string) $collection['tagline']) ?></p>
 <?php endif; ?>
-            <span class="collection-card__name h2" id="collection-<?= e((string) $collection['id']) ?>"><?= e((string) $collection['name']) ?></span>
-            <span class="collection-card__count"><?= e($count === 1 ? '1 fragrance' : $count . ' fragrances') ?></span>
-            <span class="collection-card__rule" aria-hidden="true"></span>
-          </span>
-        </a>
+        <h2 class="edition__name" id="collection-<?= e((string) $collection['id']) ?>"><a href="<?= e($collection['url']) ?>"><?= e((string) $collection['name']) ?></a></h2>
 <?php if (trim((string) ($collection['description'] ?? '')) !== ''): ?>
-        <p class="text-muted"><?= e((string) $collection['description']) ?></p>
+        <p class="edition__text"><?= e((string) $collection['description']) ?></p>
 <?php endif; ?>
-<?php if (trim((string) ($collection['mood'] ?? '')) !== ''): ?>
-        <p class="lead"><?= e((string) $collection['mood']) ?></p>
-<?php endif; ?>
+        <p class="edition__meta"><span><?= e($count === 1 ? '1 fragrance' : $count . ' fragrances') ?></span><?php if (trim((string) ($collection['mood'] ?? '')) !== ''): ?><span>Mood · <?= e((string) $collection['mood']) ?></span><?php endif; ?></p>
 <?php if ($thumbs !== []): ?>
-        <ul class="grid grid--thumbs" aria-label="From <?= e((string) $collection['name']) ?>">
+        <ul class="edition__thumbs" aria-label="From <?= e((string) $collection['name']) ?>">
 <?php foreach ($thumbs as $thumb): ?>
           <li>
-            <a class="product-card product-card--compact" href="<?= e($thumb['url']) ?>">
+            <a class="thumb" href="<?= e($thumb['url']) ?>">
+              <span class="thumb__media">
 <?php if ($thumb['image_set'] !== null): ?>
-              <span class="product-card__media"><img class="product-card__img" src="<?= e(product_card_image_src($thumb['image_set'], 'thumb', 'jpg')) ?>"<?= product_card_image_srcset($thumb['image_set'], 'jpg') !== '' ? ' srcset="' . e(product_card_image_srcset($thumb['image_set'], 'jpg')) . '" sizes="(min-width: 768px) 16vw, 30vw"' : '' ?> alt="<?= e($thumb['alt']) ?>" width="600" height="750" loading="lazy" decoding="async"></span>
-<?php else: ?>
-              <?php partial('placeholder.php', ['label' => $thumb['name'], 'class' => 'product-card__media']); ?>
+                <img src="<?= e(product_card_image_src($thumb['image_set'], 'thumb', 'jpg')) ?>" alt="<?= e($thumb['alt']) ?>" width="120" height="150" loading="lazy" decoding="async">
 <?php endif; ?>
-              <span class="product-card__body"><span class="product-card__name text-small"><?= e($thumb['name']) ?></span> <span class="price text-small"><span class="price__now"><?= e($thumb['price_display']) ?></span></span></span>
+              </span>
+              <span class="thumb__name"><?= e($thumb['name']) ?></span>
+              <span class="thumb__price"><?= e($thumb['price_display']) ?></span>
             </a>
           </li>
 <?php endforeach; ?>
         </ul>
 <?php endif; ?>
-        <p><a class="btn btn--text" href="<?= e($collection['url']) ?>"><span class="btn__label">Explore <?= e((string) $collection['name']) ?></span> <?php partial('icon.php', ['name' => 'arrow-right', 'size' => 16, 'class' => 'btn__icon']); ?></a></p>
-      </article>
+        <a class="btn btn--ghost" href="<?= e($collection['url']) ?>"><span class="btn__label">Explore <?= e((string) $collection['name']) ?><?php partial('icon.php', ['name' => 'arrow-right', 'size' => 16]); ?></span></a>
+      </div>
+    </article>
 <?php endforeach; ?>
-    </div>
   </div>
 </section>

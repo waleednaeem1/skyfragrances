@@ -8,6 +8,10 @@ $showAvg = (bool) ($showAvg ?? false);
 $showCount = (bool) ($showCount ?? true);
 $classes = 'stars' . (in_array($size, ['md', 'lg'], true) ? ' stars--' . $size : '') . ($href !== '' ? ' stars--link' : '');
 $label = 'Rated ' . number_format($rating, 1) . ' out of 5 from ' . $count . ' ' . ($count === 1 ? 'review' : 'reviews');
+$visibleText = trim(($showCount ? '(' . $count . ')' : '') . ' ' . ($showAvg ? number_format($rating, 1) : ''));
+if ($href !== '' && $visibleText !== '') {
+    $label = $visibleText . ', ' . lcfirst($label);
+}
 $tag = $href !== '' ? 'a' : 'span';
 $starPath = 'M12 2.6l2.85 6.05 6.65.8-4.9 4.6 1.3 6.55L12 17.35l-5.9 3.25 1.3-6.55-4.9-4.6 6.65-.8L12 2.6z';
 ?>

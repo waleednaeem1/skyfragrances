@@ -47,6 +47,7 @@ function settings_definitions(): array
         'hero_image_desktop' => ['home', 'image', 'Hero image (desktop)', ['help' => 'Wide, at least 1600 px across.']],
         'hero_image_mobile' => ['home', 'image', 'Hero image (mobile)', ['help' => 'Tall, at least 900 px high.']],
         'hero_trust_line' => ['home', 'text', 'Trust line under the hero', ['maxlength' => 80]],
+        'hero_products' => ['home', 'text', 'Hero bottles', ['maxlength' => 200, 'help' => 'Up to three product slugs, separated by commas, e.g. azure-oud, cirrus, aurora-bloom. Leave empty to show the three best sellers.']],
         'home_bestsellers_count' => ['home', 'int', 'Best sellers shown', ['min' => 4, 'max' => 12]],
         'home_new_count' => ['home', 'int', 'New arrivals shown', ['min' => 4, 'max' => 12]],
         'home_reviews_enabled' => ['home', 'bool', 'Show reviews on the home page', []],

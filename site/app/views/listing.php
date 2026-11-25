@@ -57,7 +57,7 @@ $renderFilters = static function (string $suffix, bool $withSort) use ($facetGro
 <?php foreach ($group['options'] as $option): ?>
 <?php $disabled = $option['count'] === 0 && !$option['active']; ?>
       <label class="filters__option<?= $option['active'] ? ' is-active' : '' ?><?= $disabled ? ' is-disabled' : '' ?>">
-        <span class="filters__option-label"><input class="field__checkbox" type="checkbox" name="<?= e($group['key']) ?>[]" value="<?= e($option['value']) ?>"<?= $option['active'] ? ' checked' : '' ?><?= $disabled ? ' disabled' : '' ?>><?= e($option['label']) ?></span>
+        <span class="filters__option-label"><input class="field__checkbox" type="checkbox" name="<?= e($group['key']) ?>[]" value="<?= e($option['value']) ?>"<?= $option['active'] ? ' checked' : '' ?><?= $disabled ? ' disabled' : '' ?>><?php if ($group['key'] === 'family'): ?><span class="filters__dot tone--<?= e(scent_tone($option['label'])) ?>" aria-hidden="true"></span><?php endif; ?><?= e($option['label']) ?></span>
         <span class="filters__option-count"><?= e((string) $option['count']) ?></span>
       </label>
 <?php endforeach; ?>
@@ -97,74 +97,79 @@ $renderFilters = static function (string $suffix, bool $withSort) use ($facetGro
 };
 ?>
 <?php if (in_array($landingKind, ['collection', 'gender'], true)): ?>
-<section class="hero hero--strip<?= $heroImage === null ? ' hero--empty' : '' ?>" aria-labelledby="listing-title">
+<?php $moodWords = array_values(array_filter(array_map('trim', explode(',', (string) ($mood ?? ''))))); ?>
+<section class="landing-hero scene<?= $heroImage === null ? ' landing-hero--plain' : '' ?>" aria-labelledby="listing-title">
 <?php if ($heroImage !== null): ?>
-  <div class="hero__media">
-    <picture>
+  <picture class="landing-hero__media">
 <?php if ($heroImage['srcset_webp'] !== ''): ?>
-      <source type="image/webp" srcset="<?= e($heroImage['srcset_webp']) ?>" sizes="100vw">
+    <source type="image/webp" srcset="<?= e($heroImage['srcset_webp']) ?>" sizes="100vw">
 <?php endif; ?>
-      <img class="hero__img" src="<?= e($heroImage['src']) ?>"<?= $heroImage['srcset'] !== '' ? ' srcset="' . e($heroImage['srcset']) . '" sizes="100vw"' : '' ?> alt="" width="1600" height="900" style="--hero-opacity:.55" loading="eager" fetchpriority="high" decoding="async">
-    </picture>
-  </div>
+    <img src="<?= e($heroImage['src']) ?>"<?= $heroImage['srcset'] !== '' ? ' srcset="' . e($heroImage['srcset']) . '" sizes="100vw"' : '' ?> alt="" width="1600" height="900" loading="eager" fetchpriority="high" decoding="async">
+  </picture>
 <?php endif; ?>
-  <div class="hero__scrim" aria-hidden="true"></div>
-  <div class="hero__body">
+  <div class="landing-hero__scrim" aria-hidden="true"></div>
+  <div class="shell landing-hero__inner">
+    <?php partial('breadcrumb.php', ['items' => array_map(static fn (array $crumb): array => ['label' => $crumb[0], 'url' => substr((string) $crumb[1], strlen(BASE_PATH))], $breadcrumbs ?? [])]); ?>
 <?php if ($landingKind === 'collection' && trim((string) ($landing['tagline'] ?? '')) !== ''): ?>
-    <p class="hero__eyebrow hero__enter" style="--i:0"><?= e((string) $landing['tagline']) ?></p>
+    <p class="landing-hero__tagline"><?= e((string) $landing['tagline']) ?></p>
 <?php endif; ?>
-    <h1 class="hero__title hero__enter text-gold-grad" id="listing-title" style="--i:1"><?= e($heading) ?></h1>
+    <h1 class="landing-hero__title" id="listing-title"><?= e($heading) ?></h1>
 <?php if (trim((string) $intro) !== ''): ?>
-    <p class="hero__sub hero__enter" style="--i:2"><?= e($intro) ?></p>
+    <p class="landing-hero__intro"><?= e($intro) ?></p>
 <?php endif; ?>
-<?php if (trim((string) ($mood ?? '')) !== ''): ?>
-    <p class="hero__sub hero__enter lead" style="--i:3"><?= e((string) $mood) ?></p>
-<?php endif; ?>
-    <p class="hero__trust hero__enter" style="--i:4"><?= e($landingCount) ?></p>
+    <p class="landing-hero__meta"><span><?= e($landingCount) ?></span><?php if ($moodWords !== []): ?><span>Mood · <?= e(implode(', ', $moodWords)) ?></span><?php endif; ?></p>
   </div>
 </section>
-<?php else: ?>
-<div class="container">
-  <?php partial('breadcrumb.php', ['items' => array_map(static fn (array $crumb): array => ['label' => $crumb[0], 'url' => substr((string) $crumb[1], strlen(BASE_PATH))], $breadcrumbs ?? [])]); ?>
-  <header class="page-head">
-    <h1 class="page-head__title h1" id="listing-title"><?= e($heading) ?></h1>
-<?php if (trim((string) $intro) !== ''): ?>
-    <p class="page-head__intro text-muted"><?= e($intro) ?></p>
+<?php if (count($moodWords) > 1): ?>
+<div class="marquee marquee--mood" aria-hidden="true" data-loop>
+  <div class="marquee__track">
+<?php for ($copy = 0; $copy < 4; $copy++): ?>
+<?php foreach ($moodWords as $moodWord): ?>
+    <span class="marquee__item"><?= e($moodWord) ?><span class="marquee__star">✦</span></span>
+<?php endforeach; ?>
+<?php endfor; ?>
+  </div>
+</div>
 <?php endif; ?>
+<?php else: ?>
+<?php ob_start(); ?>
 <?php if ($landingKind === 'search'): ?>
-    <form class="form listing__search" role="search" method="get" action="<?= e(url('/search')) ?>">
-      <div class="field field--inline">
-        <label class="field__label u-sr-only" for="f-search-q">Search the catalogue</label>
-        <div class="field__control">
-          <input class="field__input field__input--search js-suggest-input" id="f-search-q" name="q" type="search" value="<?= e($searchQuery) ?>" maxlength="60" autocomplete="off" placeholder="Try “oud”, “rose” or “fresh”" data-suggest-target="suggest-page" aria-describedby="hint-search-q">
-          <div class="suggest" id="suggest-page" role="listbox"></div>
-        </div>
-        <button class="btn btn--primary" type="submit"><span class="btn__label">Search</span></button>
-        <p class="field__hint" id="hint-search-q">Search by name, scent family, note or SKU.</p>
-      </div>
+    <form class="listing-search" role="search" method="get" action="<?= e(url('/search')) ?>">
+      <label class="u-sr-only" for="f-search-q">Search the catalogue</label>
+      <input class="listing-search__input js-suggest-input" id="f-search-q" name="q" type="search" value="<?= e($searchQuery) ?>" maxlength="60" autocomplete="off" placeholder="Try “oud”, “rose” or “fresh”" data-suggest-target="suggest-page" aria-describedby="hint-search-q">
+      <button class="btn btn--primary" type="submit"><span class="btn__label">Search</span></button>
+      <div class="suggest" id="suggest-page" role="listbox"></div>
+      <p class="listing-search__hint" id="hint-search-q">Search by name, scent family, note or SKU.</p>
     </form>
 <?php if ($searchLanding): ?>
     <div class="chips">
 <?php foreach (['oud', 'rose', 'fresh', 'amber', 'vetiver'] as $example): ?>
-      <a class="chip chip--note" href="<?= e(url('/search?q=' . eu($example))) ?>"><span><?= e($example) ?></span></a>
+      <a class="chip" href="<?= e(url('/search?q=' . eu($example))) ?>"><?= e($example) ?></a>
 <?php endforeach; ?>
     </div>
 <?php endif; ?>
 <?php endif; ?>
-  </header>
-</div>
+<?php $heroAfter = (string) ob_get_clean(); ?>
+<?php partial('page-hero.php', [
+    'crumbs' => array_map(static fn (array $crumb): array => ['label' => $crumb[0], 'url' => substr((string) $crumb[1], strlen(BASE_PATH))], $breadcrumbs ?? []),
+    'eyebrow' => ['shop' => 'The collection', 'family' => 'Scent family', 'merch' => 'Curated', 'search' => 'Search'][$landingKind] ?? '',
+    'title' => $heading,
+    'titleId' => 'listing-title',
+    'intro' => trim((string) $intro),
+    'after' => $heroAfter,
+]); ?>
 <?php endif; ?>
 <?php if ($landingKind === 'gender' && ($preset['gender'] ?? '') === 'unisex'): ?>
-<div class="container"><p class="text-small text-muted">Unisex fragrances also appear under For Him and For Her, so the counts across the three pages will not add up.</p></div>
+<div class="shell"><p class="listing-note">Unisex fragrances also appear under For Him and For Her, so the counts across the three pages will not add up.</p></div>
 <?php endif; ?>
 <?php if ($landingKind === 'collection' && $total === 0): ?>
-<section class="section section--tight"><div class="container center"><p class="lead">This collection is being restocked.</p></div></section>
+<p class="shell listing-empty">This collection is being restocked.</p>
 <?php elseif ($landingKind === 'gender' && $total === 0): ?>
-<section class="section section--tight"><div class="container center"><p class="lead">Nothing here yet — these are landing soon.</p></div></section>
+<p class="shell listing-empty">Nothing here yet — these are landing soon.</p>
 <?php endif; ?>
 <?php if (!$searchLanding): ?>
-<section class="section section--flush-top" aria-labelledby="listing-title">
-  <div class="container listing-layout">
+<section class="listing" aria-labelledby="listing-title">
+  <div class="shell listing__layout">
     <aside class="listing__filters" aria-label="Filters">
       <?php $renderFilters('', false); ?>
     </aside>
@@ -195,7 +200,7 @@ $renderFilters = static function (string $suffix, bool $withSort) use ($facetGro
 <?php endif; ?>
 <?php if ($products !== []): ?>
       <h2 class="u-sr-only">Results</h2>
-      <div class="grid grid--products js-filter-bar-anchor" data-motion="cards">
+      <div class="product-grid js-filter-bar-anchor">
 <?php foreach ($products as $index => $product): ?>
         <?php partial('product-card.php', ['product' => $product, 'eager' => $index < 2 && $page === 1]); ?>
 <?php endforeach; ?>
@@ -246,10 +251,10 @@ $renderFilters = static function (string $suffix, bool $withSort) use ($facetGro
 </section>
 <?php endif; ?>
 <?php if ($total === 0 && $bestSellers !== []): ?>
-<section class="section section--divided" aria-labelledby="popular-title">
-  <div class="container">
+<section class="section section--ruled" aria-labelledby="popular-title">
+  <div class="shell">
     <?php partial('section-header.php', ['eyebrow' => 'Loved most', 'title' => 'Popular right now', 'titleId' => 'popular-title', 'linkHref' => url('/best-sellers'), 'linkLabel' => 'View all']); ?>
-    <div class="grid grid--products sf-reveal sf-reveal--stagger">
+    <div class="product-grid" data-reveal>
 <?php foreach ($bestSellers as $product): ?>
       <?php partial('product-card.php', ['product' => $product]); ?>
 <?php endforeach; ?>
@@ -258,12 +263,10 @@ $renderFilters = static function (string $suffix, bool $withSort) use ($facetGro
 </section>
 <?php endif; ?>
 <?php if ($total === 0 && setting_bool('quiz_band_enabled', true)): ?>
-<section class="section section--glow section--divided" aria-labelledby="finder-title">
-  <div class="container container--narrow center">
-    <?php partial('section-header.php', ['eyebrow' => (string) setting('quiz_band_heading', 'Not sure where to start?'), 'title' => 'Find your signature scent in 60 seconds', 'sub' => (string) setting('quiz_band_text', 'Five quick questions about how you like to smell, and we match you with the perfumes that agree.'), 'center' => true, 'titleId' => 'finder-title']); ?>
-    <div class="btn-row cluster cluster--center sf-reveal">
-      <a class="btn btn--primary" href="<?= e(url('/scent-finder')) ?>"><?php partial('icon.php', ['name' => 'compass', 'size' => 18, 'class' => 'btn__icon']); ?><span class="btn__label">Start the Scent Finder</span></a>
-    </div>
+<section class="section section--ruled" aria-labelledby="finder-title">
+  <div class="shell">
+    <?php partial('section-header.php', ['eyebrow' => (string) setting('quiz_band_heading', 'Not sure where to start?'), 'title' => 'Find your signature scent in 60 seconds', 'em' => 2, 'sub' => (string) setting('quiz_band_text', 'Five quick questions about how you like to smell, and we match you with the perfumes that agree.'), 'center' => true, 'titleId' => 'finder-title']); ?>
+    <p class="listing-finder" data-reveal><a class="btn btn--primary" href="<?= e(url('/scent-finder')) ?>"><span class="btn__label">Start the Scent Finder<?php partial('icon.php', ['name' => 'arrow-right', 'size' => 16]); ?></span></a></p>
   </div>
 </section>
 <?php endif; ?>

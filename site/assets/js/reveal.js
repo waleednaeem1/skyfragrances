@@ -1,117 +1,56 @@
 (function () {
   'use strict';
   var doc = document;
-  var STEP_MS = 70;
-  var HINT_MS = 1400;
-  var reducedQuery = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-  var handshake = window.SFReveal = window.SFReveal || {};
+  var reducedQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var hasObserver = typeof window.IntersectionObserver !== 'undefined';
 
-  function reduced() {
-    return !!(reducedQuery && reducedQuery.matches);
-  }
-  function showAll(nodes) {
-    for (var i = 0; i < nodes.length; i++) {
-      nodes[i].classList.add('is-visible');
-    }
-  }
-  function reveal(el) {
-    if (el.classList.contains('sf-reveal--stagger') || reduced()) {
-      el.classList.add('is-visible');
-      return;
-    }
-    var settle = function () {
-      clearTimeout(timer);
-      el.removeEventListener('transitionend', onEnd);
-      el.style.willChange = '';
-    };
-    var onEnd = function (event) {
-      if (event.target === el) {
-        settle();
-      }
-    };
-    el.style.willChange = 'transform, opacity';
-    el.addEventListener('transitionend', onEnd);
-    var timer = setTimeout(settle, HINT_MS);
-    window.requestAnimationFrame(function () {
-      el.classList.add('is-visible');
-    });
-  }
-  function observe(nodes, options, onEnter) {
+  function observe(nodes, options, onChange) {
     var observer = new IntersectionObserver(function (entries) {
       for (var i = 0; i < entries.length; i++) {
-        onEnter(entries[i], observer);
+        onChange(entries[i], observer);
       }
     }, options);
     for (var j = 0; j < nodes.length; j++) {
       observer.observe(nodes[j]);
     }
-    return observer;
   }
-  function initReveal() {
-    if (handshake.started) {
-      return;
+  function markAll(nodes, className) {
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].classList.add(className);
     }
-    handshake.started = true;
-    var nodes = doc.querySelectorAll('.sf-reveal');
+  }
+  function onceInView(selector, className, margin) {
+    var nodes = doc.querySelectorAll(selector);
     if (!nodes.length) {
       return;
     }
-    if (reduced() || typeof window.IntersectionObserver === 'undefined') {
-      showAll(nodes);
+    if (reducedQuery.matches || !hasObserver) {
+      markAll(nodes, className);
       return;
     }
-    var pending = Array.prototype.slice.call(nodes);
-    function show(el) {
-      var delay = parseInt(el.getAttribute('data-reveal-delay') || '0', 10);
-      if (delay > 0 && delay <= 5) {
-        el.style.transitionDelay = (delay * STEP_MS) + 'ms';
+    observe(nodes, { rootMargin: '0px 0px ' + margin + ' 0px', threshold: 0 }, function (entry, observer) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add(className);
+        observer.unobserve(entry.target);
       }
-      reveal(el);
-    }
-    function revealPassed() {
-      var viewportBottom = window.innerHeight;
-      var kept = [];
-      for (var i = 0; i < pending.length; i++) {
-        var el = pending[i];
-        if (el.classList.contains('is-visible')) {
-          continue;
-        }
-        var rect = el.getBoundingClientRect();
-        if (rect.bottom < 0 || rect.top < viewportBottom * 0.88) {
-          show(el);
-        } else {
-          kept.push(el);
-        }
-      }
-      pending = kept;
-    }
-    observe(nodes, { rootMargin: '0px 0px -12% 0px', threshold: 0 }, function (entry, observer) {
-      if (!entry.isIntersecting) {
-        return;
-      }
-      show(entry.target);
-      observer.unobserve(entry.target);
     });
-    var scrollTick = false;
-    window.addEventListener('scroll', function () {
-      if (scrollTick || !pending.length) {
-        return;
-      }
-      scrollTick = true;
-      window.requestAnimationFrame(function () {
-        revealPassed();
-        scrollTick = false;
-      });
-    }, { passive: true });
-    window.addEventListener('pageshow', revealPassed);
-    revealPassed();
-    if (reducedQuery && reducedQuery.addEventListener) {
-      reducedQuery.addEventListener('change', function () {
-        if (reduced()) {
-          showAll(doc.querySelectorAll('.sf-reveal'));
-        }
-      });
+  }
+
+  function initReveal() {
+    var native = window.CSS && window.CSS.supports && window.CSS.supports('animation-timeline: view()');
+    if (!native) {
+      onceInView('[data-reveal]', 'is-visible', '-10%');
     }
+    onceInView('[data-inview]', 'is-inview', '-12%');
+  }
+  function initLoops() {
+    var loops = doc.querySelectorAll('[data-loop]');
+    if (!loops.length || !hasObserver) {
+      return;
+    }
+    observe(loops, { rootMargin: '120px 0px', threshold: 0 }, function (entry) {
+      entry.target.classList.toggle('is-paused', !entry.isIntersecting);
+    });
   }
   function initHeader() {
     var header = doc.querySelector('.js-site-header');
@@ -119,12 +58,9 @@
       return;
     }
     var sentinel = doc.querySelector('.header-sentinel');
-    var startsTransparent = header.classList.contains('is-transparent');
-    if (startsTransparent && sentinel && typeof window.IntersectionObserver !== 'undefined') {
+    if (sentinel && hasObserver) {
       observe([sentinel], { rootMargin: '-80px 0px 0px 0px', threshold: 0 }, function (entry) {
-        var solid = !entry.isIntersecting;
-        header.classList.toggle('is-solid', solid);
-        header.classList.toggle('is-transparent', !solid);
+        header.classList.toggle('is-solid', !entry.isIntersecting);
       });
     }
     var lastY = window.pageYOffset;
@@ -136,8 +72,7 @@
       ticking = true;
       window.requestAnimationFrame(function () {
         var y = window.pageYOffset;
-        var locked = doc.body.classList.contains('is-locked');
-        if (!locked && y > lastY + 6 && y > 240) {
+        if (!doc.body.classList.contains('is-locked') && y > lastY + 6 && y > 240) {
           header.classList.add('is-hidden');
         } else if (y < lastY - 6 || y <= 240) {
           header.classList.remove('is-hidden');
@@ -157,47 +92,31 @@
       fab.classList.toggle('whatsapp-fab--raised', raised);
     }
   }
-  function initStickyBar() {
-    var bar = doc.querySelector('.js-sticky-bar');
-    var anchor = doc.querySelector('.js-sticky-anchor');
-    if (!bar || !anchor || typeof window.IntersectionObserver === 'undefined') {
-      return;
-    }
-    var desktop = window.matchMedia('(min-width: 1024px)');
-    var whenHidden = bar.hasAttribute('data-sticky-when-hidden');
-    observe([anchor], { threshold: 0 }, function (entry) {
-      var away = !entry.isIntersecting && (whenHidden || entry.boundingClientRect.top < 0);
-      var passed = away && !desktop.matches;
-      bar.classList.toggle('is-visible', passed);
-      doc.body.classList.toggle('has-sticky-bar', passed);
-      raiseFloating(passed);
-    });
-  }
-  function initFilterBar() {
-    var bar = doc.querySelector('.js-filter-bar');
-    var anchor = doc.querySelector('.js-filter-bar-anchor');
-    if (!bar || !anchor || typeof window.IntersectionObserver === 'undefined') {
+  function initBottomBar(barSelector, anchorSelector, bodyClass, visibleWhen) {
+    var bar = doc.querySelector(barSelector);
+    var anchor = doc.querySelector(anchorSelector);
+    if (!bar || !anchor || !hasObserver) {
       return;
     }
     var desktop = window.matchMedia('(min-width: 1024px)');
     observe([anchor], { threshold: 0 }, function (entry) {
-      var shown = entry.isIntersecting && !desktop.matches;
+      var shown = visibleWhen(entry, bar) && !desktop.matches;
       bar.classList.toggle('is-visible', shown);
-      doc.body.classList.toggle('has-filter-bar', shown);
+      doc.body.classList.toggle(bodyClass, shown);
       raiseFloating(shown);
     });
   }
+
   function init() {
-    handshake.start = initReveal;
-    handshake.showAll = function () {
-      showAll(doc.querySelectorAll('.sf-reveal'));
-    };
-    if (!handshake.claimed) {
-      initReveal();
-    }
+    initReveal();
+    initLoops();
     initHeader();
-    initStickyBar();
-    initFilterBar();
+    initBottomBar('.js-sticky-bar', '.js-sticky-anchor', 'has-sticky-bar', function (entry, bar) {
+      return !entry.isIntersecting && (bar.hasAttribute('data-sticky-when-hidden') || entry.boundingClientRect.top < 0);
+    });
+    initBottomBar('.js-filter-bar', '.js-filter-bar-anchor', 'has-filter-bar', function (entry) {
+      return entry.isIntersecting;
+    });
   }
   if (doc.readyState === 'loading') {
     doc.addEventListener('DOMContentLoaded', init);

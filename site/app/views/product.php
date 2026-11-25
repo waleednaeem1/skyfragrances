@@ -29,195 +29,170 @@ $trustIcons = [
     'clock' => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
 ];
 $stickyThumb = $images !== [] ? $images[0]['thumb'] : asset(brand_asset('img/brand/monogram-transparent-512.png'));
+$noteMarquee = array_values(array_unique(array_merge($notes['top'], $notes['heart'], $notes['base'])));
+$eyebrowParts = array_values(array_filter([$collection !== [] ? '<a href="' . e($collection['url']) . '">' . e($collection['name']) . '</a>' : '', e($genderLabel)]));
 ?>
-<div class="container">
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <ol class="breadcrumb__list">
-      <li class="breadcrumb__item"><a class="breadcrumb__link" href="<?= e(url('/')) ?>">Home</a></li>
-      <li class="breadcrumb__item"><a class="breadcrumb__link" href="<?= e(url('/shop')) ?>">Shop</a></li>
-<?php if ($collection !== []): ?>
-      <li class="breadcrumb__item"><a class="breadcrumb__link" href="<?= e($collection['url']) ?>"><?= e($collection['name']) ?></a></li>
-<?php endif; ?>
-      <li class="breadcrumb__item"><span class="breadcrumb__current" aria-current="page"><?= e($product['name']) ?></span></li>
-    </ol>
-  </nav>
-  <div class="split split--pdp">
-    <div class="split__media">
+<section class="pdp" aria-labelledby="pdp-title">
+  <div class="shell pdp__grid">
+    <div class="pdp__media">
       <?php partial('gallery.php', ['images' => $images, 'badges' => $badges, 'productName' => $product['name']]); ?>
     </div>
-    <aside class="split__aside">
-      <div class="stack">
-<?php if ($collection !== []): ?>
-        <p class="u-track"><a href="<?= e($collection['url']) ?>"><?= e($collection['name']) ?></a></p>
+    <div class="pdp__info">
+      <?php partial('breadcrumb.php', ['items' => array_values(array_filter([['label' => 'Home', 'url' => '/'], ['label' => 'Shop', 'url' => '/shop'], $collection !== [] ? ['label' => $collection['name'], 'url' => substr((string) $collection['url'], strlen(BASE_PATH))] : null, ['label' => $product['name'], 'url' => '']]))]); ?>
+<?php if ($eyebrowParts !== []): ?>
+      <p class="eyebrow pdp__eyebrow"><?= implode(' · ', $eyebrowParts) ?></p>
 <?php endif; ?>
-        <h1 class="h1"><?= e($product['name']) ?></h1>
-        <p class="text-muted text-small">
-          <span><?= e($genderLabel) ?></span>
+      <h1 class="pdp__title" id="pdp-title"><?= e($product['name']) ?></h1>
+<?php if (!empty($product['short_description'])): ?>
+      <p class="pdp__tagline"><?= e($product['short_description']) ?></p>
+<?php endif; ?>
+<?php if (!empty($product['scent_family']) || $rating['count'] >= 1): ?>
+      <p class="pdp__meta">
 <?php if (!empty($product['scent_family'])): ?>
-          <span aria-hidden="true"> · </span>
-<?php if ($familyUrl !== ''): ?>
-          <a href="<?= e($familyUrl) ?>"><?= e($product['scent_family']) ?></a>
-<?php else: ?>
-          <span><?= e($product['scent_family']) ?></span>
+        <span class="pdp__family tone--<?= e(scent_tone($product['scent_family'])) ?>"><?php if ($familyUrl !== ''): ?><a href="<?= e($familyUrl) ?>"><?= e($product['scent_family']) ?></a><?php else: ?><?= e($product['scent_family']) ?><?php endif; ?></span>
 <?php endif; ?>
-<?php endif; ?>
-        </p>
 <?php if ($rating['count'] >= 1): ?>
-        <p><?php partial('stars.php', ['rating' => $rating['average'], 'count' => $rating['count'], 'size' => 'md', 'href' => '#reviews', 'showAvg' => true]); ?></p>
+        <?php partial('stars.php', ['rating' => $rating['average'], 'count' => $rating['count'], 'size' => 'md', 'href' => '#reviews', 'showAvg' => true]); ?>
+<?php endif; ?>
+      </p>
 <?php endif; ?>
 <?php if ($selected !== null): ?>
-        <p class="price price--lg js-price-block<?= $selected['on_sale'] ? ' price--sale' : '' ?>">
-          <span class="price__now" data-price-now><?= e($selected['effective_display']) ?></span>
-          <s class="price__was" data-price-was<?= $selected['on_sale'] ? '' : ' hidden' ?>><?= $selected['on_sale'] ? e($selected['price_display']) : '' ?></s>
-          <span class="badge badge--save" data-save-pill<?= $selected['save_percent'] > 0 ? '' : ' hidden' ?>><?= $selected['save_percent'] > 0 ? 'Save ' . e((string) $selected['save_percent']) . '%' : '' ?></span>
-          <span class="price__tax">Inclusive of all taxes.</span>
-        </p>
-<?php endif; ?>
-<?php if (!empty($product['short_description'])): ?>
-        <p class="lead"><?= e($product['short_description']) ?></p>
+      <p class="pdp__price price price--lg js-price-block<?= $selected['on_sale'] ? ' price--sale' : '' ?>">
+        <span class="price__now" data-price-now><?= e($selected['effective_display']) ?></span>
+        <s class="price__was" data-price-was<?= $selected['on_sale'] ? '' : ' hidden' ?>><?= $selected['on_sale'] ? e($selected['price_display']) : '' ?></s>
+        <span class="badge badge--save" data-save-pill<?= $selected['save_percent'] > 0 ? '' : ' hidden' ?>><?= $selected['save_percent'] > 0 ? 'Save ' . e((string) $selected['save_percent']) . '%' : '' ?></span>
+        <span class="price__tax">Inclusive of all taxes</span>
+      </p>
 <?php endif; ?>
 <?php if ($sizes !== []): ?>
-        <form class="js-add-to-cart-form stack" id="add-to-cart-form" action="<?= e(url('/api/cart/add')) ?>" method="post">
-          <?= csrf_field() ?>
-          <fieldset class="size-picker" role="radiogroup">
-            <legend class="size-picker__legend"><span>Size</span><span class="size-picker__legend-value" data-sticky-size><?= e($selected['label']) ?></span></legend>
-            <div class="size-picker__options">
+      <form class="js-add-to-cart-form pdp__form" id="add-to-cart-form" action="<?= e(url('/api/cart/add')) ?>" method="post">
+        <?= csrf_field() ?>
+        <fieldset class="size-picker" role="radiogroup">
+          <legend class="size-picker__legend"><span>Size · <span class="size-picker__legend-value" data-sticky-size><?= e($selected['label']) ?></span></span></legend>
+          <div class="size-picker__options">
 <?php foreach ($sizes as $size): ?>
-              <label class="size-chip">
-                <input class="size-chip__input" type="radio" name="size_id" value="<?= e((string) $size['id']) ?>" data-size-input<?= $size['id'] === $selected['id'] ? ' checked' : '' ?> required>
-                <span class="size-chip__card">
-                  <span class="size-chip__label"><?= e($size['label']) ?></span>
-                  <span class="size-chip__price">
+            <label class="size-chip">
+              <input class="size-chip__input" type="radio" name="size_id" value="<?= e((string) $size['id']) ?>" data-size-input<?= $size['id'] === $selected['id'] ? ' checked' : '' ?> required>
+              <span class="size-chip__card">
+                <span class="size-chip__label"><?= e($size['label']) ?></span>
+                <span class="size-chip__price">
 <?php if ($size['on_sale']): ?>
-                    <span class="size-chip__sale"><?= e($size['effective_display']) ?></span><s class="size-chip__was"><?= e($size['price_display']) ?></s>
+                  <span class="size-chip__sale"><?= e($size['effective_display']) ?></span><s class="size-chip__was"><?= e($size['price_display']) ?></s>
 <?php else: ?>
-                    <?= e($size['price_display']) ?>
+                  <?= e($size['price_display']) ?>
 <?php endif; ?>
 <?php if (!$size['in_stock']): ?>
-                    <span class="size-chip__stock">Out of stock</span>
+                  <span class="size-chip__stock">Out of stock</span>
 <?php endif; ?>
-                  </span>
                 </span>
-              </label>
+              </span>
+            </label>
 <?php endforeach; ?>
-            </div>
-            <p class="size-picker__error">Choose a size.</p>
-          </fieldset>
-          <p class="stock-line<?= e($stockLine['class']) ?>" data-stock-line><?= e($stockLine['text']) ?></p>
-          <p class="text-micro text-muted">SKU <span data-sku><?= e($selected['sku']) ?></span></p>
+          </div>
+          <p class="size-picker__error">Choose a size.</p>
+        </fieldset>
+        <p class="stock-line<?= e($stockLine['class']) ?>" data-stock-line><?= e($stockLine['text']) ?></p>
+        <div class="pdp__buy">
 <?php if (!$allSoldOut): ?>
-          <div class="cluster">
-            <div class="qty js-qty" data-max="<?= e((string) $selected['max_qty']) ?>" data-product-qty>
-              <button class="qty__btn" type="button" data-qty-dec aria-label="Decrease quantity"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M5 12h14"/></svg></button>
-              <input class="qty__input" type="text" inputmode="numeric" pattern="[0-9]*" name="qty" value="1" aria-label="Quantity">
-              <button class="qty__btn" type="button" data-qty-inc aria-label="Increase quantity"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg></button>
-            </div>
-            <span class="cart-line__max text-micro text-muted" data-qty-max hidden>Max <?= e((string) $selected['max_qty']) ?></span>
+          <div class="qty js-qty" data-max="<?= e((string) $selected['max_qty']) ?>" data-product-qty>
+            <button class="qty__btn" type="button" data-qty-dec aria-label="Decrease quantity"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M5 12h14"/></svg></button>
+            <input class="qty__input" type="text" inputmode="numeric" pattern="[0-9]*" name="qty" value="1" aria-label="Quantity">
+            <button class="qty__btn" type="button" data-qty-inc aria-label="Increase quantity"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg></button>
           </div>
 <?php else: ?>
           <input type="hidden" name="qty" value="1">
 <?php endif; ?>
           <button class="btn btn--primary btn--block js-add-to-cart js-sticky-anchor" type="submit" data-label-add="Add to Cart" data-label-sold-out="Sold Out"<?= $selectedOut ? ' disabled aria-disabled="true"' : '' ?>><span class="btn__label"><?= $selectedOut ? 'Sold Out' : 'Add to Cart' ?></span></button>
+        </div>
+<?php if (!$allSoldOut): ?>
+        <span class="pdp__max" data-qty-max hidden>Max <?= e((string) $selected['max_qty']) ?></span>
+<?php endif; ?>
 <?php if ($hasWhatsapp): ?>
-          <a class="btn <?= $selectedOut ? 'btn--primary' : 'btn--ghost' ?> btn--whatsapp btn--block js-whatsapp-order" href="<?= e($whatsapp['href']) ?>" target="_blank" rel="noopener" data-wa-base="<?= e($whatsapp['base']) ?>" data-wa-in="<?= $attrLines($whatsapp['in']) ?>" data-wa-out="<?= $attrLines($whatsapp['out']) ?>"><?php partial('icon.php', ['name' => 'whatsapp', 'size' => 20]); ?><span class="btn__label"><?= $selectedOut ? 'Ask on WhatsApp' : 'Order on WhatsApp' ?></span></a>
+        <a class="btn <?= $selectedOut ? 'btn--primary' : 'btn--ghost' ?> btn--whatsapp btn--block js-whatsapp-order" href="<?= e($whatsapp['href']) ?>" target="_blank" rel="noopener" data-wa-base="<?= e($whatsapp['base']) ?>" data-wa-in="<?= $attrLines($whatsapp['in']) ?>" data-wa-out="<?= $attrLines($whatsapp['out']) ?>"><?php partial('icon.php', ['name' => 'whatsapp', 'size' => 20]); ?><span class="btn__label"><?= $selectedOut ? 'Ask on WhatsApp' : 'Order on WhatsApp' ?></span></a>
 <?php endif; ?>
-        </form>
+        <p class="pdp__sku">SKU <span data-sku><?= e($selected['sku']) ?></span></p>
+      </form>
 <?php elseif ($hasWhatsapp): ?>
-        <a class="btn btn--primary btn--whatsapp btn--block js-whatsapp-order" href="<?= e($whatsapp['href']) ?>" target="_blank" rel="noopener"><?php partial('icon.php', ['name' => 'whatsapp', 'size' => 20]); ?><span class="btn__label">Ask on WhatsApp</span></a>
+      <a class="btn btn--primary btn--whatsapp btn--block js-whatsapp-order" href="<?= e($whatsapp['href']) ?>" target="_blank" rel="noopener"><?php partial('icon.php', ['name' => 'whatsapp', 'size' => 20]); ?><span class="btn__label">Ask on WhatsApp</span></a>
 <?php endif; ?>
-        <div class="trust trust--row">
+        <ul class="pdp__trust">
 <?php foreach ($trust as $item): ?>
-          <div class="trust__item">
-            <svg class="trust__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $trustIcons[$item['icon']] ?? '' ?></svg>
-            <div>
-              <p class="trust__title"><?= e($item['title']) ?></p>
-              <p class="trust__text"><?= e($item['text']) ?></p>
-            </div>
-          </div>
+        <li class="pdp__trust-item">
+          <svg class="pdp__trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $trustIcons[$item['icon']] ?? '' ?></svg>
+          <span><strong><?= e($item['title']) ?></strong><?= e($item['text']) ?></span>
+        </li>
 <?php endforeach; ?>
-        </div>
-<?php if ($accordions !== []): ?>
-        <div class="accordion">
-<?php foreach ($accordions as $item): ?>
-          <div class="accordion__item">
-            <h2 class="accordion__title h4"><button class="accordion__trigger js-accordion-trigger" type="button" aria-expanded="<?= $item['open'] ? 'true' : 'false' ?>" aria-controls="p-<?= e($item['id']) ?>" id="t-<?= e($item['id']) ?>"><?= e($item['title']) ?><span class="accordion__glyph" aria-hidden="true"></span></button></h2>
-            <div class="accordion__panel" id="p-<?= e($item['id']) ?>" role="region" aria-labelledby="t-<?= e($item['id']) ?>">
-              <div class="accordion__inner"><div class="accordion__body"><p><?= nl2br(e($item['body'])) ?></p></div></div>
-            </div>
-          </div>
+      </ul>
+    </div>
+  </div>
+</section>
+<?php if (count($noteMarquee) > 1): ?>
+<div class="marquee marquee--notes" aria-hidden="true" data-loop>
+  <div class="marquee__track">
+<?php for ($copy = 0; $copy < 3; $copy++): ?>
+<?php foreach ($noteMarquee as $marqueeNote): ?>
+    <span class="marquee__item"><?= e($marqueeNote) ?><span class="marquee__star">✦</span></span>
 <?php endforeach; ?>
-        </div>
-<?php endif; ?>
-      </div>
-    </aside>
+<?php endfor; ?>
   </div>
 </div>
+<?php endif; ?>
 <?php if ($allSoldOut): ?>
 <?php partial('related.php', ['related' => $related, 'sectionId' => 'related']); ?>
 <?php endif; ?>
 <?php if ($hasComposition): ?>
-<?php $storyFamily = (string) ($product['scent_family_slug'] ?? $product['scent_family'] ?? ''); ?>
-<?php $storyImage = $images !== [] ? $images[0] : null; ?>
-<?php $storyHueMap = ['midnight-meridian' => ['#5E7FB4', '#8C6FA6', '#B08458'], 'azure-heights' => ['#7FB3D5', '#D8DCC2', '#C4AE8E'], 'golden-hour' => ['#E0A45C', '#C8703A', '#96502E'], 'dawn-chorus' => ['#E8C2B4', '#D9A3A0', '#B98A91'], 'monsoon-veil' => ['#8AA07C', '#6A7554', '#5E3B33']]; ?>
-<?php $storyHues = $storyHueMap[(string) ($collection['slug'] ?? '')] ?? null; ?>
-<section class="section section--divided story<?= $storyImage === null ? ' story--no-figure' : '' ?>" id="composition" aria-labelledby="composition-title" data-motion="story" data-note="top" data-story-family="<?= e($storyFamily) ?>"<?= $storyHues !== null ? ' data-motion-hue-top="' . e($storyHues[0]) . '" data-motion-hue-heart="' . e($storyHues[1]) . '" data-motion-hue-base="' . e($storyHues[2]) . '"' : '' ?>>
-  <div class="story__glow story__glow--a is-on" aria-hidden="true"></div>
-  <div class="story__glow story__glow--b" aria-hidden="true"></div>
-  <div class="container story__container">
-    <header class="section-header section-header--center sf-reveal">
-      <p class="section-header__eyebrow">Inside the bottle</p>
-      <h2 class="section-header__title h2" id="composition-title">The Composition</h2>
-    </header>
-    <div class="story__layout">
-<?php if ($storyImage !== null): ?>
-      <div class="story__figure" aria-hidden="true">
-        <div class="story__stage">
-          <div class="story__tilt">
-            <div class="story__halo story__halo--a is-on"></div>
-            <div class="story__halo story__halo--b"></div>
-            <picture>
-              <source type="image/webp" srcset="<?= e($storyImage['webp']) ?>">
-              <img class="story__bottle" src="<?= e($storyImage['src']) ?>" alt="" width="600" height="750" loading="lazy" decoding="async">
-            </picture>
-          </div>
-          <div class="story__layers" data-motion-slot="story-layers"></div>
-        </div>
-      </div>
-<?php endif; ?>
-      <div class="story__notes stack">
-        <?php partial('notes-pyramid.php', ['notes' => $notes]); ?>
+<section class="section" id="composition" aria-labelledby="composition-title">
+  <div class="shell">
+    <?php partial('section-header.php', ['eyebrow' => 'Scent profile', 'title' => 'The composition', 'titleId' => 'composition-title', 'sub' => 'How ' . $product['name'] . ' opens, settles and lingers on skin.']); ?>
+    <div class="composition">
+      <?php partial('notes-pyramid.php', ['notes' => $notes]); ?>
+      <div class="composition__aside" data-reveal>
         <?php partial('meters.php', ['meters' => $meters]); ?>
-<?php if ($seasons !== [] || $occasions !== []): ?>
-      <div class="grid grid--2 sf-reveal">
 <?php if ($seasons !== []): ?>
-        <div>
-          <h3 class="u-track text-small">Best season</h3>
-          <div class="chips">
+        <div class="composition__group">
+          <h3 class="composition__label">Best season</h3>
+          <ul class="tags">
 <?php foreach ($seasons as $chip): ?>
-            <span class="chip chip--static chip--note"><?php if ($chip['icon'] !== ''): ?><svg class="chip__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $seasonIcons[$chip['icon']] ?></svg><?php endif; ?><span><?= e($chip['text']) ?></span></span>
+            <li class="tag"><?php if ($chip['icon'] !== ''): ?><svg class="tag__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><?= $seasonIcons[$chip['icon']] ?></svg><?php endif; ?><?= e($chip['text']) ?></li>
 <?php endforeach; ?>
-          </div>
+          </ul>
         </div>
 <?php endif; ?>
 <?php if ($occasions !== []): ?>
-        <div>
-          <h3 class="u-track text-small">Occasion</h3>
-          <div class="chips">
+        <div class="composition__group">
+          <h3 class="composition__label">Occasion</h3>
+          <ul class="tags">
 <?php foreach ($occasions as $occasion): ?>
-            <span class="chip chip--static chip--note"><span><?= e($occasion) ?></span></span>
+            <li class="tag"><?= e($occasion) ?></li>
 <?php endforeach; ?>
-          </div>
+          </ul>
         </div>
-<?php endif; ?>
-      </div>
 <?php endif; ?>
       </div>
     </div>
   </div>
 </section>
 <?php endif; ?>
-<section class="section section--divided" id="reviews" aria-labelledby="reviews-title">
-  <div class="container container--narrow">
+<?php if ($accordions !== []): ?>
+<section class="pdp-details" aria-label="Details">
+  <div class="shell">
+<?php if ($accordions !== []): ?>
+    <div class="accordion">
+<?php foreach ($accordions as $item): ?>
+      <div class="accordion__item">
+        <h2 class="accordion__title"><button class="accordion__trigger js-accordion-trigger" type="button" aria-expanded="<?= $item['open'] ? 'true' : 'false' ?>" aria-controls="p-<?= e($item['id']) ?>" id="t-<?= e($item['id']) ?>"><?= e($item['title']) ?><span class="accordion__glyph" aria-hidden="true"></span></button></h2>
+        <div class="accordion__panel" id="p-<?= e($item['id']) ?>" role="region" aria-labelledby="t-<?= e($item['id']) ?>">
+          <div class="accordion__inner"><div class="accordion__body"><p><?= nl2br(e($item['body'])) ?></p></div></div>
+        </div>
+      </div>
+<?php endforeach; ?>
+    </div>
+<?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
+<section class="section section--ruled" id="reviews" aria-labelledby="reviews-title">
+  <div class="shell">
     <?php partial('reviews.php', ['reviews' => $reviews, 'rating' => $rating, 'reviewsVisible' => $reviewsVisible, 'productName' => $product['name'], 'reviewAction' => $reviewAction, 'trapField' => $trapField]); ?>
   </div>
 </section>

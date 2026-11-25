@@ -16,12 +16,14 @@ $businessHours = trim((string) ($businessHours ?? ''));
 $hasDetails = $contactPhone !== '' || $whatsappDigits !== '' || $contactEmail !== '' || $addressLine !== '' || $businessHours !== '';
 $fieldClass = static fn (string $key): string => 'field' . (isset($errors[$key]) ? ' has-error' : '');
 ?>
-<section class="section section--tight" id="sent">
-  <div class="container">
-    <header class="page-head">
-      <h1 class="page-head__title"><?= e($pageHeading) ?></h1>
-      <p class="page-head__intro">Questions about an order, a scent, or a gift? Message us on WhatsApp for the fastest reply, or send the form and we will answer within one working day.</p>
-    </header>
+<?php partial('page-hero.php', [
+    'crumbs' => [['label' => 'Home', 'url' => '/'], ['label' => $pageHeading, 'url' => '']],
+    'eyebrow' => 'We reply within a working day',
+    'title' => $pageHeading,
+    'intro' => 'Questions about an order, a scent, or a gift? Message us on WhatsApp for the fastest reply, or send the form and we will answer within one working day.',
+]); ?>
+<section class="section" id="sent">
+  <div class="shell">
     <div class="split">
 <?php if ($hasDetails): ?>
       <aside class="split__aside">

@@ -153,9 +153,10 @@ $imageSizes = (string) ($sizes ?? '(min-width: 1200px) 22vw, (min-width: 768px) 
 $jpgSrcset = product_card_image_srcset($imageSet, 'jpg', ['thumb', 'card']);
 $webpSrcset = product_card_image_srcset($imageSet, 'webp', ['thumb', 'card']);
 ?>
-<article class="<?= e($cardClasses) ?>" data-motion-card="product">
+<article class="<?= e($cardClasses) ?> tone--<?= e(scent_tone($product['scent_family'] ?? null)) ?>">
 <?php if ($imageSet !== null): ?>
   <a class="product-card__media" href="<?= e($productUrl) ?>" tabindex="-1" aria-hidden="true">
+    <span class="product-card__glow"></span>
     <picture>
 <?php if ($webpSrcset !== ''): ?>
       <source type="image/webp" srcset="<?= e($webpSrcset) ?>" sizes="<?= e($imageSizes) ?>">
@@ -165,6 +166,7 @@ $webpSrcset = product_card_image_srcset($imageSet, 'webp', ['thumb', 'card']);
 <?php if ($hoverSet !== null): ?>
     <img class="product-card__img product-card__img--alt" src="<?= e(product_card_image_src($hoverSet, 'card', 'jpg')) ?>" alt="" width="600" height="750" loading="lazy" decoding="async">
 <?php endif; ?>
+    <span class="product-card__sweep"></span>
 <?php if ($badges !== []): ?>
     <div class="badge-stack">
 <?php foreach ($badges as [$badgeType, $badgeLabel]): ?>
@@ -177,10 +179,13 @@ $webpSrcset = product_card_image_srcset($imageSet, 'webp', ['thumb', 'card']);
   <?php partial('placeholder.php', ['label' => (string) $product['name'], 'class' => 'product-card__media']); ?>
 <?php endif; ?>
   <div class="product-card__body">
-    <h3 class="product-card__name"><a class="product-card__link" href="<?= e($productUrl) ?>"><?= e((string) $product['name']) ?></a></h3>
 <?php $metaParts = array_values(array_filter([trim((string) ($product['scent_family'] ?? '')), implode(' · ', $sizeLabels)], static fn (string $part): bool => $part !== '')); ?>
 <?php if ($metaParts !== []): ?>
     <p class="product-card__meta"><?= e(implode(' · ', $metaParts)) ?></p>
+<?php endif; ?>
+    <h3 class="product-card__name"><a class="product-card__link" href="<?= e($productUrl) ?>"><?= e((string) $product['name']) ?></a></h3>
+<?php if (trim((string) ($product['short_description'] ?? '')) !== ''): ?>
+    <p class="product-card__desc"><?= e(truncate_on_word((string) $product['short_description'], 90)) ?></p>
 <?php endif; ?>
 <?php if ($ratingCount > 0): ?>
     <p class="product-card__rating"><?php partial('stars.php', ['rating' => $ratingAvg, 'count' => $ratingCount]); ?></p>
