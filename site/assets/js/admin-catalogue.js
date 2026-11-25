@@ -2,7 +2,6 @@
   'use strict';
 
   var doc = document;
-  var api = window.SFAdmin || null;
   var nameField = doc.getElementById('name');
 
   function qs(sel, root) { return (root || doc).querySelector(sel); }
@@ -63,6 +62,7 @@
 
   on('[data-image-action]', 'click', function (ev, button) {
     ev.preventDefault();
+    var api = window.SFAdmin;
     if (!api) return;
     var tiles = button.closest('[data-sortable]');
     var url = button.getAttribute('data-image-action');
