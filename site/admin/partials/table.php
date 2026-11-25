@@ -24,9 +24,20 @@ $sortLink = static function (array $column) use ($sortParam, $sortCurrent): arra
     $q[$sortParam] = $next;
     return ['href' => url(request_path()) . '?' . http_build_query($q), 'active' => $active, 'dir' => $dir];
 };
-$renderActions = static function (array $actions, string $rowId, string $variantDefault) {
+$rowForms = [];
+$renderAction = static function (array $action, array $defaults) use ($bulk, &$rowForms): void {
+    if ($bulk !== null && !empty($action['post'])) {
+        $fields = (array) ($action['fields'] ?? []);
+        $formId = 'row-form-' . substr(md5((string) $action['post'] . '?' . http_build_query($fields)), 0, 12);
+        $rowForms[$formId] = ['post' => (string) $action['post'], 'fields' => $fields];
+        $action['attr'] = (array) ($action['attr'] ?? []) + ['form' => $formId];
+        unset($action['post'], $action['fields']);
+    }
+    partial_admin('button.php', $action + $defaults);
+};
+$renderActions = static function (array $actions, string $rowId, string $variantDefault) use ($renderAction): void {
     foreach ($actions as $action) {
-        partial_admin('button.php', $action + ['variant' => $variantDefault, 'size' => 'sm']);
+        $renderAction($action, ['variant' => $variantDefault, 'size' => 'sm']);
     }
 };
 ?>
@@ -119,7 +130,7 @@ $renderActions = static function (array $actions, string $rowId, string $variant
           <div class="adm-sheet__handle" aria-hidden="true"></div>
           <p class="adm-sheet__title"><?= strip_tags((string) ($card['title'] ?? '')) ?></p>
 <?php foreach ($actions as $action): ?>
-<?php partial_admin('button.php', $action + ['variant' => 'sheet', 'block' => true]); ?>
+<?php $renderAction($action, ['variant' => 'sheet', 'block' => true]); ?>
 <?php endforeach; ?>
           <button type="button" class="adm-sheet__item adm-sheet__item--close" data-sheet-close>Close</button>
         </div>
@@ -132,6 +143,14 @@ $renderActions = static function (array $actions, string $rowId, string $variant
 <?php if ($bulk !== null): ?>
 <?php partial_admin('action-bar.php', ['mode' => 'bulk', 'buttons' => (array) ($bulk['buttons'] ?? [])]); ?>
 </form>
+<?php foreach ($rowForms as $formId => $rowForm): ?>
+<form id="<?= e($formId) ?>" method="post" action="<?= e(url($rowForm['post'])) ?>" hidden>
+  <?= csrf_field() ?>
+<?php foreach ($rowForm['fields'] as $fieldName => $fieldValue): ?>
+  <input type="hidden" name="<?= e((string) $fieldName) ?>" value="<?= e((string) $fieldValue) ?>">
+<?php endforeach; ?>
+</form>
+<?php endforeach; ?>
 <?php endif; ?>
 <?php endif; ?>
 </div>
