@@ -24,7 +24,7 @@ function customers_sums_sql(): string
         SUM(status = 'cancelled') AS cancelled,
         COALESCE(SUM(CASE WHEN status <> 'cancelled' AND payment_status <> 'refunded' THEN grand_total END), 0) AS ordered,
         COALESCE(SUM(amount_paid), 0) AS collected,
-        COALESCE(SUM(CASE WHEN status <> 'cancelled' AND payment_status <> 'refunded' THEN GREATEST(grand_total - amount_paid, 0) END), 0) AS to_collect,
+        COALESCE(SUM(CASE WHEN status <> 'cancelled' AND payment_status <> 'refunded' AND grand_total > amount_paid THEN grand_total - amount_paid END), 0) AS to_collect,
         COALESCE(SUM(CASE WHEN status = 'cancelled' THEN amount_paid END), 0) AS refund_due";
 }
 
